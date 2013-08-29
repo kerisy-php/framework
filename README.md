@@ -1,4 +1,4 @@
 framework
 =========
 
-Kerisy framework is PHP 5.2+ based!
+Kerisy framework is PHP 5.2+ based!!
