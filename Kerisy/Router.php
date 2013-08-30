@@ -29,7 +29,7 @@ class Kerisy_Router
 	
 	public function __construct()
 	{
-		$this->_uri =& Kerisy::loadClass('Kerisy_Uri');
+		$this->_uri = Kerisy::loadClass('Kerisy_Uri');
 		$this->initModules();
 		$this->initRoutes();
 	}
@@ -136,12 +136,17 @@ class Kerisy_Router
 		{
 			$uri_string = $this->_uri_string;
 		}
-
-		$segments = explode('/', $uri_string);
-
-		$module = $segments[0];
-		$controller = $segments[1];
-		$action = $segments[2];
+		
+		$module = $controller = $action = '';
+		
+		if ($uri_string != '/')
+		{
+			$segments = explode('/', $uri_string);
+	
+			$module		= isset($segments[0]) ? $segments[0] : '';
+			$controller	= isset($segments[1]) ? $segments[1] : '';
+			$action		= isset($segments[2]) ? $segments[2] : '';
+		}
 
 		$this->setModule($module);
 		$this->setController($controller);

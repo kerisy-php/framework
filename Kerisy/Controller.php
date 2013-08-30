@@ -35,8 +35,6 @@ class Kerisy_Controller
 	
 	private function initView()
 	{
-		$template_dir = $this->template_dir . DS . Kerisy::config()->get()->theme[$this->template_dir];
-		
 		$config = array(
 			'template_dir' => APP_PATH . 'templates' . DS . 'front' . DS . 'default' . DS,
 			'template_engine' => 'Kerisy'
@@ -162,12 +160,12 @@ class Kerisy_Controller
 	
 	public function crumb($crumb_data = array())
 	{
-		if (empty($crumb_data))
+		if (empty($crumb_data) || !isset($crumb_data['name']))
 		{
 			return false;
 		}
 		
-		return $this->_crumb($crumb_data['name'], $crumb_data['url'], $crumb_data['class']);
+		return $this->_crumb($crumb_data['name'], $crumb_data['url'] ? $crumb_data['url'] : null, isset($crumb_data['class']) ? $crumb_data['class'] : null);
 	}
 	
 	private function _crumb($name, $url = '', $class = '')

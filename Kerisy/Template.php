@@ -28,7 +28,7 @@ class Kerisy_Template
 	
 	private function __get($key)
 	{
-		return $this->_vars[$key];
+		return isset($this->_vars[$key]) ? $this->_vars[$key] : null;
 	}
 	
 	private function __set($key, $value)

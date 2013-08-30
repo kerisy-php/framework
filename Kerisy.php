@@ -9,8 +9,8 @@
 * file that was distributed with this source code.
 */
 
-error_reporting(E_ERROR);
-//error_reporting(E_ALL);
+//error_reporting(E_ERROR);
+error_reporting(E_ALL);
 ini_set("error_log", APP_PATH . "logs/errors.log");
 
 date_default_timezone_set('Asia/Shanghai');
@@ -99,7 +99,7 @@ class Kerisy
 	public static function loadClass($class_name)
 	{
 		$class_name = isset(self::$_use_classes[$class_name]) ? self::$_use_classes[$class_name] : $class_name;
-		if (self::$_classes[$class_name])
+		if (isset(self::$_classes[$class_name]))
 		{
 			return self::$_classes[$class_name];
 		}

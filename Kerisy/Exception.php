@@ -49,7 +49,7 @@ abstract class Kerisy_Exception extends Exception
 		parent::__construct($message, $this->getExceptionCode());		
 	}
 	
-	public function handler(Exception $e)
+	public static function handler(Exception $e)
 	{
 		try
 		{
