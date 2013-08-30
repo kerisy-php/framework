@@ -37,9 +37,10 @@ class Kerisy_Router
 	public function routing()
 	{
 		$this->_uri_string = $this->_uri->getUriString();
+
 		if(isset($this->_routes[$this->_uri_string]))
 		{
-			$this->setRequest($this->_routes[$this->_uri_string]);
+			$this->setRequest($this->_routes[$this->_uri_string]['route']);
 			return ;
 		}
 
