@@ -155,7 +155,7 @@ class Kerisy_Router
 		}
 		else
 		{
-			$url = $route;
+			$url = '/' . trim($route, '/') . '/';
 		}
 
 		if (count($params)>0)
