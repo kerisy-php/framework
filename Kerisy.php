@@ -9,8 +9,9 @@
 * file that was distributed with this source code.
 */
 
-//error_reporting(E_ERROR);
-error_reporting(E_ALL);
+// error_reporting(E_ERROR);
+error_reporting(E_ALL^E_NOTICE);
+
 ini_set("error_log", APP_PATH . "logs/errors.log");
 
 date_default_timezone_set('Asia/Shanghai');
@@ -176,6 +177,11 @@ class Kerisy
 		return self::$_classes[$config_class_key];
 	}
 	
+	public static function router()
+	{
+		return self::loadClass('Kerisy_Router');
+	}
+	
 	public static function cache()
 	{
 		return self::loadClass('Kerisy_Cache');
@@ -232,18 +238,20 @@ class Kerisy
 
     	$class_filename = APP_PATH . 'Modules/' . str_replace('_', '/', $class_name) . '.php';
 
-    	if (true || is_file($class_filename))
+    	if (!is_file($class_filename))
     	{
-    		require_once $class_filename;
-    		if (!class_exists($class_name))
-    		{
-    			throw new Kerisy_Exception_500('Class ' . $class_name . ' does not exist.');
-    		}
-    		self::$_classes[$class_name] = new $class_name;
-    		return self::$_classes[$class_name];
+    		throw new Kerisy_Exception_500('Unable to load file: ' . $class_filename);
     	}
     	
-    	throw new Kerisy_Exception_500('Unable to load file: ' . $class_filename);
+    	require_once $class_filename;
+    	
+    	try {
+    		self::$_classes[$class_name] = new $class_name;
+    	} catch (Exception $e) {
+    		throw new Kerisy_Exception_500($e->getMessage());
+    	}
+    		
+    	return self::$_classes[$class_name];
     }
 	
 	public static function version()

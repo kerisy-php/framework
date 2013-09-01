@@ -32,6 +32,15 @@ class Kerisy_Controller
 		$this->initView();
 		$this->initBaseUrl();
 	}
+
+	public function createUrl($route, $params = array())
+	{
+		if (!$this->_router) {
+			throw new Kerisy_Exception_500('not set router.');
+		}
+		
+		return $this->base_url . Kerisy::router()->createUrl($route, $params);
+	}
 	
 	private function initView()
 	{
@@ -155,7 +164,7 @@ class Kerisy_Controller
 	
 	public function setMCAID($mca_id)
 	{
-		$this->mca_id = $mca_id;
+		$this->view->mac_id = $this->mca_id = $mca_id;
 	}
 	
 	public function crumb($crumb_data = array())

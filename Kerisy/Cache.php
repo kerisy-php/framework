@@ -20,8 +20,14 @@ abstract class Kerisy_Cache
 	protected $cache;
 	protected $cache_enabled = true;
 	
-	public function __construct(array $config)
-	{		
+	public function __construct()
+	{
+		$this->backend_name = 'File';
+		$this->frontend_name = 'Core';
+	}
+	
+	public function init(array $config)
+	{
 		$this->cache_prefix = $config['prefix'];
 		$this->cache_group_prefix = 'group_' . $config['prefix'];
 		
@@ -32,7 +38,7 @@ abstract class Kerisy_Cache
 						);
 						
 		$backend_options['compression'] = false;
-		
+
 		if ('memcache' == $config['save_handler'])
 		{
 			$save_handler = 'Memcached';
@@ -49,7 +55,7 @@ abstract class Kerisy_Cache
 			$backend_options = $config['apc'];
 		}
 		else
-		{
+		{ee($config);
 			$save_handler = $this->backend_name;
 			if ('File' == $this->backend_name)
 			{
@@ -60,7 +66,6 @@ abstract class Kerisy_Cache
 		Kerisy::import('Zend.Cache');
 		
 		$this->cache = Zend_Cache::factory($this->frontend_name, $save_handler, $front_options, $backend_options);
-		
 	}
 	
 	public function get($key)

@@ -44,9 +44,6 @@ class Kerisy_Application_Web extends Kerisy_Application
 	 	$this->_controller_object->setController($controller);
 	 	$this->_controller_object->setModule($module);
 	 	$this->_controller_object->setMCAID(strtolower("{$module}_{$controller}_{$action}"));
-	 	
-	 	$this->_controller_object->init();
-	 	$this->_controller_object->view->mca_id =  strtolower("{$module}_{$controller}_{$action}");
 	 	$this->_controller_object->before();
 	 	$this->_controller_object->$action_name();
 	 	$this->_controller_object->after();

@@ -11,12 +11,13 @@
 
 class Kerisy_Router
 {
-	protected $_router_config;
 	//所有模块
 	protected $_modules;
 	protected $_default_module = 'System';
 	//所有模块下的路由
 	protected $_routes = array();
+	
+	protected $_custom_routes = array();
 	
 	protected $_uri;
 	protected $_uri_string;
@@ -91,10 +92,12 @@ class Kerisy_Router
 		{
 			foreach ($this->_modules as $module)
 			{
-				$routes_config = Kerisy::config($module)->get('routes')->routes;
-				foreach ($routes_config as $pattern => $route)
+				if ($routes_config = Kerisy::config($module)->get('routes')->routes)
 				{
-					$this->addRoute($pattern, $route);
+					foreach ($routes_config as $pattern => $route)
+					{
+						$this->addRoute($pattern, $route);
+					}
 				}
 			}
 		}
@@ -104,8 +107,11 @@ class Kerisy_Router
 	
 	protected function addRoute($pattern, $route)
 	{
+		$template = '/' . trim($pattern, '/') . '/';
+		
 		$route_data = array(
 				'pattern' => $pattern,
+				'template' => $template,
 				'regular' => false,
 				'route' => $route,
 				'params' => array()
@@ -120,15 +126,44 @@ class Kerisy_Router
 				$params[$i] = $matches[1][$i];
 				$reg = $matches[2][$i] ? $matches[2][$i] : '.*';
 				$pattern = str_replace($matches[0][$i], "({$reg})", $pattern);
+				$template = str_replace($matches[0][$i], "{{$matches[1][$i]}}", $template);
 			}
+			
 			$pattern = str_replace('/', '\/', $pattern);
 			
 			$route_data['regular'] = true;
 			$route_data['pattern'] = "/^{$pattern}$/";
+			$route_data['template'] = $template;
 			$route_data['params'] = $params;
 		}
 
+		$this->_custom_routes[$route] = $route_data;
 		$this->_routes[$route_data['pattern']] = $route_data;
+	}
+	
+	public function createUrl($route, $params = array())
+	{
+		if (array_key_exists($route, $this->_custom_routes))
+		{
+			$router = $this->_custom_routes[$route];
+			$url = $router['template'];
+			foreach ($router['params'] as $param)
+			{
+				$url = str_replace("{{$param}}", isset($params[$param]) ? $params[$param] : '', $url);
+				unset($params[$param]);
+			}
+		}
+		else
+		{
+			$url = $route;
+		}
+
+		if (count($params)>0)
+		{
+			$url .= '?' . http_build_query($params);
+		}
+		
+		return $url;
 	}
 	
 	protected function setRequest($uri_string)

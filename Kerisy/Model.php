@@ -16,7 +16,7 @@ abstract class Kerisy_Model
 	protected $primary_key;
 	
 	protected $_db;
-	
+
 	private static $query_count = 0;
 	
 	public function getQueries()
@@ -51,6 +51,17 @@ abstract class Kerisy_Model
 		{
 			throw new Kerisy_Exception_500('primary key should be not null');
 		}
+		
+		$this->_router = Kerisy::loadClass('Kerisy_Router');
+	}
+
+	public function createUrl($route, $params = array())
+	{
+		if (!$this->_router) {
+			throw new Kerisy_Exception_500('not set router.');
+		}
+		
+		return $this->base_url . Kerisy::router()->createUrl($route, $params);
 	}
 	
 	protected function getTableFullName()
@@ -77,35 +88,39 @@ abstract class Kerisy_Model
 	
 	public function get($primary_key)
 	{
-		if( empty( $primary_key ) || !is_array( $primary_key ) )
+		if(!$primary_key)
 		{
 			return false;
 		}
-		$where = '1=1 ';
-		if( is_array( $primary_key ) && !empty( $primary_key ))
-		{
-			foreach ($primary_key as $key => $val )
-			{
-				$where .= " AND `$key` = '$val'";
-			}
-		}
+		
+		$primary_key = addslashes($primary_key);
+		$where = "`{$this->primary_key}` = '{$primary_key}'";
+
 		$select = $this->select();
 		$select->from($this->getTableFullName(), '*')
 				->where( $where )
 				->limit(1, 0);
+
 		return $this->slave()->fetchRow($select);
 	}
 	
 	public function fetch($primary_key)
 	{
-		$cache_key = $this->getTableFullName() . '_' . $primary_key;
-		//if($data = Kerisy::cache()->get($cache_key))
-		//{
-		//	return $data;
-		//}
+		$cache_key = 'dbcache_' . $this->getTableFullName() . '_' . $primary_key;
+		$data = Kerisy::cache()->get($cache_key);
+
+		if($data !== false)
+		{
+			return $data;
+		}
 		
-		$data = $this->get($primary_key);
-		//Kerisy::cache()->set($cache_key, $data, 'fetch_id');
+		if (!$data = $this->get($primary_key))
+		{
+			$data = null;
+		}
+		
+		Kerisy::cache()->set($cache_key, $data);
+		
 		return $data;
 	}
 	

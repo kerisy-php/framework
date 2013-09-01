@@ -30,7 +30,7 @@ class Kerisy_View
 
 	public function __get($key)
 	{
-		return $this->_template->getVar($key);
+		return $this->_template->$key;
 	}
 
 	public function __set($key, $value)
