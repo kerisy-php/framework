@@ -25,7 +25,7 @@ class Kerisy_BBCode
 			$content = $Tag->convertToBBCode($content);
 		}
 		
-		$content = preg_replace(array('/<br[^>]*?>/U', '/<[^>]+?>/U'), array("\n", ''), $content);
+		$content = preg_replace(array('/<br[^>]*?>/U', '/<[^>]+?>/U', "/\n[\s\n\r\t]+\n/"), array("\n", '', "\n\n"), $content);
 		
 		return $content;
 	}
