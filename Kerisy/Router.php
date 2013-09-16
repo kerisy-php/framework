@@ -34,7 +34,7 @@ class Kerisy_Router
 		$this->initModules();
 		$this->initRoutes();
 	}
-	
+
 	public function routing()
 	{
 		$this->_uri_string = $this->_uri->getUriString();
@@ -45,22 +45,25 @@ class Kerisy_Router
 			return ;
 		}
 
-		foreach ($this->_routes as $key => $route)
+		if (is_array($this->_routes))
 		{
-			if (!$route['regular'])
+			foreach ($this->_routes as $key => $route)
 			{
-				continue;
-			}
-			
-			if (preg_match($route['pattern'], $this->_uri_string, $maches))
-			{
-				foreach ($route['params'] as $i => $key)
+				if (!$route['regular'])
 				{
-					$_GET[$key] = $maches[$i+1];
+					continue;
 				}
-
-				$this->setRequest($route['route']);
-				return ;
+				
+				if (preg_match($route['pattern'], $this->_uri_string, $maches))
+				{
+					foreach ($route['params'] as $i => $key)
+					{
+						$_GET[$key] = $maches[$i+1];
+					}
+	
+					$this->setRequest($route['route']);
+					return ;
+				}
 			}
 		}
 
@@ -79,30 +82,27 @@ class Kerisy_Router
 	
 	protected function initRoutes()
 	{
-		$routes_config = Kerisy::config()->get()->routes;
-		if(is_array($routes_config))
+		$this->_custom_routes = $this->_routes = array();
+		
+		$routes = Kerisy::config()->get()->routes;
+		if(is_array($routes))
 		{
-			foreach ($routes_config as $pattern => $route)
+			foreach ($routes as $pattern => $route)
 			{
 				$this->addRoute($pattern, $route);
 			}
 		}
 
-		if(is_array($this->_modules))
+		foreach ($this->_modules as $module)
 		{
-			foreach ($this->_modules as $module)
+			if ($routes = Kerisy::config($module)->get('routes')->routes)
 			{
-				if ($routes_config = Kerisy::config($module)->get('routes')->routes)
+				foreach ($routes as $pattern => $route)
 				{
-					foreach ($routes_config as $pattern => $route)
-					{
-						$this->addRoute($pattern, $route);
-					}
+					$this->addRoute($pattern, $route);
 				}
 			}
 		}
-
-		return $this->_routes;
 	}
 	
 	protected function addRoute($pattern, $route)
@@ -262,14 +262,7 @@ class Kerisy_Router
 	{
 		$controller_class = $this->_module . '_Controller_' . ($type === 'admincp' ? 'Admin_' : '') . $this->_controller;		
 
-		try 
-		{
-			$default_action = Kerisy::controller($controller_class)->getDefaultAction();
-		}
-		catch (Exception $e) 
-		{
-			throw new Kerisy_Exception_500('Unable to find class: ' . $controller_class);
-		}
+		$default_action = Kerisy::controller($controller_class)->getDefaultAction();
 		
 		return $default_action;
 	}
