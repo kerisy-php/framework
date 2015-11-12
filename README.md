@@ -1,4 +1,4 @@
-framework
-=========
+Kerisy - A web framework written in PHP 7.0+
+===========================================================
 
-Kerisy framework is PHP 5.2/5.3/5.4/5.5 based.
+Kerisy use swoole http server.

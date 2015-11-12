@@ -1,0 +1,30 @@
+{
+    "name" : "kerisy/framework",
+    "description": "A web framework on the swoole",
+    "keywords": ["framework", "swoole", "restful"],
+    "authors" : [
+        {
+            "name" : "Jiaqing Zou",
+            "email": "zoujiaqing@gmail.com"
+        }
+    ],
+    "require": {
+        "php": ">=5.5.0",
+        "ext-swoole": ">=1.7.20",
+        "symfony/console": "^2.7",
+        "monolog/monolog": "~1.0"
+    },
+    "autoload": {
+        "files": [
+            "src/functions.php"
+        ],
+        "psr-4": {
+            "Kerisy\\": "src"
+        }
+    },
+    "minimum-stability": "stable",
+    "config": {
+        "vendor-dir": "vendor",
+        "preferred-install": "dist"
+    }
+}
