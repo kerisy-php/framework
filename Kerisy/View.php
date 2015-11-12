@@ -17,7 +17,6 @@ class Kerisy_View
 	public function init($config = array())
 	{
 		$this->_config = array_merge($this->_config, $config);
-		
 		Kerisy::import('Kerisy.Template');
 		$this->_template = new Kerisy_Template();
 		$this->_template->setTemplateDir($this->_config['template_dir']);

@@ -11,15 +11,41 @@
 
 class Kerisy_Uri
 {
-	private $_admincp = false;
 	private $_uri_string;
 	private $_uri_mode;
-	
+	private $_controller_prefix_domains = array();
+	private $_controller_prefix_routes = array();
+	private $_use_controller_prefix = false;
+	private $_controller_prefix = '';
+
+
 	public function __construct()
 	{
 		$this->_uri_mode = Kerisy::config()->get()->uri_mode;
+		
+		$data = Kerisy::config()->get()->controller_custom_prefix;
+		if ($data)
+		{
+			$this->setControllerCustomPrefix($data);
+		}
+		
 		$this->_uri_string = $this->detectUri();
-		$this->setAdmincp();
+		$this->filterControllerPrefix();
+	}
+	
+	public function setControllerCustomPrefix($prefix_data = array())
+	{
+		foreach ($prefix_data as $k => $v)
+		{
+			if ($v['type'] == "domain")
+			{
+				$this->_controller_prefix_domains[$v['value']] = $k;
+			}
+			else
+			{
+				$this->_controller_prefix_routes[$v['value']] = $k;
+			}
+		}
 	}
 	
 	public function getUriString()
@@ -90,30 +116,46 @@ class Kerisy_Uri
 		return str_replace(array('//', '../'), '/', trim($uri, '/'));
 	}
 	
-	public function getAdmincp()
+	public function useControllerPrefix()
 	{
-		return $this->_admincp;
+		return $this->_use_controller_prefix;
 	}
 	
-	private function setAdmincp()
+	public function getControllerPrefix()
 	{
-		if ('domain' == $this->_uri_mode['admincp']['type'])
+		return $this->_controller_prefix;
+	}
+	
+	private function filterControllerPrefix()
+	{
+		if (array_key_exists($_SERVER['HTTP_HOST'], $this->_controller_prefix_domains))
 		{
-			if ($_SERVER['HTTP_HOST'] == $this->_uri_mode['admincp']['value'])
-			{
-				$this->_admincp = true;
-			}
+			$this->_use_controller_prefix = true;
+			$this->_uri_mode = "domain";
+			$this->_controller_prefix = $this->_controller_prefix_domains[$_SERVER['HTTP_HOST']];
 		}
-		else 
+		else
 		{
 			$tmp = explode('/', $this->_uri_string);
-			
-			if ($this->_uri_mode['admincp']['value'] == $tmp[0])
+
+			if (count($tmp) && array_key_exists($tmp[0], $this->_controller_prefix_routes))
 			{
-				unset($tmp[0]);
-				$this->_uri_string = implode('/', $tmp); 
-				$this->_uri_string = empty($this->_uri_string) ? '/' : $this->_uri_string;
-				$this->_admincp = true;
+				$route_dir = $tmp[0];
+				if (count($tmp) > 1)
+				{
+					unset($tmp[0]);
+
+					$this->_uri_string = implode('/', $tmp); 
+					$this->_uri_string = empty($this->_uri_string) ? '/' : $this->_uri_string;
+				}
+				else
+				{
+					$this->_uri_string = '';
+				}
+				
+				$this->_use_controller_prefix = true;
+				$this->_uri_mode = "route";
+				$this->_controller_prefix = $this->_controller_prefix_routes[$route_dir];
 			}
 		}
 	}

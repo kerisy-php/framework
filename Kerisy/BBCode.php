@@ -34,6 +34,7 @@ class Kerisy_BBCode
 	{
 		// 初始化公用成员变量
 		$find_tags = array();
+        $matches = array();
 		
 		if (preg_match_all('/(\[(\/?)(\w+)([^\]]+)?\])/', $content, $matches, PREG_OFFSET_CAPTURE))
 		{

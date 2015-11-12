@@ -14,16 +14,18 @@ abstract class Kerisy_Cache
 	protected $cache_prefix = 'kerisy_cache_';
 	protected $cache_group_prefix = 'group_kerisy_cache_';
 	
-	protected $backend_name;
-	protected $frontend_name;
+	protected $backend_name = "File";
+	protected $frontend_name = 'Core';
 	
 	protected $cache;
 	protected $cache_enabled = true;
 	
+	protected $_cache_config;
+	
 	public function __construct()
 	{
-		$this->backend_name = 'File';
-		$this->frontend_name = 'Core';
+		$this->_cache_config = Kerisy::config()->get()->cache;
+		$this->init($this->_cache_config);
 	}
 	
 	public function init(array $config)
@@ -55,7 +57,7 @@ abstract class Kerisy_Cache
 			$backend_options = $config['apc'];
 		}
 		else
-		{ee($config);
+		{
 			$save_handler = $this->backend_name;
 			if ('File' == $this->backend_name)
 			{
