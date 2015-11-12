@@ -285,41 +285,9 @@ class Application extends ServiceLocator
 
     protected function runAction($action, $request, $response)
     {
-
-        $this->beforeAction($action, $request);
-
-        //$data = $this->call($action);
         $data = call_user_func_array($action, [$request, $response]);
 
-        $this->afterAction($action, $request, $response);
-
         return $data;
-    }
-
-    protected function beforeAction($action, $request)
-    {
-        if ($action instanceof Closure) {
-            return;
-        }
-
-        list($object, $method) = $action;
-
-        if (method_exists($object, 'before')) {
-            call_user_func([$object, 'before'], $method, $request);
-        }
-    }
-
-    protected function afterAction($action, $request, $response)
-    {
-        if ($action instanceof Closure) {
-            return;
-        }
-
-        list($object, $method) = $action;
-
-        if (method_exists($object, 'after')) {
-            call_user_func([$object, 'after'], $method, $request, $response);
-        }
     }
 
     /**
