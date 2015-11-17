@@ -7,6 +7,8 @@ use Kerisy\Di\Container;
 use Kerisy\Log\Logger;
 use Kerisy\Http\Request;
 use Kerisy\Http\Response;
+use Doctrine\ORM\Tools\Setup;
+use Doctrine\ORM\EntityManager;
 
 /**
  * Class Application
@@ -78,6 +80,7 @@ class Application extends ServiceLocator
             $this->initializeConfig();
             $this->registerServices();
             $this->registerRoutes();
+            $this->registerEntities();
             $this->bootstrapped = true;
 
             $this->get('log')->info('application started');
@@ -89,6 +92,19 @@ class Application extends ServiceLocator
     protected function initializeConfig()
     {
         date_default_timezone_set($this->timezone);
+    }
+    
+    protected function registerEntities()
+    {
+        $paths = [];
+        
+        foreach ($this->modules as $module)
+        {
+            $paths[] = APPLICATION_PATH . "modules/{$module}/Model";
+        }
+
+        $config = Setup::createAnnotationMetadataConfiguration($paths, (KERISY_ENV === 'development'));
+        $entityManager = EntityManager::create($this->config('database')->get(KERISY_ENV), $config);
     }
 
     protected function registerServices()
