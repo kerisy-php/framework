@@ -32,6 +32,8 @@ class Application extends ServiceLocator
      * @var string[]
      */
     public $commands = [];
+    
+    public $modules = [];
 
     /**
      * Application component definitions.
@@ -192,7 +194,7 @@ class Application extends ServiceLocator
         $this->formatException($response->data, $response);
 
         $response->prepare();
-        $this->refreshServices();
+        $this->refreshComponents();
 
         return $response;
     }
@@ -231,11 +233,11 @@ class Application extends ServiceLocator
         }
     }
 
-    protected function refreshServices()
+    protected function refreshComponents()
     {
         foreach($this->refreshing as $id => $_) {
             $this->unbind($id);
-            $this->bind($id, $this->services[$id]);
+            $this->bind($id, $this->components[$id]);
         }
     }
 
