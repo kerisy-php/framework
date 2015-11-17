@@ -31,8 +31,6 @@ class Application extends ServiceLocator
      */
     public $commands = [];
 
-    public $routes = [];
-
     /**
      * Application service definitions.
      *
@@ -58,6 +56,10 @@ class Application extends ServiceLocator
     protected $refreshing = [];
 
     private $_configs;
+    
+    public function __construct() {
+        parent::__construct($this->config('application')->all());
+    }
 
     public function init()
     {
@@ -65,7 +67,7 @@ class Application extends ServiceLocator
             throw new InvalidParamException("The param: 'APPLICATION_PATH' is invalid");
         }
 
-        $this->services = array_merge($this->defaultServices(), $this->services);
+        $this->services = array_merge($this->defaultServices(), $this->config('services')->all());
 
         Container::getInstance()->setApp($this);
     }
@@ -116,7 +118,7 @@ class Application extends ServiceLocator
     protected function registerRoutes()
     {
         $this->dispatcher = new Dispatcher();
-        $this->dispatcher->getRouter()->setConfig($this->routes);
+        $this->dispatcher->getRouter()->setConfig($this->config('routes')->all());
     }
 
     public function defaultServices()
