@@ -10,7 +10,7 @@
     ],
     "require": {
         "php": ">=5.5.0",
-        "ext-swoole": ">=1.7.20",
+        "ext-swoole": ">=1.7.19",
         "symfony/console": "^2.7",
         "doctrine/orm": "2.4.*",
         "monolog/monolog": "~1.0"
