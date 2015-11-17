@@ -39,7 +39,7 @@ class ServerCommand extends Command
 
     protected function handleRun()
     {
-        $server = require CONFIG_PATH . 'server.php';
+        $server = config('service')->all();
         $server['asDaemon'] = 0;
 
         return make($server)->run();
@@ -53,7 +53,7 @@ class ServerCommand extends Command
             throw new InvalidValueException('The pidfile exists, it seems the server is already started');
         }
 
-        $server = require CONFIG_PATH . 'server.php';
+        $server = config('service')->all();
         $server['asDaemon'] = 1;
         $server['pidFile'] = APPLICATION_PATH . 'runtime/server.pid';
 

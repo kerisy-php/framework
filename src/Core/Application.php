@@ -7,6 +7,8 @@ use Kerisy\Di\Container;
 use Kerisy\Log\Logger;
 use Kerisy\Http\Request;
 use Kerisy\Http\Response;
+use Doctrine\ORM\Tools\Setup;
+use Doctrine\ORM\EntityManager;
 
 /**
  * Class Application
@@ -32,11 +34,11 @@ class Application extends ServiceLocator
     public $commands = [];
 
     /**
-     * Application service definitions.
+     * Application component definitions.
      *
      * @var array
      */
-    public $services = [];
+    public $components = [];
 
     public $debug = true;
 
@@ -67,7 +69,7 @@ class Application extends ServiceLocator
             throw new InvalidParamException("The param: 'APPLICATION_PATH' is invalid");
         }
 
-        $this->services = array_merge($this->defaultServices(), $this->config('services')->all());
+        $this->components = array_merge($this->defaultComponents(), $this->config('components')->all());
 
         Container::getInstance()->setApp($this);
     }
@@ -76,8 +78,9 @@ class Application extends ServiceLocator
     {
         if (!$this->bootstrapped) {
             $this->initializeConfig();
-            $this->registerServices();
+            $this->registerComponents();
             $this->registerRoutes();
+            $this->registerEntities();
             $this->bootstrapped = true;
 
             $this->get('log')->info('application started');
@@ -90,14 +93,27 @@ class Application extends ServiceLocator
     {
         date_default_timezone_set($this->timezone);
     }
-
-    protected function registerServices()
+    
+    protected function registerEntities()
     {
-        foreach ($this->services as $id => $definition) {
+        $paths = [];
+        
+        foreach ($this->modules as $module)
+        {
+            $paths[] = APPLICATION_PATH . "modules/{$module}/Model";
+        }
+
+        $config = Setup::createAnnotationMetadataConfiguration($paths, (KERISY_ENV === 'development'));
+        $entityManager = EntityManager::create($this->config('database')->get(KERISY_ENV), $config);
+    }
+
+    protected function registerComponents()
+    {
+        foreach ($this->components as $id => $definition) {
             $this->bind($id, $definition);
         }
 
-        foreach ($this->services as $id => $_) {
+        foreach ($this->components as $id => $_) {
             if ($this->get($id) instanceof ShouldBeRefreshed) {
                 $this->refreshing[$id] = true;
             }
@@ -121,7 +137,7 @@ class Application extends ServiceLocator
         $this->dispatcher->getRouter()->setConfig($this->config('routes')->all());
     }
 
-    public function defaultServices()
+    public function defaultComponents()
     {
         return [
             'errorHandler' => [
