@@ -1,8 +1,11 @@
 <?php
 /**
- * @brief           Kerisy Framework
+ * Kerisy Framework
+ * 
+ * PHP Version 7
+ * 
  * @author          Jiaqing Zou <zoujiaqing@gmail.com>
- * @copyright      (c) 2015 putao.com, Inc.
+ * @copyright       (c) 2015 putao.com, Inc.
  * @package         kerisy/framework
  * @subpackage      Support
  * @since           2015/11/11
