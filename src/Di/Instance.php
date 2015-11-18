@@ -1,10 +1,11 @@
 <?php
 /**
- * This file is modified from Yii framework 2 project.
- *
- * @link http://www.yiiframework.com/
- * @copyright Copyright (c) 2008 Yii Software LLC
- * @license http://www.yiiframework.com/license/
+ * @project            Kerisy Framework
+ * @author             Jiaqing Zou <zoujiaqing@gmail.com>
+ * @copyright         (c) 2015 putao.com, Inc.
+ * @package            kerisy/framework
+ * @create             2015/11/11
+ * @version            2.0.0
  */
 
 namespace Kerisy\Di;

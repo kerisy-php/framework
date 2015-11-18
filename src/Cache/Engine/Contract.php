@@ -8,14 +8,14 @@
  * @version            2.0.0
  */
 
-namespace Kerisy\Session;
+namespace Kerisy\Cache;
 
 /**
- * Interface StorageContract
+ * Interface EngineContract
  *
- * @package Kerisy\Session
+ * @package Kerisy\Cache
  */
-interface StorageContract
+interface Contract
 {
     /**
      * Read session by Session ID.

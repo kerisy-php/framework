@@ -8,24 +8,24 @@
  * @version            2.0.0
  */
 
-namespace Kerisy\Session;
+namespace Kerisy\Cache;
 
 use Kerisy\Core\Object;
-use Kerisy\Session\Contract as SessionContract;
+use Kerisy\Cache\Contract;
 
 /**
  * The Session Manager
  *
  * @package Kerisy\Session
  */
-class Manager extends Object implements SessionContract
+class Manager extends Object
 {
     /**
      * The backend session storage.
      *
      * @var array|StorageContract
      */
-    public $storage;
+    public $engine;
     /**
      * How long the session should expires, defaults to 15 days.
      *
@@ -36,11 +36,11 @@ class Manager extends Object implements SessionContract
 
     public function init()
     {
-        if (!$this->storage instanceof StorageContract) {
-            $this->storage = make($this->storage);
+        if (!$this->engine instanceof StorageContract) {
+            $this->engine = make($this->engine);
         }
 
-        $this->storage->timeout($this->expires);
+        $this->engine->timeout($this->expires);
     }
 
     /**

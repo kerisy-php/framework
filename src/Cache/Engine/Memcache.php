@@ -8,22 +8,22 @@
  * @version            2.0.0
  */
 
-namespace Kerisy\Session;
+namespace Kerisy\Cache;
 
 use Kerisy\Core\InvalidConfigException;
 use Kerisy\Core\Object;
-use Kerisy\Session\Contract as SessionContract;
+use Kerisy\Cache\Contract as EngineContract;
 
 /**
- * Class FileStorage
+ * Class Memcache
  *
- * @package Kerisy\Session
+ * @package Kerisy\Cache
  */
-class MemcacheStorage extends Object implements StorageContract
+class MemcacheEngine extends Object implements EngineContract
 {
     public $host = "127.0.0.1";
     public $port = 11211;
-    public $prefix = "session_";
+    public $prefix = "kerisy_cache_";
 
     protected $timeout = 3600;
 
@@ -33,22 +33,24 @@ class MemcacheStorage extends Object implements StorageContract
     {
         $this->_memcache = new \Memcache();
 
-        if (!$this->_memcache->connect($this->host, $this->port)) {
+        if (!$this->_memcache->connect($this->host, $this->port))
+        {
             throw new InvalidConfigException("The memcached host '{$this->host}' error.");
         }
     }
 
-    public function getPrefixKey($id)
+    public function getPrefixKey($key)
     {
-        return $this->prefix . $id;
+        return $this->prefix . $key;
     }
 
     /**
      * @inheritDoc
      */
-    public function read($id)
+    public function read($key)
     {
-        if ($data = $this->_memcache->set($this->getPrefixKey($id)))
+        $data = $this->_memcache->set($this->getPrefixKey($key));
+        if ($data)
         {
             return unserialize($data);
         }
@@ -59,20 +61,20 @@ class MemcacheStorage extends Object implements StorageContract
     /**
      * @inheritDoc
      */
-    public function write($id, array $data)
+    public function write($key, array $data)
     {
-        return $this->_memcache->set($this->getPrefixKey($id), serialize($data), 0, $this->timeout) !== false;
+        return $this->_memcache->set($this->getPrefixKey($key), serialize($data), 0, $this->timeout) !== false;
     }
 
     /**
-     * Destroy session by id.
+     * Destroy cache by key.
      *
      * @param $id
      * @return boolean
      */
-    public function destroy($id)
+    public function destroy($key)
     {
-        return $this->_memcache->delete($this->getPrefixKey($id)) !== false;
+        return $this->_memcache->delete($this->getPrefixKey($key)) !== false;
     }
 
     /**
