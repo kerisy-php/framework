@@ -1,17 +1,12 @@
 <?php
 /**
- * @project            Kerisy Framework
- * @author             Jiaqing Zou <zoujiaqing@gmail.com>
- * @copyright         (c) 2015 putao.com, Inc.
- * @package            kerisy/framework
- * @create             2015/11/11
- * @version            2.0.0
- */
-/**
- * Created by PhpStorm.
- * User: Brian
- * Date: 2015/11/10
- * Time: 13:51
+ * @brief           Kerisy Framework
+ * @author          Jiaqing Zou <zoujiaqing@gmail.com>
+ * @copyright      (c) 2015 putao.com, Inc.
+ * @package         kerisy/framework
+ * @subpackage      Core
+ * @since           2015/11/11
+ * @version         2.0.0
  */
 
 namespace Kerisy\Core;
