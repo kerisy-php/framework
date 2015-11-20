@@ -237,6 +237,8 @@ class Application extends ServiceLocator
         $action = $this->createAction($route);
 
         $request->callMiddleware();
+        
+        $response->initView($route->getPrefix());
 
         $data = $this->runAction($action, $request, $response);
 
@@ -279,9 +281,11 @@ class Application extends ServiceLocator
             'message' => $exception->getMessage(),
             'code' => $exception->getCode(),
         ];
+        
         if ($exception instanceof HttpException) {
             $array['status'] = $exception->statusCode;
         }
+        
         if ($this->debug) {
             $array['file'] = $exception->getFile();
             $array['line'] = $exception->getLine();

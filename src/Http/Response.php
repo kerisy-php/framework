@@ -40,6 +40,8 @@ class Response extends Object implements ShouldBeRefreshed
 
     public $statusCode = 200;
     public $statusText;
+    
+    public $view;
 
     public static $httpStatuses = [
         100 => 'Continue',
@@ -115,6 +117,16 @@ class Response extends Object implements ShouldBeRefreshed
     public function init()
     {
         $this->headers = new HeaderBag();
+    }
+    
+    public function initView($prefix)
+    {
+        $this->view = new \Kerisy\Http\View($prefix);
+    }
+    
+    public function render($template)
+    {
+        return $this->view->render($template);
     }
 
     public function status($code, $text = null)
