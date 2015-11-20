@@ -12,295 +12,445 @@
  * @version         2.0.0
  */
 
-namespace Kerisy\Http;
+namespace Kerisy\Http\Client;
 
-use Kerisy\Core\Exception;
+//GET请求
+//
+//$http = new Kerisy\Http\Client();
+//$http->setHeader('User-Agent','Mozilla/5.0 (Windows NT 5.1; rv:13.0) Gecko/20100101 Firefox/13.0.1'); 
+//$http->get('http://www.example.com/'); 
+//echo $http->getBody(); 
+//
+//POST请求
+//
+//$http = new Kerisy\Http\Client(); 
+//$http->setHeader('User-Agent','Mozilla/5.0 (Windows NT 5.1; rv:13.0) Gecko/20100101 Firefox/13.0.1'); 
+//$data = array( 
+//    'id'=>1, 
+//    'name'=>'example'   
+//); 
+//$file = array( 
+//    'photo'=>'/data/patch/file.jpg' 
+//); 
+//$http->post('http://www.example.com/',array($data)[,$file]); 
+//echo $http->getBody(); 
+//
+//Cookie支持
+//
+//$http->setCookies($cookie); 
+//
+//代理支持
+//
+//$http->setProxy('socks5.example.com:1080',HttpClient::PROXY_SOCKS5,'user','password'); 
+//
 
-class Client
-{
-    const EOF = "\r\n";
-    const PORT = 80;
 
-    protected $timeout = 30;
+class Client {
+    
+    const PROXY_NONE = 0;
+    const PROXY_SOCKS4 = 1;
+    const PROXY_SOCKS5 = 2;
+    const PROXY_HTTP = 4;
+    
+    //请求送头
+    private $_require_header = [];
+    
+    //请求Cookie信息
+    private $_require_cookie = [];
+    
+    //回发头
+    private $_response_header = [];
+    
+    //回发数据
+    private $_response_body='';
+    //回发Cookie信息
+    private $_response_cookie = [];
+    
+    //回发状态码
+    private $_response_status;
+    
+    //请求Uri
+    private $_require_uri;
+    
+    //代理方式
+    private $_proxy_type = self::PROXY_NONE;
+    
+    //代理服务器
+    private $_proxy_host;
+    
+    //代理认证用户名
+    private $_proxy_user;
+    
+    //代理认证密码
+    private $_proxy_pass;
+    
+    //cookie持久访问
+    private $_keep_cookie = true;
 
-    public $url;
-    public $uri;
-    public $reqHeader;
+    private $_error;
 
-    /**
-     * @var \swoole_client
-     */
-    protected $cli;
-
-    protected $buffer = '';
-    protected $nparse = 0;
-    protected $isError = false;
-    protected $isFinish = false;
-    protected $status = array();
-    protected $respHeader = array();
-    protected $body = '';
-    protected $trunk_length = 0;
-    protected $userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:43.0) Gecko/20100101 Firefox/43.0';
-    protected $onReadyCallback;
-    protected $post_data;
-    protected $method = 'GET';
-
-    function parseHeader($data)
-    {
-        $parts = explode("\r\n\r\n", $data, 2);
-
-        // parts[0] = HTTP头;
-        // parts[1] = HTTP主体，GET请求没有body
-        $headerLines = explode("\r\n", $parts[0]);
-
-        // HTTP协议头,方法，路径，协议[RFC-2616 5.1]
-        list($status['method'], $status['uri'], $status['protocol']) = explode(' ', $headerLines[0], 3);
-
-        //错误的HTTP请求
-        if (empty($status['method']) or empty($status['uri']) or empty($status['protocol']))
-        {
-            return false;
-        }
-        unset($headerLines[0]);
-        //解析Header
-        $this->respHeader =  \Swoole\Http\Parser::parseHeaderLine($headerLines);
-        $this->status = $status;
-        if (isset($parts[1]))
-        {
-            $this->buffer = $parts[1];
-        }
-        return true;
+    private $_mimes = [
+            'gif' => 'image/gif',
+            'png' => 'image/png',
+            'bmp' => 'image/bmp',
+            'jpeg' => 'image/jpeg',
+            'pjpg' => 'image/pjpg',
+            'jpg' => 'image/jpeg',
+            'tif' => 'image/tiff',
+            'htm' => 'text/html',
+            'css' => 'text/css',
+            'html' => 'text/html',
+            'txt' => 'text/plain',
+            'gz' => 'application/x-gzip',
+            'tgz' => 'application/x-gzip',
+            'tar' => 'application/x-tar',
+            'zip' => 'application/zip',
+            'hqx' => 'application/mac-binhex40',
+            'doc' => 'application/msword',
+            'pdf' => 'application/pdf',
+            'ps' => 'application/postcript',
+            'rtf' => 'application/rtf',
+            'dvi' => 'application/x-dvi',
+            'latex' => 'application/x-latex',
+            'swf' => 'application/x-shockwave-flash',
+            'tex' => 'application/x-tex',
+            'mid' => 'audio/midi',
+            'au' => 'audio/basic',
+            'mp3' => 'audio/mpeg',
+            'ram' => 'audio/x-pn-realaudio',
+            'ra' => 'audio/x-realaudio',
+            'rm' => 'audio/x-pn-realaudio',
+            'wav' => 'audio/x-wav',
+            'wma' => 'audio/x-ms-media',
+            'wmv' => 'video/x-ms-media',
+            'mpg' => 'video/mpeg',
+            'mpga' => 'video/mpeg',
+            'wrl' => 'model/vrml',
+            'mov' => 'video/quicktime',
+            'avi' => 'video/x-msvideo'
+    ];
+    
+    public function setHeader($k,$v) {
+        $this->_require_header[$k] = $v;
+    }
+	
+    public function removeHeader($k) {
+        unset($this->_require_header);
     }
 
-    function errorLog($line, $msg)
-    {
-        echo "Line $line: $msg\n";
+    public function setCookie($k,$v) {
+        $this->_require_cookie[$k] =$v;
     }
 
-    function parseBody()
-    {
-        //解析trunk
-        if (isset($this->respHeader['Transfer-Encoding']) and $this->respHeader['Transfer-Encoding'] == 'chunked')
-        {
-            while(1)
-            {
-                if ($this->trunk_length == 0)
-                {
-                    $_len = strstr($this->buffer, "\r\n", true);
-                    if ($_len === false)
-                    {
-                        $this->errorLog(__LINE__, "Trunk: length error, $_len");
-                        return false;
-                    }
-                    $length = hexdec($_len);
-                    //$this->errorLog(__LINE__, "Trunk Length: $_len > $length, data_length=".strlen($this->buffer));
-                    if ($length == 0)
-                    {
-                        $this->isFinish = true;
-                        return true;
-                    }
-                    $this->trunk_length = $length;
-                    $this->buffer = substr($this->buffer, strlen($_len) + 2);
-                }
-                else
-                {
-                    //数据量不足，需要等待数据
-                    if (strlen($this->buffer) < $this->trunk_length)
-                    {
-                        //$this->errorLog(__LINE__, "Trunk No: trunk_length={$this->trunk_length}, data_length=".strlen($this->buffer));
-                        return false;
-                    }
-                    $this->body .= substr($this->buffer, 0, $this->trunk_length);
-                    $this->buffer = substr($this->buffer, $this->trunk_length + 2);
-                    //$this->errorLog(__LINE__, "Trunk OK: {$this->trunk_length}, data_length=".strlen($this->buffer));
-                    $this->trunk_length = 0;
-                }
-            }
-            return false;
+    //设置多个Cookie或者Cookie字符串
+    public function setCookies($v) {
+        $this->_require_cookie = array_merge($this->_require_cookie, is_array($v) ? $v : $this->cookieToArray($v));
+    }
+
+    public function getBody() {
+        return $this->_response_body;
+    }
+
+    public function getHeader() {
+        return $this->_response_header;
+    }
+
+    public function getCookie() {
+        return $this->_response_cookie;
+    }
+
+    public function getStatus() {
+        return $this->_response_status;
+    }
+
+    public function setProxy($h,$t=self::PROXY_HTTP,$u='',$p='') {
+        $this->_proxy_host = $h;
+        $this->_proxy_type = $t;
+        if($u != '') {
+            $this->_proxy_user = $u;
+            $this->_proxy_pass = $p;
         }
-        //普通的Content-Length约定
-        else
-        {
-            if (strlen($this->buffer) < $this->respHeader['Content-Length'])
-            {
+    }
+
+    public function keepCookie($v){
+            $this->_keep_cookie = $v;
+    }
+    
+    public function __construct() {
+        $this->initRequire();
+        $this->initResponse();
+    }
+
+    //将Cookie字符串转化为数组形式
+    private function cookieToArray($str) {
+        $ret = array();
+        $cookies = explode(';', $str);
+        $ext = array('path','expires','domain','httponly','');
+        if(count($cookies)) {
+            foreach($cookies as $cookie) {
+				$cookie = trim($cookie);
+				$arr = explode('=', $cookie);
+				$value = implode('=',array_slice($arr,1,count($arr)));;
+				$ret[trim($arr[0])] = $value;
+			  }
+        }
+        return $ret;
+    }
+    //初始化请求数据
+    private function initRequire() {
+        $this->_require_header = array(
+                'Accept'=>'Accept: */*',
+                'Accept-Language'=>'zh-cn',
+                'User-Agent'=>'Mozilla/5.0 (Windows; U; Windows NT 5.1; zh-CN; rv:1.9.2.3) Gecko/20100401 Firefox/3.6.3',
+                'Connection'=>'close');
+        $this->_require_cookie = array();
+    }
+
+    //初始化回发数据
+    private function initResponse() {
+		$this->remove_header('Content-Type');
+        $this->_response_header = array();
+        $this->_response_body = '';
+        $this->_response_status = 0;
+		if(!$this->_keep_cookie){
+			$this->_response_cookie = array();
+		}
+    }
+
+    //发送请求
+    private function send($method,$data='') {
+        $matches = parse_url($this->_require_uri);
+        !isset($matches['host']) && $matches['host'] = '';
+        !isset($matches['path']) && $matches['path'] = '';
+        !isset($matches['query']) && $matches['query'] = '';
+        !isset($matches['port']) && $matches['port'] = '';
+        $host = $matches['host'];
+        $path = $matches['path'] ? $matches['path'].($matches['query'] ? '?'.$matches['query'] : '') : '/';
+        $port = $matches['port'] ? $matches['port']: 80;
+        $this->_require_header['Host']= $host.($port == 80 ? '' :(':'.$port));
+
+        if(!isset($this->_require_header['Referer']))  $this->_require_header['Referer'] = $this->_require_uri;
+
+        $sock = socket_create(AF_INET,SOCK_STREAM, SOL_TCP);
+        if(!$sock) {
+            $this->_error = socket_last_error();
+        }
+
+        socket_set_option($sock,SOL_SOCKET,SO_RCVTIMEO,array("sec"=>10, "usec"=>0 ) );
+        socket_set_option($sock,SOL_SOCKET,SO_SNDTIMEO,array("sec"=>10, "usec"=>0 ) );
+
+        if( isset($this->_proxy_type) &&  $this->_proxy_type !=  self::PROXY_NONE ) {
+            list ($proxy_host,$proxy_port) = explode(':',$this->_proxy_host);
+            if(!isset($proxy_port)) $proxy_port = 80;
+
+            if(!@socket_connect($sock,$proxy_host,$proxy_port)) {
+                $this->_error = "Cann't connect to {$host}:{$port}";
                 return false;
             }
-            else
-            {
-                $this->body = $this->buffer;
-                $this->isFinish = true;
-                return true;
+            $host_ip = gethostbyname($host);
+            switch($this->_proxy_type) {
+                case self::PROXY_SOCKS4:
+                    socket_write($sock, chr(4).chr(1).pack('nN', $port,ip2long($host_ip)).'HttpClient'.chr(0));
+                    $buf = socket_read($sock,2,PHP_BINARY_READ);
+                    if(ord(substr($buf,-1)) != 90) {
+                        $this->_error = "Request to {$host}:{$port} rejected or failed";
+						socket_close($sock);
+                        return false;
+                    }
+                    break;
+                case self::PROXY_SOCKS5:
+                //step1
+                    $auth_method = empty($this->_proxy_user) ? 1 : 2;
+                    socket_write($sock, chr(5).chr(1).chr($auth_method));
+                    $buf = socket_read($sock,2,PHP_BINARY_READ);
+                    if(substr($buf,-1) != 0x00) {
+                        $this->_error ="Request to {$host}:{$port} rejected or failed";
+						socket_close($sock);
+                        return false;
+                    }
+                    //auth
+                    if($auth_method == 2) {
+						socket_write($sock, chr(1).chr(strlen($this->_proxy_user)).$this->_proxy_user.chr(strlen($this->_proxy_pass)).$this->_proxy_pass);
+                        $buf = socket_read($sock,2,PHP_BINARY_READ);
+                        if(substr($buf,-1) != 0x00) {
+                            $this->_error = "authentication  failed";
+							socket_close($sock);
+                            return false;
+                        }
+                    }
+                    //step2
+                    //使用代理的dns服务器
+                    socket_write($sock, pack("C5", 0x05, 0x01, 0x00, 0x03, strlen($host)).$host.pack("n", $port));
+                    $buf = socket_read($sock,2,PHP_BINARY_READ);
+                    $response = unpack("Cversion/Cresult", $buf);
+                    if($response['result'] != 0 ) {
+                        $this->_error ="Request to {$host}:{$port} rejected or failed";
+			socket_close($sock);
+                        
+                        return false;
+                    }
+                    break;
+                case self::PROXY_HTTP:
+					$path = $this->_require_uri;
+                    $this->_require_header['Proxy-Connection'] = 'Close';
+                    if(!empty($this->_proxy_user)) {
+                        $this->_require_header['Proxy-Authorization'] = 'Basic '.base64_encode($this->_proxy_user.':'.$this->_proxy_pass);
+                    }
+                    break;
+            }
+
+        }else {
+            if(!socket_connect($sock,$host,$port)) {
+                $this->_error = "Cann't connect to {$host}:{$port}";
+                return false;
             }
         }
+		
+        //send data
+        $_method = strtoupper($method)." {$path} HTTP/1.0\r\n";
+        $data = $_method.$this->create_header()."\r\n".$data;
+
+        socket_write($sock, $data);
+
+		$this->_response_cookie = $this->_require_cookie;	
+		$recv = '';
+		while(($line = @socket_read($sock,1024)) != false) {
+			$recv .=  $line;
+		}
+		
+		 switch($this->_proxy_type) {
+				case self::PROXY_SOCKS4:
+					break;
+				case self::PROXY_SOCKS5:
+						if($recv) $recv = substr($recv,8);
+					break;
+		 }
+		$arr = explode("\r\n\r\n",$recv);
+		
+		//处理报头
+		$heads = explode("\r\n",array_shift($arr));
+
+		foreach($heads as $line){
+			if(trim($line)=='' || $line=="\r\n") continue;
+			if (!strncasecmp('HTTP', $line, 4)) {
+                    //status
+                    $status = explode(' ', $line);
+                    $this->_response_status = intval($status[1]);
+             }elseif(!strncasecmp('Set-Cookie: ', $line, 12)) {
+                     $this->_response_cookie = array_merge($this->_response_cookie,$this->cookie_str2arr(substr($line, 12)));
+					 if($this->_keep_cookie){
+						$this->_require_cookie = array_merge($this->_require_cookie,$this->_response_cookie);
+					 }
+              }else {
+                    $header = explode(':',$line,2);
+                    if(count($header) == 2) $this->_response_header[$header[0]] = trim($header[1]);
+              }
+		}
+		//报文	
+		$this->_response_body = implode("\r\n\r\n",$arr);
+        socket_close($sock);
     }
 
-    static function gzipDecode($data, $type = 'gzip')
-    {
-        if ($type == 'gzip')
-        {
-            return gzdecode($data);
+    private function createHeader() {
+        $header = '';
+        foreach ($this->_require_header as $k=>$v) {
+            $header .= $k.': '.$v."\r\n";
         }
-        elseif ($type == 'deflate')
-        {
-            return gzinflate($data);
+        if(count($this->_require_cookie)) {
+            $cookie = '';
+            foreach ($this->_require_cookie as $k=>$v) {
+                $cookie .= $k.'='.$v.';';
+            }
+            if(!empty($cookie)) $header .= "Cookie: $cookie\r\n";
         }
-        elseif($type == 'compress')
-        {
-            return gzinflate(substr($data,2,-4));
+        return $header;
+    }
+
+    //get 请求
+    public function get($uri) {
+        $this->_require_uri = $uri;
+        $this->init_response();
+        $this->send('get');
+        $this->init_require();
+    }
+
+    public function post($uri,$data=array(),$files=array()) {
+        $this->_require_uri = $uri;
+        $this->init_response();
+        $post = '';
+        if(count($files)) {
+            $post = $this->post_file($data,$files);
+        }else {
+            $post = $this->post_text($data);
         }
-        else
-        {
-            return $data;
+        $this->_require_header['Content-Length'] = strlen($post);
+
+        $this->send('post',$post);
+        $this->init_require();
+    }
+
+    private function postText($data) {
+        $post = '';
+        if(count($data)) {
+            foreach($data as $k=>$v) {
+                $post .= '&'.$this->format_post($k,$v);
+            }
+            $post = substr($post, 1);
         }
+        $this->_require_header['Content-Type'] = 'application/x-www-form-urlencoded';
+        return $post;
     }
 
-    function setCookie()
-    {
-
-    }
-
-    function setUserAgent($userAgent)
-    {
-        $this->userAgent = $userAgent;
-    }
-
-    function setHeader($k, $v)
-    {
-        $this->reqHeader[$k] = $v;
-    }
-
-    function onConnect(\swoole_client $cli)
-    {
-        //echo "Connected\n";
-
-        $header = $this->method.' '.$this->uri['path'].' HTTP/1.1'. self::EOF;
-        $header .= 'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8' . self::EOF;
-        $header .= 'Accept-Encoding: gzip,deflate' . self::EOF;
-        $header .= 'Accept-Language: zh-CN,zh;q=0.8,en;q=0.6,zh-TW;q=0.4,ja;q=0.2' . self::EOF;
-        $header .= 'Host: '.$this->uri['host']. self::EOF;
-        $header .= $this->userAgent . self::EOF;
-
-        if (!empty($this->reqHeader))
-        {
-            foreach ($this->reqHeader as $k => $v)
-            {
-                $header .= $k . ': ' . $v . self::EOF;
+    private function postFile($data, $files) {
+        $boundary = "---------------------------".substr(md5(rand(0,32000)),0,10);
+        $this->_require_header['Content-Type'] = 'multipart/form-data; boundary='.$boundary;
+        $post =  "--$boundary\r\n";
+        //附件数据
+        foreach($files as $k=>$v) {
+            if(is_file($v)) {
+                $content = file_get_contents($v);
+                $filename = basename($v);
+                $file_type = $this->get_mime($v);
+                $post.="Content-Disposition: form-data; name=\"{$k}\"; filename=\"{$filename}\"\r\n";
+                $post.="Content-Type: {$file_type}\r\n\r\n";
+                $post.="$content\r\n";
+                $post .="--$boundary";
             }
         }
-
-        //$this->errorLog(__LINE__, $header);
-
-        $body = '';
-        if ($this->post_data)
-        {
-            $header .= 'Content-Type: application/x-www-form-urlencoded' . self::EOF;
-            $header .= 'Content-Length: ' . strlen($this->post_data) . self::EOF;
-            $body = $this->post_data;
-        }
-        $cli->send($header . self::EOF . $body);
-    }
-
-    function  onReady($func)
-    {
-        if (is_callable($func))
-        {
-            $this->onReadyCallback = $func;
-        }
-        else
-        {
-            throw new Exception(__CLASS__.": function is not callable.");
-        }
-    }
-
-    function onReceive($cli, $data)
-    {
-        $this->buffer .= $data;
-//        $this->errorLog(__LINE__, "received n=".strlen($data).", buffer_len=".strlen($this->buffer));
-//        static $i = 0;
-//        file_put_contents('./data.log.'.$i++, $data);
-        if ($this->trunk_length > 0 and strlen($this->buffer) < $this->trunk_length)
-        {
-            return;
-        }
-        if (empty($this->respHeader))
-        {
-            $ret = $this->parseHeader($this->buffer) ;
-            if ($ret === false)
-            {
-                return;
+        //附带文本数据
+        if(count($data)) {
+            foreach($data as $k=>$v) {
+                $post .="\r\nContent-Disposition: form-data; name=\"$k\"\r\n\r\n";
+                $post .="$v\r\n";
+                $post .="--$boundary";
             }
-            else
-            {
-                //header + CRLF + body
-                if (strlen($this->buffer) > 0)
-                {
-                    goto parse_body;
+        }
+        $post .="--\r\n\r\n";
+        return $post;
+    }
+
+    private function formatPost($k,$v) {
+        $post = '';
+        if(is_array($v)) {
+            if(count($v)) {
+                foreach($v as $_k=>$_v) {
+                    $post.= ('&'.$this->format_post($k.'['.$_k.']',$_v));
                 }
             }
+        }else {
+            $post.= ('&'.$k.'='.rawurlencode($v));
         }
-        else
-        {
-            parse_body:
-            if ($this->parseBody() === true and $this->isFinish)
-            {
-                $compress_type = empty($this->respHeader['Content-Encoding'])?'':$this->respHeader['Content-Encoding'];
-                $this->body = self::gzipDecode($this->body, $compress_type);
-                call_user_func($this->onReadyCallback, $this, $this->body, $this->respHeader);
-            }
+        return substr($post, 1);
+    }
+
+    private  function getMime($file) {
+        $arr =  explode('.', $file);
+        $ext = strtolower($arr[count($arr)-1]);
+        if(isset($this->_mimes[$ext])) {
+            return $this->_mimes[$ext];
+        }else {
+            return 'image/jpeg';
         }
-    }
-
-    function onError($cli)
-    {
-        echo "Connect to server failed.\n";
-    }
-
-    function onClose($cli)
-    {
-        echo "Server close\n";
-    }
-
-    function execute()
-    {
-        if (empty($this->onReadyCallback))
-        {
-            throw new Exception(__CLASS__." require onReadyCallback");
-        }
-
-        $cli = new \swoole_client(SWOOLE_TCP, SWOOLE_SOCK_ASYNC);
-        $this->cli = $cli;
-        $cli->on('connect', array($this, 'onConnect'));
-        $cli->on('error', array($this, 'onError'));
-        $cli->on('Receive', array($this, 'onReceive'));
-        $cli->on('close', array($this, 'onClose'));
-        $cli->connect($this->uri['host'], $this->uri['port'], $this->timeout);
-    }
-
-    function get()
-    {
-        $this->execute();
-    }
-
-    function __construct($url)
-    {
-        $this->url = $url;
-        $this->uri = parse_url($this->url);
-
-        if (empty($this->uri['port']))
-        {
-            $this->uri['port'] = self::PORT;
-        }
-    }
-
-    function post(array $data)
-    {
-        $this->post_data = http_build_query($data);
-        $this->method = 'POST';
-        $this->execute();
-    }
-
-    function close()
-    {
-        $this->cli->close();
     }
 }
+?>
