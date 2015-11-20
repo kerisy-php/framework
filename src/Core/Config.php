@@ -23,7 +23,7 @@ class Config extends Set
         $config_file = CONFIG_PATH . $config_group . $ext_name;
         
         /* 环境变量加载不同扩展名的配置文件 */
-        $env_ext_name = (KERISY_ENV == 'development' ? '.dev' : (KERISY_ENV == 'test' ? '.test' : '')) . '.php';
+        $env_ext_name = (KERISY_ENV == 'development' ? '.dev' : (KERISY_ENV == 'test' ? '.test' : '')) . $ext_name;
         $env_config_file = CONFIG_PATH . $config_group . $env_ext_name;
         
         /* ENV配置文件不存在的情况下默认加载正式环境配置文件 */
