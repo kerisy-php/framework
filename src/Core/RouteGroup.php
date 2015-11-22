@@ -30,6 +30,11 @@ class RouteGroup extends Object
     {
         $this->_prefix = $prefix;
     }
+    
+    public function getPrefix()
+    {
+        return $this->_prefix;
+    }
 
     /**
      * 类似下面这种形式的配置文件

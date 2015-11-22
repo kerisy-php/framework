@@ -440,7 +440,7 @@ class Container extends Object
      * @param array $config configurations to be applied to the new instance
      * @return object the newly created instance of the specified class
      */
-    protected function build($class, $params, $config)
+protected function build($class, $params, $config)
     {
         /* @var $reflection ReflectionClass */
         list ($reflection, $dependencies) = $this->getDependencies($class);
