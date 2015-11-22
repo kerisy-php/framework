@@ -124,11 +124,31 @@ class Response extends Object implements ShouldBeRefreshed
         $this->view = new \Kerisy\Http\View($prefix);
     }
     
-    public function render($template)
+    public function view($template, $data = [])
     {
-        return $this->view->render($template);
+        $this->view->replace($data);
+        $this->data = $this->view->render($template);
+        
+        $this->headers->set('Content-Type', 'text/html');
+        
+        return $this;
     }
-
+    
+    public function json($data = [])
+    {
+        $this->data = json_encode($data, JSON_UNESCAPED_UNICODE);
+        
+        $this->headers->set('Content-Type', 'application/json');
+        
+        return $this;
+    }
+    
+    public function download($filepath, $name, $headers)
+    {
+        // TODO
+        return $this;
+    }
+    
     public function status($code, $text = null)
     {
         if (!isset(self::$httpStatuses[$code])) {
