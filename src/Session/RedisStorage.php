@@ -1,9 +1,9 @@
 <?php
 /**
  * Kerisy Framework
- * 
+ *
  * PHP Version 7
- * 
+ *
  * @author          Jiaqing Zou <zoujiaqing@gmail.com>
  * @copyright      (c) 2015 putao.com, Inc.
  * @package         kerisy/framework
@@ -32,6 +32,9 @@ class RedisStorage extends Object implements StorageContract
 
     protected $timeout = 3600;
 
+    /**
+     * @var \Redis
+     */
     private $_redis;
 
     public function init()
@@ -53,7 +56,7 @@ class RedisStorage extends Object implements StorageContract
      */
     public function read($id)
     {
-        if ($data = $this->_redis->set($this->getPrefixKey($id)))
+        if ($data = $this->_redis->get($this->getPrefixKey($id)))
         {
             return unserialize($data);
         }
