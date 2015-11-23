@@ -1,9 +1,9 @@
 <?php
 /**
  * Kerisy Framework
- * 
+ *
  * PHP Version 7
- * 
+ *
  * @author          Jiaqing Zou <zoujiaqing@gmail.com>
  * @copyright      (c) 2015 putao.com, Inc.
  * @package         kerisy/framework
@@ -35,7 +35,12 @@ class Router
         // Get instance, please;
     }
 
-    public function getInstance()
+    private function __clone()
+    {
+        // Get instance, please;
+    }
+
+    public static function getInstance()
     {
         if (!self::$_instance)
         {
