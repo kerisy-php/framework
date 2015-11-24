@@ -11,7 +11,7 @@
     "require": {
         "php": ">=5.5.0",
         "symfony/console": "^2.7",
-        "ext-apcu": ">=4.0.8",
+        "ext-apcu": ">=4.0.7",
         "ext-swoole": ">=1.7.19",
         "propel/propel": "dev-master",
         "monolog/monolog": "~1.0"
