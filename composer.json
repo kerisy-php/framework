@@ -13,7 +13,7 @@
         "symfony/console": "^2.7",
         "ext-apcu": ">=4.0.7",
         "ext-swoole": ">=1.7.19",
-        "propel/propel": "2.0.0-alpha5",
+        "propel/propel": "~2.0@dev",
         "monolog/monolog": "~1.0"
     },
     "autoload": {
