@@ -31,17 +31,28 @@ class View extends Set
         }
     }
     
-    public function render($template)
+    private function getTemplateFile($template)
     {
-        $template_file = $this->_template_dir . $template . $this->_ext;
-        if (!file_exists($template_file))
-        {
+        $template_file = $this->_template_dir . $template .$this->_ext;
+
+        if(!file_exists($template_file)){
             throw new Exception('Template file does not exist: ' . $template_file);
         }
         
+        return $template_file;
+    }
+    
+    private function template($template)
+    {
+        
+        include $this->getTemplateFile($template);
+    }
+
+    public function render($template)
+    {
         ob_start(null, 0, false);
         
-        include $template_file;
+        include $this->getTemplateFile($template);
         
         return ob_get_contents();
     }
