@@ -19,7 +19,7 @@ use Kerisy\Core\Set;
 class View extends Set
 {
     protected $_ext = '.phtml';
-    protected $_template_dir = APPLICATION_PATH . 'views';
+    protected $_template_dir;
     protected $_prefix;
 
     public function __construct($prefix = 'front')
