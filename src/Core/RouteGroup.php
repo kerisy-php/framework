@@ -107,7 +107,6 @@ class RouteGroup extends Object
 
             if (preg_match($route->getPattern(), $path, $maches)) {
                 $params = [];
-                var_dump($route->getParamKeys());
                 foreach ($route->getParamKeys() as $i => $key) {
                     $params[$key] = $maches[$i + 1];
                 }
