@@ -88,7 +88,7 @@ class RouteGroup extends Object
             $routeObject->setPattern($pattern);
             $routeObject->setTemplate($template);
             $routeObject->setRegular(true);
-            $routeObject->setParams($params);
+            $routeObject->setParamKeys($params);
         }
 
         $this->_routes[$pattern] = $routeObject;
@@ -107,7 +107,8 @@ class RouteGroup extends Object
 
             if (preg_match($route->getPattern(), $path, $maches)) {
                 $params = [];
-                foreach ($route->getParams() as $i => $key) {
+                var_dump($route->getParamKeys());
+                foreach ($route->getParamKeys() as $i => $key) {
                     $params[$key] = $maches[$i + 1];
                 }
                 $route->setParams($params);

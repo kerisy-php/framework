@@ -310,6 +310,22 @@ class Request extends Object implements ShouldBeRefreshed
 
         return $default;
     }
+    
+    /**
+     * get a $_GET value by key
+     * 
+     * @param $_GET key
+     * @param string $default
+     * @return $_GET value
+     */
+    public function get($key, $default = null)
+    {
+        if (($value = $this->params->get($key)) !== null) {
+            return $value;
+        }
+        
+        return $default;
+    }
 
     public function all()
     {

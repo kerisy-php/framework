@@ -29,6 +29,7 @@ class Route extends Object
     private $_template;
     private $_route;
     private $_pattern;
+    private $_param_keys = [];
     private $_params = [];
     private $_regular = false;
     private $_module;
@@ -89,6 +90,16 @@ class Route extends Object
     public function getPattern()
     {
         return $this->_pattern;
+    }
+    
+    public function setParamKeys($keys)
+    {
+      $this->_param_keys = $keys;
+    }
+    
+    public function getParamKeys()
+    {
+	return $this->_param_keys;
     }
 
     public function setParams(array $params)
