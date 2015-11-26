@@ -320,11 +320,7 @@ class Request extends Object implements ShouldBeRefreshed
      */
     public function get($key, $default = null)
     {
-        if (($value = $this->params->get($key)) !== null) {
-            return $value;
-        }
-        
-        return $default;
+        return $this->params->get($key, $default);
     }
 
     public function all()
