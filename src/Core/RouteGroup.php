@@ -110,6 +110,7 @@ class RouteGroup extends Object
                 foreach ($route->getParams() as $i => $key) {
                     $params[$key] = $maches[$i + 1];
                 }
+                $route->setParams($params);
                 return $route;
             }
         }

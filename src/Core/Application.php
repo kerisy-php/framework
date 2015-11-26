@@ -14,13 +14,10 @@
 
 namespace Kerisy\Core;
 
-use Closure;
 use Kerisy\Di\Container;
 use Kerisy\Log\Logger;
 use Kerisy\Http\Request;
 use Kerisy\Http\Response;
-use Doctrine\ORM\Tools\Setup;
-use Doctrine\ORM\EntityManager;
 
 /**
  * Class Application
@@ -117,8 +114,8 @@ class Application extends ServiceLocator
             $paths[] = APPLICATION_PATH . "modules/{$module}/Model";
         }
 
-        $config = Setup::createAnnotationMetadataConfiguration($paths, (KERISY_ENV === 'development'));
-        $entityManager = EntityManager::create($this->config('database')->get(KERISY_ENV), $config);
+        $config = $this->config('database')->all();
+        var_dump($config);
     }
 
     protected function registerComponents()
@@ -230,13 +227,14 @@ class Application extends ServiceLocator
         }
     }
 
-    protected function exec($request, $response)
+    protected function exec(Request $request, Response $response)
     {
         $route = $this->dispatch($request);
 
         $action = $this->createAction($route);
 
         $request->callMiddleware();
+        $request->setParams($route->getParams());
         
         $response->initView($route->getPrefix());
 
