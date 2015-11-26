@@ -115,7 +115,7 @@ class Application extends ServiceLocator
         }
 
         $config = $this->config('database')->all();
-        var_dump($config);
+        // var_dump($config);
     }
 
     protected function registerComponents()
@@ -234,6 +234,7 @@ class Application extends ServiceLocator
         $action = $this->createAction($route);
 
         $request->callMiddleware();
+        
         $request->setParams($route->getParams());
         
         $response->initView($route->getPrefix());
