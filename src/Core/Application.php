@@ -93,7 +93,7 @@ class Application extends ServiceLocator
             $this->initializeConfig();
             $this->registerComponents();
             $this->registerRoutes();
-            $this->registerEntities();
+            //$this->registerEntities();
             $this->bootstrapped = true;
 
             $this->get('log')->info('application started');
@@ -107,17 +107,14 @@ class Application extends ServiceLocator
         date_default_timezone_set($this->timezone);
     }
 
-    protected function registerEntities()
-    {
-        $env = $this->config('application')->get('environment');
-        $config = $this->config('database')->all();
+    /*
+        protected function registerEntities()
+        {
+            $config = $this->config('database')->all();
 
-        if (!isset($config[$env])) {
-            throw new InvalidParamException(' not exist environment:' . $env . ' config of database');
+            return new Database($config['connections'][$config['default']]);
         }
-
-        return new Database($config[$env]);
-    }
+    */
 
     protected function registerComponents()
     {
