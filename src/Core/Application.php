@@ -1,9 +1,9 @@
 <?php
 /**
  * Kerisy Framework
- * 
+ *
  * PHP Version 7
- * 
+ *
  * @author          Jiaqing Zou <zoujiaqing@gmail.com>
  * @copyright      (c) 2015 putao.com, Inc.
  * @package         kerisy/framework
@@ -18,6 +18,7 @@ use Kerisy\Di\Container;
 use Kerisy\Log\Logger;
 use Kerisy\Http\Request;
 use Kerisy\Http\Response;
+use Kerisy\Database\Database;
 
 /**
  * Class Application
@@ -41,7 +42,7 @@ class Application extends ServiceLocator
      * @var string[]
      */
     public $commands = [];
-    
+
     public $modules = [];
 
     /**
@@ -69,8 +70,9 @@ class Application extends ServiceLocator
     protected $refreshing = [];
 
     private $_configs;
-    
-    public function __construct() {
+
+    public function __construct()
+    {
         parent::__construct($this->config('application')->all());
     }
 
@@ -104,18 +106,17 @@ class Application extends ServiceLocator
     {
         date_default_timezone_set($this->timezone);
     }
-    
+
     protected function registerEntities()
     {
-        $paths = [];
-        
-        foreach ($this->modules as $module)
-        {
-            $paths[] = APPLICATION_PATH . "modules/{$module}/Model";
+        $env = $this->config('application')->get('environment');
+        $config = $this->config('database')->all();
+
+        if (!isset($config[$env])) {
+            throw new InvalidParamException(' not exist environment:' . $env . ' config of database');
         }
 
-        $config = $this->config('database')->all();
-        // var_dump($config);
+        return new Database($config[$env]);
     }
 
     protected function registerComponents()
@@ -133,8 +134,7 @@ class Application extends ServiceLocator
 
     public function config($config_group)
     {
-        if (!isset($this->_configs[$config_group]))
-        {
+        if (!isset($this->_configs[$config_group])) {
             $config = new Config($config_group);
             $this->_configs[$config_group] = $config;
         }
@@ -234,9 +234,9 @@ class Application extends ServiceLocator
         $action = $this->createAction($route);
 
         $request->callMiddleware();
-        
+
         $request->setParams($route->getParams());
-        
+
         $response->initView($route->getPrefix());
 
         $data = $this->runAction($action, $request, $response);
@@ -248,7 +248,7 @@ class Application extends ServiceLocator
 
     protected function refreshComponents()
     {
-        foreach($this->refreshing as $id => $_) {
+        foreach ($this->refreshing as $id => $_) {
             $this->unbind($id);
             $this->bind($id, $this->components[$id]);
         }
@@ -280,11 +280,11 @@ class Application extends ServiceLocator
             'message' => $exception->getMessage(),
             'code' => $exception->getCode(),
         ];
-        
+
         if ($exception instanceof HttpException) {
             $array['status'] = $exception->statusCode;
         }
-        
+
         if ($this->debug) {
             $array['file'] = $exception->getFile();
             $array['line'] = $exception->getLine();
@@ -300,8 +300,7 @@ class Application extends ServiceLocator
 
     protected function dispatch($request)
     {
-        if (!$route = $this->dispatcher->dispatch($request))
-        {
+        if (!$route = $this->dispatcher->dispatch($request)) {
             throw new HttpException(404);
         }
 
