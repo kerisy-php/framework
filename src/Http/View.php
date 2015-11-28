@@ -1,9 +1,9 @@
 <?php
 /**
  * Kerisy Framework
- * 
+ *
  * PHP Version 7
- * 
+ *
  * @author          Jiaqing Zou <zoujiaqing@gmail.com>
  * @copyright      (c) 2015 putao.com, Inc.
  * @package         kerisy/framework
@@ -19,7 +19,7 @@ use Kerisy\Core\Set;
 class View extends Set
 {
     protected $_ext = '.phtml';
-    protected $_template_dir = APPLICATION_PATH . 'views';
+    protected $_template_dir = '';
     protected $_prefix;
 
     public function __construct($prefix = 'front')
@@ -30,7 +30,7 @@ class View extends Set
             throw new Exception('Template directory does not exist: ' . $this->_template_dir);
         }
     }
-    
+
     public function render($template)
     {
         $template_file = $this->_template_dir . $template . $this->_ext;
@@ -38,11 +38,14 @@ class View extends Set
         {
             throw new Exception('Template file does not exist: ' . $template_file);
         }
-        
-        ob_start(null, 0, false);
-        
+
+        ob_start();
+
+        ob_implicit_flush(0);
+
+        extract($this->data, EXTR_OVERWRITE);
         include $template_file;
-        
-        return ob_get_contents();
+
+        return ob_get_clean();
     }
 }
