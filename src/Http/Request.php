@@ -1,9 +1,9 @@
 <?php
 /**
  * Kerisy Framework
- * 
+ *
  * PHP Version 7
- * 
+ *
  * @author          Jiaqing Zou <zoujiaqing@gmail.com>
  * @copyright      (c) 2015 putao.com, Inc.
  * @package         kerisy/framework
@@ -198,7 +198,7 @@ class Request extends Object implements ShouldBeRefreshed
 
         if ((!$secure && $port == 80) || ($secure && $port == 443)) {
             return $host;
-        }else {
+        } else {
             return $host . ':' . $port;
         }
     }
@@ -271,10 +271,12 @@ class Request extends Object implements ShouldBeRefreshed
         $contentType = $this->getContentType();
         if ($contentType == 'application/json') {
             $parsedBody = json_decode($body, true);
-        } else if ($contentType == 'application/x-www-form-urlencoded') {
-            parse_str($body, $parsedBody);
         } else {
-            throw new NotSupportedException("The content type: '$contentType' does not supported");
+            if ($contentType == 'application/x-www-form-urlencoded') {
+                parse_str($body, $parsedBody);
+            } else {
+                throw new NotSupportedException("The content type: '$contentType' does not supported");
+            }
         }
 
         return $parsedBody;
@@ -304,16 +306,16 @@ class Request extends Object implements ShouldBeRefreshed
             return $value;
         }
 
-        if (($value == $this->body->get($key)) !== null) {
+        if (($value = $this->body->get($key)) !== null) {
             return $value;
         }
 
         return $default;
     }
-    
+
     /**
      * get a $_GET value by key
-     * 
+     *
      * @param $_GET key
      * @param string $default
      * @return $_GET value
