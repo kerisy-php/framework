@@ -13,7 +13,8 @@
         "symfony/console": "^2.7",
         "ext-apcu": ">=4.0.7",
         "ext-swoole": ">=1.7.19",
-        "monolog/monolog": "~1.0"
+        "monolog/monolog": "~1.0",
+        "guzzlehttp/guzzle": "^6.1"
     },
     "autoload": {
         "files": [
