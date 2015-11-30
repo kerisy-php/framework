@@ -15,12 +15,12 @@ use Kerisy\Core\Object;
 class DB extends Object
 {
     public static $capsule = [];
-    protected static $default_connection = 'default';
+    protected static $connection = 'default';
 
 
     public static function signton($default_connection = '')
     {
-        $connection = $default_connection ?: static::$default_connection;
+        $connection = $default_connection ?: static::$connection;
 
         if (!isset(self::$capsule[$connection])) {
             $config = config('database')->get($connection);
