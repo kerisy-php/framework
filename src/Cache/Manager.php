@@ -1,9 +1,9 @@
 <?php
 /**
  * Kerisy Framework
- * 
+ *
  * PHP Version 7
- * 
+ *
  * @author          Jiaqing Zou <zoujiaqing@gmail.com>
  * @copyright      (c) 2015 putao.com, Inc.
  * @package         kerisy/framework
@@ -15,7 +15,7 @@
 namespace Kerisy\Cache;
 
 use Kerisy\Core\Object;
-use Kerisy\Cache\Contract;
+use Kerisy\Cache\Engine\Contract as StorageContract;
 
 /**
  * The Session Manager
@@ -41,6 +41,7 @@ class Manager extends Object
     public function init()
     {
         if (!$this->engine instanceof StorageContract) {
+
             $this->engine = make($this->engine);
         }
 

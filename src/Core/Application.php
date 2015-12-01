@@ -234,7 +234,7 @@ class Application extends ServiceLocator
 
         $request->setParams($route->getParams());
 
-        $response->initView($route->getPrefix());
+        $response->setPrefix($route->getPrefix());
 
         $data = $this->runAction($action, $request, $response);
 

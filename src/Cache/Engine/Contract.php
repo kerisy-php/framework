@@ -12,7 +12,7 @@
  * @version         2.0.0
  */
 
-namespace Kerisy\Cache;
+namespace Kerisy\Cache\Engine;
 
 /**
  * Interface EngineContract

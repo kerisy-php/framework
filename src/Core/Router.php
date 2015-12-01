@@ -93,7 +93,7 @@ class Router
             $group->addRoute($route);
         }
     }
-    
+
     public function routing($request)
     {
         $group = null;
@@ -110,7 +110,7 @@ class Router
         {
             $path = "/";
         }
-        
+
         if (!$group = $this->getGroupByDomain($request->host))
         {
             if ($path == null && $this->_default_group)
@@ -144,7 +144,7 @@ class Router
             $route = $this->getRouteByPath($path);
             $route->setPrefix($group->getPrefix());
         }
-        
+
         if ($route !== null)
         {
             \apc_add($cacheKey, $route, 3600);
@@ -153,7 +153,7 @@ class Router
 
         return false;
     }
-    
+
     public function getRouteByPath($path = '/')
     {
         $mca = explode('/', $path);
@@ -162,25 +162,25 @@ class Router
         $route->setModule(!empty($mca[0]) ? $mca[0] : $this->getDefaultModule());
         $route->setController(!empty($mca[1]) ? $mca[1] : $this->getDefaultController());
         $route->setAction(!empty($mca[2]) ? $mca[2] : $this->getDefaultAction());
-        
+
         return $route;
     }
-    
+
     public function getDefaultPrefix()
     {
         return 'Front';
     }
-    
+
     public function getDefaultModule()
     {
         return 'Core';
     }
-    
+
     public function getDefaultController()
     {
         return 'index';
     }
-    
+
     public function getDefaultAction()
     {
         return 'index';

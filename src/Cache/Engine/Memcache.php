@@ -1,9 +1,9 @@
 <?php
 /**
  * Kerisy Framework
- * 
+ *
  * PHP Version 7
- * 
+ *
  * @author          Jiaqing Zou <zoujiaqing@gmail.com>
  * @copyright      (c) 2015 putao.com, Inc.
  * @package         kerisy/framework
@@ -12,18 +12,18 @@
  * @version         2.0.0
  */
 
-namespace Kerisy\Cache;
+namespace Kerisy\Cache\Engine;
 
 use Kerisy\Core\InvalidConfigException;
 use Kerisy\Core\Object;
-use Kerisy\Cache\Contract as EngineContract;
+use Kerisy\Cache\Engine\Contract as EngineContract;
 
 /**
  * Class Memcache
  *
  * @package Kerisy\Cache
  */
-class MemcacheEngine extends Object implements EngineContract
+class Memcache extends Object implements EngineContract
 {
     public $host = "127.0.0.1";
     public $port = 11211;
@@ -37,8 +37,7 @@ class MemcacheEngine extends Object implements EngineContract
     {
         $this->_memcache = new \Memcache();
 
-        if (!$this->_memcache->connect($this->host, $this->port))
-        {
+        if (!$this->_memcache->connect($this->host, $this->port)) {
             throw new InvalidConfigException("The memcached host '{$this->host}' error.");
         }
     }
@@ -54,8 +53,7 @@ class MemcacheEngine extends Object implements EngineContract
     public function read($key)
     {
         $data = $this->_memcache->set($this->getPrefixKey($key));
-        if ($data)
-        {
+        if ($data) {
             return unserialize($data);
         }
 

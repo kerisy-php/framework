@@ -40,7 +40,8 @@ class Response extends Object implements ShouldBeRefreshed
 
     public $statusCode = 200;
     public $statusText;
-    
+
+    public $prefix;
     public $view;
 
     public static $httpStatuses = [
@@ -118,14 +119,22 @@ class Response extends Object implements ShouldBeRefreshed
     {
         $this->headers = new HeaderBag();
     }
-    
-    public function initView($prefix)
+
+    public function setPrefix($prefix)
     {
-        $this->view = new \Kerisy\Http\View($prefix);
+        $this->prefix = $prefix;
+    }
+    
+    public function initView()
+    {
+        if (!$this->view)
+            $this->view = new \Kerisy\Http\View($this->prefix);
     }
     
     public function view($template, $data = [])
     {
+        $this->initView();
+
         $this->view->replace($data);
         $this->data = $this->view->render($template);
         
