@@ -1,9 +1,9 @@
 <?php
 /**
  * Kerisy Framework
- * 
+ *
  * PHP Version 7
- * 
+ *
  * @author          Jiaqing Zou <zoujiaqing@gmail.com>
  * @copyright      (c) 2015 putao.com, Inc.
  * @package         kerisy/framework
@@ -153,8 +153,12 @@ class Swoole extends Base
 
     protected function prepareRequest($request)
     {
-        list($host, $port) = explode(':', $request->header['host']);
-
+        $port = 80;
+        $hosts = explode(':', $request->header['host']);
+        if (count($hosts) > 1) {
+            $port = $hosts[1];
+        }
+        $host = $hosts[0];
         $config = [
             'protocol' => $request->server['server_protocol'],
             'host' => $host,
@@ -177,7 +181,7 @@ class Swoole extends Base
 
         foreach ($res->headers->all() as $name => $values) {
             $name = str_replace(' ', '-', ucwords(str_replace('-', ' ', $name)));
-            foreach($values as $value) {
+            foreach ($values as $value) {
                 $response->header($name, $value);
             }
         }
