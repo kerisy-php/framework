@@ -18,8 +18,8 @@ use GuzzleHttp\Client as Gclient;
 
 class Client {
     
-    public function __construct(Gclient $client) {
-        $this->client = $client;
+    public function __construct() {
+        $this->client = new Gclient;
     }
 
     public function get($url , $data = array())

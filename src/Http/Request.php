@@ -14,7 +14,7 @@
 
 namespace Kerisy\Http;
 
-use Kerisy\Auth\Authenticatable;
+use Kerisy\Contracts\Auth\Authenticatable;
 use Kerisy\Core\MiddlewareTrait;
 use Kerisy\Core\NotSupportedException;
 use Kerisy\Core\Object;
@@ -120,6 +120,9 @@ class Request extends Object implements ShouldBeRefreshed
 
     public function setParams($params = [])
     {
+        if (empty($params)) {
+            return;
+        }
         if (!$params instanceof ParamBag) {
             $params = new ParamBag($params);
         }
@@ -378,7 +381,7 @@ class Request extends Object implements ShouldBeRefreshed
      * @param Authenticatable $user
      * @return \Kerisy\auth\Authenticatable|null
      */
-    public function user($user = null)
+    public function user(Authenticatable $user = null)
     {
         if ($user !== null) {
             $this->_user = $user;
