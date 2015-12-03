@@ -27,11 +27,11 @@ use Kerisy\Core\HttpException;
 function make($type, $params = [])
 {
     if (is_string($type)) {
-        return  Container::getInstance()->get($type, $params);
+        return Container::getInstance()->get($type, $params);
     } elseif (is_array($type) && isset($type['class'])) {
         $class = $type['class'];
         unset($type['class']);
-        return  Container::getInstance()->get($class, $params, $type);
+        return Container::getInstance()->get($class, $params, $type);
     } elseif (is_callable($type, true)) {
         return call_user_func($type, $params);
     } elseif (is_array($type)) {
@@ -118,4 +118,28 @@ function response()
 function abort($status, $message = null)
 {
     throw new HttpException($status, $message);
+}
+
+
+if (!function_exists('jsonSuccess')) {
+
+    function jsonSuccess($data, $code = '200')
+    {
+        $res = [
+            'httpCode' => $code,
+            'data' => $data
+        ];
+        return Kerisy\Support\Json::encode($res);
+    }
+}
+if (!function_exists('jsonError')) {
+
+    function jsonError($msg, $code = '400')
+    {
+        $res = [
+            'httpCode' => $code,
+            'msg' => $msg
+        ];
+        return Kerisy\Support\Json::encode($res);
+    }
 }

@@ -5,3 +5,5 @@ Kerisy Framework ChangeLog
 ---------------------
 
 - new version on the swoole!
+
+  middleware,auth

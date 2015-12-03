@@ -1,9 +1,9 @@
 <?php
 /**
  * Kerisy Framework
- * 
+ *
  * PHP Version 7
- * 
+ *
  * @author          Jiaqing Zou <zoujiaqing@gmail.com>
  * @copyright      (c) 2015 putao.com, Inc.
  * @package         kerisy/framework
@@ -64,14 +64,15 @@ class Manager extends Object implements SessionContract
     }
 
     /**
-     * @inheritDoc
+     * @inheritDoc & <haoyanfei@outlook.com>
      */
     public function get($id)
     {
-        $data = $this->storage->read($id);
-        if ($data) {
-            return new Session($data, ['id' => $id]);
-        }
+//        $data = $this->storage->read($id);
+//        if ($data) {
+//            return new Session($data, ['id' => $id]);
+//        }
+        return $this->storage->read($id);
     }
 
     /**

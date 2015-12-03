@@ -1,9 +1,9 @@
 <?php
 /**
  * Kerisy Framework
- * 
+ *
  * PHP Version 7
- * 
+ *
  * @author          Jiaqing Zou <zoujiaqing@gmail.com>
  * @copyright      (c) 2015 putao.com, Inc.
  * @package         kerisy/framework
@@ -124,40 +124,73 @@ class Response extends Object implements ShouldBeRefreshed
     {
         $this->prefix = $prefix;
     }
-    
+
     public function initView()
     {
-        if (!$this->view)
+        if (!$this->view) {
             $this->view = new \Kerisy\Http\View($this->prefix);
+        }
     }
-    
+
     public function view($template, $data = [])
     {
         $this->initView();
 
         $this->view->replace($data);
         $this->data = $this->view->render($template);
-        
+
         $this->headers->set('Content-Type', 'text/html');
-        
+
         return $this;
     }
-    
+
+
     public function json($data = [])
     {
         $this->data = json_encode($data, JSON_UNESCAPED_UNICODE);
-        
+
         $this->headers->set('Content-Type', 'application/json');
-        
+
         return $this;
     }
-    
+
+    /**
+     * @describe 跳转
+     * @auth haoyanfei<haoyf@putao.com>
+     * @param $url
+     * @param int $code
+     * @param string $text
+     * @return $this
+     */
+    public function redirect($url, $code = 302, $text = '')
+    {
+        if (empty($url)) {
+            throw new \InvalidArgumentException('Cannot redirect to an empty URL.');
+        }
+        $this->data =
+            sprintf('<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8" />
+        <meta http-equiv="refresh" content="1;url=%1$s" />
+        <title>Redirecting to %1$s</title>
+    </head>
+    <body>
+        Redirecting to <a href="%1$s">%1$s</a>.
+    </body>
+</html>', htmlspecialchars($url, ENT_QUOTES, 'UTF-8'));
+        $this->headers->set('Location', $url);
+        $this->status($code, $text);
+        return $this;
+    }
+
     public function download($filepath, $name, $headers)
     {
         // TODO
         return $this;
     }
-    
+
+
     public function status($code, $text = null)
     {
         if (!isset(self::$httpStatuses[$code])) {
@@ -176,7 +209,6 @@ class Response extends Object implements ShouldBeRefreshed
     public function with($data)
     {
         $this->data = $data;
-
         return $this;
     }
 
@@ -190,7 +222,6 @@ class Response extends Object implements ShouldBeRefreshed
             if (!is_string($this->data)) {
                 $this->headers->set('Content-Type', 'application/json');
             }
-
             $this->prepared = true;
         }
     }
@@ -208,4 +239,6 @@ class Response extends Object implements ShouldBeRefreshed
 
         return $this->content;
     }
+
+
 }

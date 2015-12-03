@@ -52,7 +52,7 @@ class MemcacheStorage extends Object implements StorageContract
      */
     public function read($id)
     {
-        if ($data = $this->_memcache->set($this->getPrefixKey($id)))
+        if ($data = $this->_memcache->get($this->getPrefixKey($id)))
         {
             return unserialize($data);
         }
