@@ -8,15 +8,12 @@
 
 namespace Kerisy\Support;
 
-
-use Kerisy\Http\Client;
 use Symfony\Component\Translation\Exception\InvalidResourceException;
 
 class CloudUpload
 {
     static public $app_key;
 
-    private $client;
 
     public function dealUpload($file)
     {
