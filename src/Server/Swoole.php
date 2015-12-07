@@ -159,9 +159,7 @@ class Swoole extends Base
         if (count($hosts) > 1) {
             $port = $hosts[1];
         }
-
         $host = $hosts[0];
-
         $config = [
             'protocol' => $request->server['server_protocol'],
             'host' => $host,
@@ -170,10 +168,11 @@ class Swoole extends Base
             'path' => $request->server['request_uri'],
             'headers' => $request->header,
             'params' => isset($request->get) ? $request->get : [],
-            'content' => $request->rawcontent(),
-            'files' => $request->files
+            'content' => $request->rawcontent()
         ];
-
+        if (isset($request->files) && is_array($request->files)) {
+            $config['files'] = $request->files;
+        }
         return app()->makeRequest($config);
     }
 
