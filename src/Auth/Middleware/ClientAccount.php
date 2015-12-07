@@ -38,7 +38,7 @@ class ClientAccount implements MiddlewareContract
     public function handle($response)
     {
         if (!auth()->check()) {
-            response()->json(['httpCode' => '4010', 'msg' => '未登录']);
+            response()->json(errorFormat('未登录',4010));
         }
     }
 }

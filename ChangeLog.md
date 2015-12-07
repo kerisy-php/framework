@@ -7,3 +7,6 @@ Kerisy Framework ChangeLog
 - new version on the swoole!
 
   middleware,auth
+
+- add upload  
+	upload file by $request->files

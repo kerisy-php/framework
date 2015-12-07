@@ -228,7 +228,7 @@ class Application extends ServiceLocator
     {
         $route = $this->dispatch($request);
 
-        $action = $this->createAction($route, $response);
+        $action = $this->createAction($route);
 
         $request->callMiddleware();
 
@@ -304,13 +304,13 @@ class Application extends ServiceLocator
         return $route;
     }
 
-    protected function createAction($route, Response $response = null)
+    protected function createAction($route)
     {
         $class = "App\\" . ucfirst($route->getModule()) . "\\Controller\\" . ucfirst($route->getPrefix()) . "\\" . ucfirst($route->getController()) . "Controller";
         $method = $route->getAction();
 
         $controller = $this->get($class);
-        $response->middleware($controller->callMiddleware());
+        $controller->callMiddleware();
 
         $action = [$controller, $method];
 

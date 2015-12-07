@@ -126,7 +126,7 @@ if (!function_exists('jsonSuccess')) {
     function jsonSuccess($data, $code = '200')
     {
         $res = [
-            'httpCode' => $code,
+            'http_code' => (int)$code,
             'data' => $data
         ];
         return Kerisy\Support\Json::encode($res);
@@ -137,9 +137,28 @@ if (!function_exists('jsonError')) {
     function jsonError($msg, $code = '400')
     {
         $res = [
-            'httpCode' => $code,
+            'http_code' => (int)$code,
             'msg' => $msg
         ];
         return Kerisy\Support\Json::encode($res);
+    }
+}
+if (!function_exists('successFormat')) {
+    function successFormat($data, $code = 200)
+    {
+        return [
+            'http_code' => (int)$code,
+            'data' => $data
+        ];
+    }
+}
+if (!function_exists('errorFormat')) {
+
+    function errorFormat($msg, $code = 400)
+    {
+        return [
+            'http_code' => (int)$code,
+            'msg' => $msg
+        ];
     }
 }

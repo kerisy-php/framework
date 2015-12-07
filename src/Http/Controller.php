@@ -18,6 +18,7 @@ class Controller
 {
     private $_user_id;
 
+
 //    private $_request;
 //    
 //    public function before($request)

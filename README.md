@@ -18,10 +18,12 @@ Kerisy use swoole http server.
 
             路由就可以调用该控制器的 login 或者 logout
 
-                . 成功 httpCode = 200 data = [userInfo];
-                
-                . 失败 httpCode = 4011 msg = "登录失败"
+                . 成功 http_code = 200 data = [userInfo];
+
+                . 失败 http_code = 4011 msg = "登录失败"
 
     b. clone a.... 修改 handle
 
-    httpCode: 4010:未登录 4011:登录失败 200:成功
+    http_code: 4010:未登录 4011:登录失败 200:成功
+2.增加文件上传功能
+    a.上传文件获取方法:  $request->files;

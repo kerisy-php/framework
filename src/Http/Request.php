@@ -63,6 +63,8 @@ class Request extends Object implements ShouldBeRefreshed
 
     public $port = 8080;
 
+    public $files = [];
+
     /**
      * The key of a header field that stores the session id, or a callable that will returns the session id.
      *
@@ -277,6 +279,8 @@ class Request extends Object implements ShouldBeRefreshed
         } else {
             if ($contentType == 'application/x-www-form-urlencoded') {
                 parse_str($body, $parsedBody);
+            } elseif ($contentType == 'multipart/form-data') {
+                // TODO
             } else {
                 throw new NotSupportedException("The content type: '$contentType' does not supported");
             }
