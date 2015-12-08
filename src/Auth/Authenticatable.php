@@ -42,8 +42,10 @@ trait Authenticatable
     public function retrieveByToken($credentials = [])
     {
         /**account[id,nickname,token]**/
-        if ($account = $this->authorizable($credentials)) {
-            return static::firstOrCreate(['id' => $credentials['uid']])->update(['username' => $credentials['username']]);
+        if ($this->authorizable($credentials)) {
+            if (!method_exists($this, 'updateUserByAccount')) {
+                return static::findIdentity($credentials['uid']);
+            }
         }
         return false;
     }

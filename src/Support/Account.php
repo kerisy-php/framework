@@ -10,43 +10,53 @@ namespace Kerisy\Support;
 
 use Kerisy\Http\Client;
 
-
+/**
+ * @describe only support api
+ * Class Account
+ * @package Kerisy\Support
+ */
 trait Account
 {
     protected $client;
 
     /**
      * @describe 验证通过
+     * client----uid,token,appid,sign
      * @auth haoyanfei<haoyf@putao.com>
      * @param $credentials [id,token]
      * @return $result ['uid','token','nickname']
      */
     public function authorizable($credentials = [])
     {
-
         $this->client = new Client;
         $account = config('config')->get('account');
-        $sign = strtoupper(md5($credentials['uid'] . $credentials['token'] . $account['secret_key']));
-        if ($sign != $credentials['sign']) {
-            //return false;
-        }
-        $toAccount = [
-            'uid' => $credentials['uid'],
-            'token' => $credentials['token'],
-            'sign' => $credentials['sign'],
-            'redirect' => $credentials['redirect']
-        ];
-        $result = $this->client->post($account['check_login_url'], $toAccount);
 
-        if (!empty($result['error_code'])) {
-            echo __FILE__;
-            var_dump($result);
+        $sign = makeVerify($credentials, $account['secret_key']);
+
+        if ($sign != $credentials['sign']) {
             return false;
         }
-        $sign = strtoupper(md5($result['uid'] . $result['token'] . $account['secret_key']));
-        if ($sign != $result['sign']) {
+        $result = $this->client->post($account['checkToken'], $credentials);
+        if (isset($result['error_code']) && $result['error_code'] === 0) {
+            return true;
+        }
+        return false;
+    }
+
+    public function getNickName($credentials = [])
+    {
+        $this->client = new Client;
+        $account = config('config')->get('account');
+
+        $sign = makeVerify($credentials, $account['secret_key']);
+
+        if ($sign != $credentials['sign']) {
             return false;
         }
-        return ['id' => $result['uid'], 'nickname' => $result['nickname'], 'token' => $result['token']];
+        $result = $this->client->post($account['getNickName'], $credentials);
+        if (isset($result['error_code']) && $result['error_code'] === 0) {
+            return $result['msg'];
+        }
+        return false;
     }
 } 

@@ -49,4 +49,6 @@ interface Authenticatable
      * @return boolean
      */
     public function validatePassword($password);
+
+    public function updateUserByAccount($account);
 }
