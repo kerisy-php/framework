@@ -183,7 +183,7 @@ class Application extends ServiceLocator
     {
         /** @var Response $response */
         $response = $this->get('response');
-
+        
         try {
             $this->exec($request, $response);
         } catch (\Exception $e) {
@@ -227,12 +227,18 @@ class Application extends ServiceLocator
     protected function exec(Request $request, Response $response)
     {
         $route = $this->dispatch($request);
+        
+        $request->setRoute($route);
 
         $action = $this->createAction($route);
+        
+        // 中止继续访问
+        if ($request->abort == true)
+        {
+            return;
+        }
 
         $request->callMiddleware();
-
-        $request->setParams($route->getParams());
 
         $response->setPrefix($route->getPrefix());
 
@@ -304,14 +310,14 @@ class Application extends ServiceLocator
         return $route;
     }
 
-    protected function createAction($route)
+    protected function createAction(Route $route)
     {
         $class = "App\\" . ucfirst($route->getModule()) . "\\Controller\\" . ucfirst($route->getPrefix()) . "\\" . ucfirst($route->getController()) . "Controller";
         $method = $route->getAction();
 
         $controller = $this->get($class);
         $controller->callMiddleware();
-
+        
         $action = [$controller, $method];
 
         return $action;

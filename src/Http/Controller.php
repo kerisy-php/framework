@@ -14,26 +14,26 @@
 
 namespace Kerisy\Http;
 
+use Kerisy\Core\MiddlewareTrait;
+
 class Controller
 {
     private $_user_id;
+    
+    use MiddlewareTrait;
 
-
-//    private $_request;
-//    
-//    public function before($request)
+//    public function before()
 //    {
-//        $this->_request = $request;
+//    
 //    }
 //    
-//    public function after($response)
+//    public function after()
 //    {
-//        return $request;
+//    
 //    }
+    
     public function userId()
     {
         return $this->_user_id;
     }
-
-    public function callMiddleware(){}
 }

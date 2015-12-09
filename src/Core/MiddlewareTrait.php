@@ -56,7 +56,7 @@ trait MiddlewareTrait
         if ($this->_middlewareCalled) {
             return;
         }
-
+        
         foreach ($this->middleware as $definition) {
             $middleware = make($definition);
             if (!$middleware instanceof MiddlewareContract) {

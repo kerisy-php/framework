@@ -64,6 +64,8 @@ class Request extends Object implements ShouldBeRefreshed
     public $port = 8080;
 
     public $files = [];
+    
+    public $abort = false;
 
     /**
      * The key of a header field that stores the session id, or a callable that will returns the session id.
@@ -82,7 +84,9 @@ class Request extends Object implements ShouldBeRefreshed
     private $_body;
 
     private $_headers;
-
+    
+    private $_route;
+    
     public function method()
     {
         return $this->method;
@@ -118,6 +122,17 @@ class Request extends Object implements ShouldBeRefreshed
     public function secure()
     {
         return 'HTTPS' === explode('/', $this->protocol)[0];
+    }
+    
+    public function setRoute(\Kerisy\Core\Route $route)
+    {
+        $this->setParams($route->getParams());
+        $this->_route = $route;
+    }
+    
+    public function getRoute()
+    {
+        return $this->_route;
     }
 
     public function setParams($params = [])
