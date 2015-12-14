@@ -101,7 +101,7 @@ class Router
         $path = trim($request->path, '/');
 
         $cacheKey = "route_cached_" . $request->host . '_' . base64_encode($path);
-        if ($route = \apc_fetch($cacheKey))
+        if ($route = \apcu_fetch($cacheKey))
         {
             return $route;
         }
@@ -147,7 +147,7 @@ class Router
 
         if ($route !== null)
         {
-            \apc_add($cacheKey, $route, 3600);
+            \apcu_add($cacheKey, $route, 3600);
             return $route;
         }
 
