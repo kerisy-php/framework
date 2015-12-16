@@ -46,7 +46,7 @@ class DB extends Object
 
     public static function table($table, $connection = null)
     {
-        $connection = $connection ?: static::$default_connection;
+        $connection = $connection ?: static::$connection;
         return static::signton($connection)->table($table);
     }
 
