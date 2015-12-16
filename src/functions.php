@@ -77,6 +77,16 @@ function session()
     return app()->get('session');
 }
 
+function cache()
+{
+    return app()->get('cache');
+}
+
+function redis()
+{
+    return app()->get('redis');
+}
+
 /**
  * Helper function to get auth service.
  *

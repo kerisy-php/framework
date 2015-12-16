@@ -1,9 +1,9 @@
 <?php
 /**
  * Kerisy Framework
- * 
+ *
  * PHP Version 7
- * 
+ *
  * @author          Jiaqing Zou <zoujiaqing@gmail.com>
  * @copyright      (c) 2015 putao.com, Inc.
  * @package         kerisy/framework
@@ -33,11 +33,10 @@ interface Contract
      * Write session data to storage.
      *
      * @param string $id
-     * @param array $data
+     * @param max $data
      * @return boolean
      */
-    public function write($id, array $data);
-
+    public function write($id, $data);
 
     /**
      * Destroy session by id.

@@ -41,7 +41,6 @@ class Manager extends Object
     public function init()
     {
         if (!$this->engine instanceof StorageContract) {
-
             $this->engine = make($this->engine);
         }
 
@@ -53,15 +52,10 @@ class Manager extends Object
      */
     public function put($attributes = [])
     {
-        if ($attributes instanceof Session) {
-            $attributes = $attributes->all();
-        }
 
         $id = md5(microtime(true) . uniqid('', true) . uniqid('', true));
 
-        $this->storage->write($id, $attributes);
-
-        return new Session($attributes, ['id' => $id]);
+        return $this->engine->write($id, $attributes);
     }
 
     /**
@@ -69,10 +63,7 @@ class Manager extends Object
      */
     public function get($id)
     {
-        $data = $this->storage->read($id);
-        if ($data) {
-            return new Session($data, ['id' => $id]);
-        }
+        return $this->engine->read($id);
     }
 
     /**
@@ -80,11 +71,8 @@ class Manager extends Object
      */
     public function set($id, $attributes)
     {
-        if ($attributes instanceof Session) {
-            $attributes = $attributes->all();
-        }
 
-        return $this->storage->write($id, $attributes);
+        return $this->engine->write($id, $attributes);
     }
 
     /**
@@ -92,6 +80,11 @@ class Manager extends Object
      */
     public function destroy($id)
     {
-        return $this->storage->destroy($id);
+        return $this->engine->destroy($id);
+    }
+
+    public function __call($method, $args)
+    {
+        return $this->storage->$method($args);
     }
 }
