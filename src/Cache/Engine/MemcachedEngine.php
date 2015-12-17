@@ -27,7 +27,7 @@ class MemcachedEngine extends Object implements EngineContract
 {
     public $host = "127.0.0.1";
     public $port = 11211;
-    public $prefix = "kerisy_cache_";
+    public $prefix = "cache_";
 
     protected $timeout = 3600;
 
@@ -58,9 +58,9 @@ class MemcachedEngine extends Object implements EngineContract
     /**
      * @inheritDoc
      */
-    public function write($key, $data)
+    public function write($key, $data, $ttl = 0)
     {
-        return $this->_memcache->set($this->getPrefixKey($key), $data) !== false;
+        return $this->_memcache->set($this->getPrefixKey($key), $data, $ttl = 0) !== false;
     }
 
     /**
@@ -87,16 +87,16 @@ class MemcachedEngine extends Object implements EngineContract
         $count = count($args);
         switch ($count) {
             case 1:
-                $this->engine->$method($args[0]);
+                $this->_memcache->$method($this->getPrefixKey($args[0]));
                 break;
             case 2:
-                $this->engine->$method($this->getPrefixKey($args[0]), $args[1]);
+                $this->_memcache->$method($this->getPrefixKey($args[0]), $args[1]);
                 break;
             case 3:
-                $this->engine->$method($this->getPrefixKey($args[0]), $args[1], $args[2]);
+                $this->_memcache->$method($this->getPrefixKey($args[0]), $args[1], $args[2]);
                 break;
             case 4:
-                $this->engine->$method($this->getPrefixKey($args[0]), $args[1], $args[2], $args[3]);
+                $this->_memcache->$method($this->getPrefixKey($args[0]), $args[1], $args[2], $args[3]);
                 break;
             default:
                 return false;

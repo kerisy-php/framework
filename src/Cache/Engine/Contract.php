@@ -34,9 +34,10 @@ interface Contract
      *
      * @param string $id
      * @param max $data
+     * @param int $ttl
      * @return boolean
      */
-    public function write($id, $data);
+    public function write($id, $data, $ttl);
 
     /**
      * Destroy session by id.

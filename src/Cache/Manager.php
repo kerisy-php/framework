@@ -55,7 +55,7 @@ class Manager extends Object
 
         $id = md5(microtime(true) . uniqid('', true) . uniqid('', true));
 
-        return $this->engine->write($id, $attributes);
+        return $this->engine->write($id, $attributes, 0);
     }
 
     /**
@@ -69,10 +69,10 @@ class Manager extends Object
     /**
      * @inheritDoc
      */
-    public function set($id, $attributes)
+    public function set($id, $attributes, $ttl = 0)
     {
 
-        return $this->engine->write($id, $attributes);
+        return $this->engine->write($id, $attributes, $ttl);
     }
 
     /**
@@ -85,6 +85,24 @@ class Manager extends Object
 
     public function __call($method, $args)
     {
-        return $this->storage->$method($args);
+        $count = count($args);
+        switch ($count) {
+            case 1:
+                $res = $this->engine->$method($args[0]);
+                break;
+            case 2:
+                $res = $this->engine->$method($args[0], $args[1]);
+                break;
+            case 3:
+                $res = $this->engine->$method($args[0], $args[1], $args[2]);
+                break;
+            case 4:
+                $res = $this->engine->$method($args[0], $args[1], $args[2], $args[3]);
+                break;
+            default:
+                $res = false;
+                break;
+        }
+        return $res;
     }
 }

@@ -36,7 +36,7 @@ interface StorageContract
      * @param array $data
      * @return boolean
      */
-    public function write($id, array $data);
+    public function write($id,$data);
 
 
     /**

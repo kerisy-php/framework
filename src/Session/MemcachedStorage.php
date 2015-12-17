@@ -1,9 +1,9 @@
 <?php
 /**
  * Kerisy Framework
- * 
+ *
  * PHP Version 7
- * 
+ *
  * @author          Jiaqing Zou <zoujiaqing@gmail.com>
  * @copyright      (c) 2015 putao.com, Inc.
  * @package         kerisy/framework
@@ -36,7 +36,7 @@ class MemcachedStorage extends Object implements StorageContract
     public function init()
     {
         $this->_memcache = new \Memcached();
-	$this->_memcache->addServers([[$this->host, $this->port]]);
+        $this->_memcache->addServers([[$this->host, $this->port]]);
     }
 
     public function getPrefixKey($id)
@@ -49,20 +49,15 @@ class MemcachedStorage extends Object implements StorageContract
      */
     public function read($id)
     {
-        if ($data = $this->_memcache->get($this->getPrefixKey($id)))
-        {
-            return unserialize($data);
-        }
-
-        return null;
+        return $this->_memcache->get($this->getPrefixKey($id));
     }
 
     /**
      * @inheritDoc
      */
-    public function write($id, array $data)
+    public function write($id, $data)
     {
-        return $this->_memcache->set($this->getPrefixKey($id), serialize($data), 0, $this->timeout) !== false;
+        return $this->_memcache->set($this->getPrefixKey($id), $data, $this->timeout) !== false;
     }
 
     /**
