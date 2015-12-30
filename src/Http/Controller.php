@@ -36,4 +36,8 @@ class Controller
     {
         return $this->_user_id;
     }
+    public function guestActions()
+    {
+        return [];
+    }
 }
