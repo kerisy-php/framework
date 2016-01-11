@@ -172,7 +172,7 @@ class Swoole extends Base
             'server' => $request->server
         ];
         if (isset($request->files) && is_array($request->files)) {
-            $config['params']['files'] = $request->files;
+            $config['files'] = $request->files;
         }
         return app()->makeRequest($config);
     }

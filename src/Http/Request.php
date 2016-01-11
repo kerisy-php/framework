@@ -63,6 +63,8 @@ class Request extends Object implements ShouldBeRefreshed
 
     public $port = 8080;
 
+    public $files = [];
+
     public $server = [];
     public $abort = false;
 

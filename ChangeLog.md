@@ -9,4 +9,4 @@ Kerisy Framework ChangeLog
   middleware,auth
 
 - add upload  
-	upload file by $request->input('files');
+	upload file by request()->files;
