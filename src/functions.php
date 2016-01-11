@@ -203,3 +203,7 @@ if (!function_exists('base64_urlSafeDecode')) {
         return base64_decode(str_replace($find, $replace, $str));
     }
 }
+function ip()
+{
+    return request()->server['remote_addr'];
+}

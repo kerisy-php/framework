@@ -63,8 +63,7 @@ class Request extends Object implements ShouldBeRefreshed
 
     public $port = 8080;
 
-    public $files = [];
-    
+    public $server = [];
     public $abort = false;
 
     /**
@@ -84,9 +83,10 @@ class Request extends Object implements ShouldBeRefreshed
     private $_body;
 
     private $_headers;
-    
+
+
     private $_route;
-    
+
     public function method()
     {
         return $this->method;
@@ -123,13 +123,13 @@ class Request extends Object implements ShouldBeRefreshed
     {
         return 'HTTPS' === explode('/', $this->protocol)[0];
     }
-    
+
     public function setRoute(\Kerisy\Core\Route $route)
     {
         $this->setParams($route->getParams());
         $this->_route = $route;
     }
-    
+
     public function getRoute()
     {
         return $this->_route;
@@ -287,8 +287,10 @@ class Request extends Object implements ShouldBeRefreshed
 
     private function parseBody($body)
     {
+
         $parsedBody = [];
         $contentType = $this->getContentType();
+
         if ($contentType == 'application/json') {
             $parsedBody = json_decode($body, true);
         } else {
@@ -427,5 +429,10 @@ class Request extends Object implements ShouldBeRefreshed
     public function guest()
     {
         return $this->user() === null;
+    }
+
+    public function to()
+    {
+        return $this->server_raw;
     }
 }
