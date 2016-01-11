@@ -167,7 +167,7 @@ class Swoole extends Base
             'method' => $request->server['request_method'],
             'path' => $request->server['request_uri'],
             'headers' => $request->header,
-            'params' => isset($request->get) ? $request->get : $request->post,
+            'params' => isset($request->get) ? $request->get : (isset($request->post) ? $request->post : []),
             'content' => $request->rawcontent(),
             'server' => $request->server
         ];
