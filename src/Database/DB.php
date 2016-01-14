@@ -22,7 +22,7 @@ class DB extends Object
     {
         $connection = $default_connection ?: static::$connection;
 
-        if (!isset(self::$capsule[$connection])) {
+        //if (!isset(self::$capsule[$connection])) {
             $config = config('database')->get($connection);
             $capsule = new PTCapsule();
             $capsule->addConnection($config, $connection);
@@ -30,7 +30,7 @@ class DB extends Object
             $capsule->setAsGlobal();
             $capsule->bootEloquent();
             self::$capsule[$connection] = $capsule->connection($connection);
-        }
+        //}
         return self::$capsule[$connection];
     }
 
