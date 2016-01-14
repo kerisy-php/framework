@@ -167,8 +167,9 @@ class Swoole extends Base
             'method' => $request->server['request_method'],
             'path' => $request->server['request_uri'],
             'headers' => $request->header,
-            'params' => isset($request->get) ? $request->get : [],
-            'content' => $request->rawcontent()
+            'params' => isset($request->get) ? $request->get : (isset($request->post) ? $request->post : []),
+            'content' => $request->rawcontent(),
+            'server' => $request->server
         ];
         if (isset($request->files) && is_array($request->files)) {
             $config['files'] = $request->files;

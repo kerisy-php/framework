@@ -183,7 +183,7 @@ class Application extends ServiceLocator
     {
         /** @var Response $response */
         $response = $this->get('response');
-        
+
         try {
             $this->exec($request, $response);
         } catch (\Exception $e) {
@@ -227,14 +227,13 @@ class Application extends ServiceLocator
     protected function exec(Request $request, Response $response)
     {
         $route = $this->dispatch($request);
-        
+
         $request->setRoute($route);
 
         $action = $this->createAction($route);
-        
+
         // 中止继续访问
-        if ($request->abort == true)
-        {
+        if ($request->abort == true) {
             return;
         }
 
@@ -282,6 +281,8 @@ class Application extends ServiceLocator
             'name' => get_class($exception),
             'message' => $exception->getMessage(),
             'code' => $exception->getCode(),
+            'http_status' => $exception->getCode(),
+            'msg' => '异常请求'
         ];
 
         if ($exception instanceof HttpException) {
@@ -317,7 +318,7 @@ class Application extends ServiceLocator
 
         $controller = $this->get($class);
         $controller->callMiddleware();
-        
+
         $action = [$controller, $method];
 
         return $action;
