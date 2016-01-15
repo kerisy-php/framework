@@ -318,7 +318,7 @@ class Request extends Object implements ShouldBeRefreshed
                 break;
             case 'multipart/form-data':
                 break;
-            case 'application/xml':
+            case 'text/xml':
             case 'text/plain':
                 $parsedBody = (array)$body;
                 break;
