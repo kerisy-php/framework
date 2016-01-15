@@ -89,6 +89,8 @@ class Request extends Object implements ShouldBeRefreshed
 
     private $_route;
 
+    public $_global = null;
+
     public function method()
     {
         return $this->method;
@@ -292,19 +294,38 @@ class Request extends Object implements ShouldBeRefreshed
 
         $parsedBody = [];
         $contentType = $this->getContentType();
-
-        if ($contentType == 'application/json') {
-            $parsedBody = json_decode($body, true);
-        } else {
-            if ($contentType == 'application/x-www-form-urlencoded') {
+        /*
+                if ($contentType == 'application/json') {
+                    $parsedBody = json_decode($body, true);
+                } else {
+                    if ($contentType == 'application/x-www-form-urlencoded') {
+                        parse_str($body, $parsedBody);
+                    } elseif ($contentType == 'multipart/form-data') {
+                        // TODO
+                    } else {
+                        $parsedBody = [file_get_contents('php://input')];
+                        var_dump($parsedBody);
+                        //throw new NotSupportedException("The content type: '$contentType' does not supported");
+                    }
+                }
+        */
+        switch ($contentType) {
+            case 'application/json':
+                $parsedBody = json_decode($body, true);
+                break;
+            case 'application/x-www-form-urlencoded':
                 parse_str($body, $parsedBody);
-            } elseif ($contentType == 'multipart/form-data') {
-                // TODO
-            } else {
+                break;
+            case 'multipart/form-data':
+                break;
+            case 'application/xml':
+            case 'text/plain':
+                $parsedBody = (array)$body;
+                break;
+            default:
                 throw new NotSupportedException("The content type: '$contentType' does not supported");
-            }
-        }
 
+        }
         return $parsedBody;
     }
 
@@ -433,8 +454,21 @@ class Request extends Object implements ShouldBeRefreshed
         return $this->user() === null;
     }
 
-    public function to()
+    public function setGlobal($params = [])
     {
-        return $this->server_raw;
+        if (is_null($this->_global)) {
+            $this->_global = $params;
+        } else {
+            $this->_global += $params;
+        }
+        return $this->_global;
+    }
+
+    public function getGlobal($key = '')
+    {
+        if (!empty($key)) {
+            return array_get($this->_global, $key);
+        }
+        return $this->_global;
     }
 }
