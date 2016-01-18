@@ -154,11 +154,11 @@ class Response extends Object implements ShouldBeRefreshed
         return $this;
     }
 
-    public function text($string, $type = 'text/html')
+    public function text($string = '', $type = 'text/html', $code = 200)
     {
         $this->data = $string;
         $this->headers->set('Content-Type', $type);
-        $this->status(200);
+        $this->status($code);
         return $this;
     }
 
