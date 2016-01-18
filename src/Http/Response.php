@@ -154,6 +154,14 @@ class Response extends Object implements ShouldBeRefreshed
         return $this;
     }
 
+    public function text($string, $type = 'text/html')
+    {
+        $this->data = $string;
+        $this->headers->set('Content-Type', $type);
+        $this->status(200);
+        return $this;
+    }
+
     /**
      * @describe 跳转
      * @auth haoyanfei<haoyf@putao.com>

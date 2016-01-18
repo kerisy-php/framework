@@ -320,11 +320,9 @@ class Request extends Object implements ShouldBeRefreshed
                 break;
             case 'text/xml':
             case 'text/plain':
-                $parsedBody = (array)$body;
                 break;
             default:
                 throw new NotSupportedException("The content type: '$contentType' does not supported");
-
         }
         return $parsedBody;
     }
