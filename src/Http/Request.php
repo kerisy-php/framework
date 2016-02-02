@@ -65,6 +65,8 @@ class Request extends Object implements ShouldBeRefreshed
 
     public $files = [];
 
+    public $cookie = [];
+
     public $server = [];
     public $abort = false;
 
