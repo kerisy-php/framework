@@ -261,7 +261,7 @@ class Response extends Object implements ShouldBeRefreshed
         return $this->_cookies;
     }
 
-    public function setCookie($key, $value, $ttl = 0, $path = '/', $domain = '.putao.com', $secure = false, $httponly)
+    public function setCookie($key, $value, $ttl = 0, $path = '/', $domain = '.putao.com', $secure = false, $httponly=false)
     {
         $this->_cookies[] = [$key, $value, $ttl, $path, $domain, $secure, $httponly];
         return $this;
