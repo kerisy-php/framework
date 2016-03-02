@@ -196,8 +196,8 @@ class Swoole extends Base
         }
         $response->header('Content-Length' , strlen($content));
         if ( $res->getCookies() ) {
-            foreach ( $res->getCookies() as list( $key , $value , $ttl ) ) {
-                $response->cookie($key , $value , $ttl,  $path = '/',  $domain  = '',  $secure = false ,  $httponly = false);
+            foreach ( $res->getCookies() as list( $key , $value , $ttl,$path,$domain,$secure,$httponly ) ) {
+                $response->cookie($key , $value , $ttl,  $path = '/',  $domain,  $secure ,  $httponly);
             }
         }
         $response->status($res->statusCode);

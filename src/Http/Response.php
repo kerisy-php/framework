@@ -48,71 +48,71 @@ class Response extends Object implements ShouldBeRefreshed
     public $attach = NULL;
 
     public static $httpStatuses = [
-        100 => 'Continue' ,
-        101 => 'Switching Protocols' ,
-        102 => 'Processing' ,
-        118 => 'Connection timed out' ,
-        200 => 'OK' ,
-        201 => 'Created' ,
-        202 => 'Accepted' ,
-        203 => 'Non-Authoritative' ,
-        204 => 'No Content' ,
-        205 => 'Reset Content' ,
-        206 => 'Partial Content' ,
-        207 => 'Multi-Status' ,
-        208 => 'Already Reported' ,
-        210 => 'Content Different' ,
-        226 => 'IM Used' ,
-        300 => 'Multiple Choices' ,
-        301 => 'Moved Permanently' ,
-        302 => 'Found' ,
-        303 => 'See Other' ,
-        304 => 'Not Modified' ,
-        305 => 'Use Proxy' ,
-        306 => 'Reserved' ,
-        307 => 'Temporary Redirect' ,
-        308 => 'Permanent Redirect' ,
-        310 => 'Too many Redirect' ,
-        400 => 'Bad Request' ,
-        401 => 'Unauthorized' ,
-        402 => 'Payment Required' ,
-        403 => 'Forbidden' ,
-        404 => 'Not Found' ,
-        405 => 'Method Not Allowed' ,
-        406 => 'Not Acceptable' ,
-        407 => 'Proxy Authentication Required' ,
-        408 => 'Request Time-out' ,
-        409 => 'Conflict' ,
-        410 => 'Gone' ,
-        411 => 'Length Required' ,
-        412 => 'Precondition Failed' ,
-        413 => 'Request Entity Too Large' ,
-        414 => 'Request-URI Too Long' ,
-        415 => 'Unsupported Media Type' ,
-        416 => 'Requested range unsatisfiable' ,
-        417 => 'Expectation failed' ,
-        418 => 'I\'m a teapot' ,
-        422 => 'Unprocessable entity' ,
-        423 => 'Locked' ,
-        424 => 'Method failure' ,
-        425 => 'Unordered Collection' ,
-        426 => 'Upgrade Required' ,
-        428 => 'Precondition Required' ,
-        429 => 'Too Many Requests' ,
-        431 => 'Request Header Fields Too Large' ,
-        449 => 'Retry With' ,
-        450 => 'Blocked by Windows Parental Controls' ,
-        500 => 'Internal Server Error' ,
-        501 => 'Not Implemented' ,
-        502 => 'Bad Gateway or Proxy Error' ,
-        503 => 'Service Unavailable' ,
-        504 => 'Gateway Time-out' ,
-        505 => 'HTTP Version not supported' ,
-        507 => 'Insufficient storage' ,
-        508 => 'Loop Detected' ,
-        509 => 'Bandwidth Limit Exceeded' ,
-        510 => 'Not Extended' ,
-        511 => 'Network Authentication Required' ,
+        100 => 'Continue',
+        101 => 'Switching Protocols',
+        102 => 'Processing',
+        118 => 'Connection timed out',
+        200 => 'OK',
+        201 => 'Created',
+        202 => 'Accepted',
+        203 => 'Non-Authoritative',
+        204 => 'No Content',
+        205 => 'Reset Content',
+        206 => 'Partial Content',
+        207 => 'Multi-Status',
+        208 => 'Already Reported',
+        210 => 'Content Different',
+        226 => 'IM Used',
+        300 => 'Multiple Choices',
+        301 => 'Moved Permanently',
+        302 => 'Found',
+        303 => 'See Other',
+        304 => 'Not Modified',
+        305 => 'Use Proxy',
+        306 => 'Reserved',
+        307 => 'Temporary Redirect',
+        308 => 'Permanent Redirect',
+        310 => 'Too many Redirect',
+        400 => 'Bad Request',
+        401 => 'Unauthorized',
+        402 => 'Payment Required',
+        403 => 'Forbidden',
+        404 => 'Not Found',
+        405 => 'Method Not Allowed',
+        406 => 'Not Acceptable',
+        407 => 'Proxy Authentication Required',
+        408 => 'Request Time-out',
+        409 => 'Conflict',
+        410 => 'Gone',
+        411 => 'Length Required',
+        412 => 'Precondition Failed',
+        413 => 'Request Entity Too Large',
+        414 => 'Request-URI Too Long',
+        415 => 'Unsupported Media Type',
+        416 => 'Requested range unsatisfiable',
+        417 => 'Expectation failed',
+        418 => 'I\'m a teapot',
+        422 => 'Unprocessable entity',
+        423 => 'Locked',
+        424 => 'Method failure',
+        425 => 'Unordered Collection',
+        426 => 'Upgrade Required',
+        428 => 'Precondition Required',
+        429 => 'Too Many Requests',
+        431 => 'Request Header Fields Too Large',
+        449 => 'Retry With',
+        450 => 'Blocked by Windows Parental Controls',
+        500 => 'Internal Server Error',
+        501 => 'Not Implemented',
+        502 => 'Bad Gateway or Proxy Error',
+        503 => 'Service Unavailable',
+        504 => 'Gateway Time-out',
+        505 => 'HTTP Version not supported',
+        507 => 'Insufficient storage',
+        508 => 'Loop Detected',
+        509 => 'Bandwidth Limit Exceeded',
+        510 => 'Not Extended',
+        511 => 'Network Authentication Required',
     ];
 
     protected $content;
@@ -132,36 +132,36 @@ class Response extends Object implements ShouldBeRefreshed
 
     public function initView()
     {
-        if ( !$this->view ) {
+        if (!$this->view) {
             $this->view = new \Kerisy\Http\View($this->prefix);
         }
     }
 
-    public function assign($key , $value)
+    public function assign($key, $value)
     {
-        $this->attach[ $key ] = $value;
+        $this->attach[$key] = $value;
     }
 
-    public function view($template , $data = [ ])
+    public function view($template, $data = [])
     {
         $this->initView();
-        if ( !is_null($this->attach) && is_array($this->attach) ) {
+        if (!is_null($this->attach) && is_array($this->attach)) {
             $data += $this->attach;
         }
         $this->view->replace($data);
         $this->data = $this->view->render($template);
 
-        $this->headers->set('Content-Type' , 'text/html');
+        $this->headers->set('Content-Type', 'text/html');
 
         return $this;
     }
 
 
-    public function json($data = [ ])
+    public function json($data = [])
     {
-        $this->data = json_encode($data , JSON_UNESCAPED_UNICODE);
+        $this->data = json_encode($data, JSON_UNESCAPED_UNICODE);
 
-        $this->headers->set('Content-Type' , 'application/json');
+        $this->headers->set('Content-Type', 'application/json');
 
         return $this;
     }
@@ -171,14 +171,14 @@ class Response extends Object implements ShouldBeRefreshed
      * @auth     haoyanfei<haoyf@putao.com>
      *
      * @param        $url
-     * @param int    $code
+     * @param int $code
      * @param string $text
      *
      * @return $this
      */
-    public function redirect($url , $code = 302 , $text = '')
+    public function redirect($url, $code = 302, $text = '')
     {
-        if ( empty( $url ) ) {
+        if (empty($url)) {
             throw new \InvalidArgumentException('Cannot redirect to an empty URL.');
         }
         $this->data =
@@ -192,30 +192,30 @@ class Response extends Object implements ShouldBeRefreshed
     <body>
         Redirecting to <a href="%1$s">%1$s</a>.
     </body>
-</html>' , htmlspecialchars($url , ENT_QUOTES , 'UTF-8'));
-        $this->headers->set('Location' , $url);
-        $this->status($code , $text);
+</html>', htmlspecialchars($url, ENT_QUOTES, 'UTF-8'));
+        $this->headers->set('Location', $url);
+        $this->status($code, $text);
 
         return $this;
     }
 
-    public function download($filepath , $name , $headers)
+    public function download($filepath, $name, $headers)
     {
         // TODO
         return $this;
     }
 
 
-    public function status($code , $text = NULL)
+    public function status($code, $text = NULL)
     {
-        if ( !isset( self::$httpStatuses[ $code ] ) ) {
+        if (!isset(self::$httpStatuses[$code])) {
             throw new InvalidParamException("The HTTP status code is invalid: $code");
         }
 
         $this->statusCode = $code;
 
-        if ( $text === NULL ) {
-            $this->statusText = isset( static::$httpStatuses[ $this->statusCode ] ) ? static::$httpStatuses[ $this->statusCode ] : '';
+        if ($text === NULL) {
+            $this->statusText = isset(static::$httpStatuses[$this->statusCode]) ? static::$httpStatuses[$this->statusCode] : '';
         } else {
             $this->statusText = $text;
         }
@@ -233,10 +233,10 @@ class Response extends Object implements ShouldBeRefreshed
      */
     public function prepare()
     {
-        if ( !$this->prepared ) {
+        if (!$this->prepared) {
             $this->content = is_string($this->data) ? $this->data : Json::encode($this->data);
-            if ( !is_string($this->data) ) {
-                $this->headers->set('Content-Type' , 'application/json');
+            if (!is_string($this->data)) {
+                $this->headers->set('Content-Type', 'application/json');
             }
             $this->prepared = TRUE;
         }
@@ -249,7 +249,7 @@ class Response extends Object implements ShouldBeRefreshed
      */
     public function content()
     {
-        if ( !$this->prepared ) {
+        if (!$this->prepared) {
             $this->prepare();
         }
 
@@ -261,9 +261,9 @@ class Response extends Object implements ShouldBeRefreshed
         return $this->_cookies;
     }
 
-    public function setCookie($key , $value , $ttl = 0)
+    public function setCookie($key, $value, $ttl = 0, $path = '/', $domain = '.putao.com', $secure = false, $httponly)
     {
-        $this->_cookies[] = [ $key , $value , $ttl ];
+        $this->_cookies[] = [$key, $value, $ttl, $path, $domain, $secure, $httponly];
         return $this;
     }
 
