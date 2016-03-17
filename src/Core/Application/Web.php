@@ -20,6 +20,20 @@ use Kerisy\Core\Application;
 class Web extends Application
 {
 
+    public function bootstrap()
+    {
+        if (!$this->bootstrapped) {
+            $this->initializeConfig();
+            $this->registerComponents();
+            $this->registerRoutes();
+            //$this->registerEntities();
+            $this->bootstrapped = true;
+
+            $this->get('log')->info('application started');
+        }
+
+        return $this;
+    }
 
     protected function registerRoutes()
     {

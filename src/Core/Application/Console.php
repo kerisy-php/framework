@@ -16,19 +16,29 @@ use Kerisy\Core\Route;
 class Console extends Application
 {
 
+
+    public function __construct()
+    {
+
+        parent::__construct();
+        $this->init();
+        $this->bootstrap();
+    }
+
+
+
     public function bootstrap()
     {
         if (!$this->bootstrapped) {
             $this->initializeConfig();
             $this->registerComponents();
+            //$this->registerEntities();
             $this->bootstrapped = true;
 
         }
 
         return $this;
     }
-
-
     protected function runAction($action, $request=false, $response=false)
     {
         $data = call_user_func_array($action, [$request, $response]);
