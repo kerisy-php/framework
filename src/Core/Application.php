@@ -136,7 +136,7 @@ class Application extends ServiceLocator
 
         $commands = array_merge($this->commands, [
             'Kerisy\Console\ServerCommand',
-            'Kerisy\Console\CommandCommand'
+            'Kerisy\Console\ShellCommand'
         ]);
 
         foreach ($commands as $command) {
