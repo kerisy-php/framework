@@ -23,14 +23,14 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 
 /**
- * Class ServerCommand
+ * Class ShellCommand
  *
  * @package Kerisy\Console
  */
-class CommandCommand extends Command
+class ShellCommand extends Command
 {
-    public $name = 'command';
-    public $description = 'Kerisy command management';
+    public $name = 'shell';
+    public $description = 'Kerisy shell management';
 
     protected function configure()
     {
