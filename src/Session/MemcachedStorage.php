@@ -37,6 +37,7 @@ class MemcachedStorage extends Object implements StorageContract
     {
         $this->_memcache = new \Memcached();
         $this->_memcache->addServers([[$this->host, $this->port]]);
+        $this->_memcache->setOption(\Memcached::OPT_COMPRESSION,false);
     }
 
     public function getPrefixKey($id)

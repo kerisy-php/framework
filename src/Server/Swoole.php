@@ -14,6 +14,8 @@
 
 namespace Kerisy\Server;
 
+use Kerisy;
+
 /**
  * A Swoole based server implementation.
  *
@@ -22,6 +24,7 @@ namespace Kerisy\Server;
 class Swoole extends Base
 {
 
+    public $alias_name = '';
     /**
      * The number of requests each process should execute before respawning, This can be useful to work around
      * with possible memory leaks.
@@ -54,16 +57,16 @@ class Swoole extends Base
 
     private function normalizedConfig()
     {
-        $config = [ ];
+        $config = [];
 
         $config['max_request'] = $this->maxRequests;
         $config['daemonize'] = $this->asDaemon;
 
-        if ( $this->numWorkers ) {
+        if ($this->numWorkers) {
             $config['worker_num'] = $this->numWorkers;
         }
 
-        if ( $this->logFile ) {
+        if ($this->logFile) {
             $config['log_file'] = $this->logFile;
         }
 
@@ -72,37 +75,37 @@ class Swoole extends Base
 
     private function createServer()
     {
-        $server = new \swoole_http_server($this->host , $this->port);
+        $server = new \swoole_http_server($this->host, $this->port);
 
-        $server->on('start' , [ $this , 'onServerStart' ]);
-        $server->on('shutdown' , [ $this , 'onServerStop' ]);
+        $server->on('start', [$this, 'onServerStart']);
+        $server->on('shutdown', [$this, 'onServerStop']);
 
-        $server->on('managerStart' , [ $this , 'onManagerStart' ]);
+        $server->on('managerStart', [$this, 'onManagerStart']);
 
-        $server->on('workerStart' , [ $this , 'onWorkerStart' ]);
-        $server->on('workerStop' , [ $this , 'onWorkerStop' ]);
+        $server->on('workerStart', [$this, 'onWorkerStart']);
+        $server->on('workerStop', [$this, 'onWorkerStop']);
 
-        $server->on('request' , [ $this , 'onRequest' ]);
+        $server->on('request', [$this, 'onRequest']);
 
-        if ( method_exists($this , 'onOpen') ) {
-            $server->on('open' , [ $this , 'onOpen' ]);
+        if (method_exists($this, 'onOpen')) {
+            $server->on('open', [$this, 'onOpen']);
         }
-        if ( method_exists($this , 'onClose') ) {
-            $server->on('close' , [ $this , 'onClose' ]);
-        }
-
-        if ( method_exists($this , 'onWsHandshake') ) {
-            $server->on('handshake' , [ $this , 'onWsHandshake' ]);
-        }
-        if ( method_exists($this , 'onWsMessage') ) {
-            $server->on('message' , [ $this , 'onWsMessage' ]);
+        if (method_exists($this, 'onClose')) {
+            $server->on('close', [$this, 'onClose']);
         }
 
-        if ( method_exists($this , 'onTask') ) {
-            $server->on('task' , [ $this , 'onTask' ]);
+        if (method_exists($this, 'onWsHandshake')) {
+            $server->on('handshake', [$this, 'onWsHandshake']);
         }
-        if ( method_exists($this , 'onFinish') ) {
-            $server->on('finish' , [ $this , 'onFinish' ]);
+        if (method_exists($this, 'onWsMessage')) {
+            $server->on('message', [$this, 'onWsMessage']);
+        }
+
+        if (method_exists($this, 'onTask')) {
+            $server->on('task', [$this, 'onTask']);
+        }
+        if (method_exists($this, 'onFinish')) {
+            $server->on('finish', [$this, 'onFinish']);
         }
 
         $server->set($this->normalizedConfig());
@@ -113,27 +116,27 @@ class Swoole extends Base
 
     public function onServerStart($server)
     {
-        cli_set_process_title($this->name . ': master');
-        if ( $this->pidFile ) {
-            file_put_contents($this->pidFile , $server->master_pid);
+        PHP_OS != 'Darwin' && cli_set_process_title($this->name . ': master');
+        if ($this->pidFile) {
+            file_put_contents($this->pidFile, $server->master_pid);
         }
     }
 
     public function onManagerStart($server)
     {
-        cli_set_process_title($this->name . ': manager');
+        PHP_OS != 'Darwin' && cli_set_process_title($this->name . ': manager');
     }
 
     public function onServerStop()
     {
-        if ( $this->pidFile ) {
+        if ($this->pidFile) {
             unlink($this->pidFile);
         }
     }
 
     public function onWorkerStart()
     {
-        cli_set_process_title($this->name . ': worker');
+        PHP_OS != 'Darwin' && cli_set_process_title($this->name . ': worker');
         $this->startApp();
     }
 
@@ -152,52 +155,54 @@ class Swoole extends Base
 
     }
 
+    /**
+     * @param \swoole_http_request $request
+     * @return mixed
+     */
     protected function prepareRequest($request)
     {
-        $port = 80;
-        $hosts = explode(':' , $request->header['host']);
-
-        if ( count($hosts) > 1 ) {
-            $port = $hosts[1];
-        }
+        $hosts = explode(':', $request->header['host']);
         $host = $hosts[0];
-        $config = [
-            'protocol' => $request->server['server_protocol'] ,
-            'host'     => $host ,
-            'port'     => $port ,
-            'method'   => $request->server['request_method'] ,
-            'path'     => $request->server['request_uri'] ,
-            'headers'  => $request->header ,
-            'params'   => isset( $request->get ) ? $request->get : ( isset( $request->post ) ? $request->post : [ ] ) ,
-            'content'  => $request->rawcontent() ,
-            'server'   => $request->server
-        ];
-        if ( isset( $request->files ) && is_array($request->files) ) {
-            $config['files'] = $request->files;
-        }
-        if ( isset( $request->cookie ) && is_array($request->cookie) ) {
-            $config['cookie'] = $request->cookie;
-        }
+        $port = isset($hosts[1]) ? (int)$hosts[1] : 80;
 
-        return app()->makeRequest($config);
+        $get = isset($request->get) ? $request->get : [];
+        $post = isset($request->post) ? $request->post : [];
+        $cookie = isset($request->cookie) ? $request->cookie : [];
+        $files = isset($request->files) ? $request->files : [];
+
+        $config = [
+            'protocol' => $request->server['server_protocol'],
+            'host' => $host,
+            'port' => $port,
+            'method' => $request->server['request_method'],
+            'path' => $request->server['request_uri'],
+            'headers' => $request->header,
+            'cookie' => $cookie,
+            'params' => array_merge($get, $post),
+            'content' => $request->rawcontent(),
+            'files' => $files,
+            'server' => $request->server
+        ];
+
+        return Kerisy::$app->makeRequest($config);
     }
 
-    public function onRequest($request , $response)
+    public function onRequest($request, $response)
     {
         $res = $this->handleRequest($this->prepareRequest($request));
 
         $content = $res->content();
 
-        foreach ( $res->headers->all() as $name => $values ) {
-            $name = str_replace(' ' , '-' , ucwords(str_replace('-' , ' ' , $name)));
-            foreach ( $values as $value ) {
-                $response->header($name , $value);
+        foreach ($res->headers->all() as $name => $values) {
+            $name = str_replace(' ', '-', ucwords(str_replace('-', ' ', $name)));
+            foreach ($values as $value) {
+                $response->header($name, $value);
             }
         }
-        $response->header('Content-Length' , strlen($content));
-        if ( $res->getCookies() ) {
-            foreach ( $res->getCookies() as list( $key , $value , $ttl,$path,$domain,$secure,$httponly ) ) {
-                $response->cookie($key , $value , $ttl,  $path = '/',  $domain,  $secure ,  $httponly);
+        $response->header('Content-Length', strlen($content));
+        if ($res->getCookies()) {
+            foreach ($res->getCookies() as list($key, $value, $ttl, $path, $domain, $secure, $httponly)) {
+                $response->cookie($key, $value, $ttl, $path = '/', $domain, $secure, $httponly);
             }
         }
         $response->status($res->statusCode);
@@ -208,5 +213,10 @@ class Swoole extends Base
     {
         $server = $this->createServer();
         $server->start();
+    }
+
+    public function setAliasName($alias_name = '')
+    {
+        $this->name .= ' '.$alias_name ?: 'server';
     }
 }

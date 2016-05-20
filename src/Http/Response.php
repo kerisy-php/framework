@@ -151,7 +151,7 @@ class Response extends Object implements ShouldBeRefreshed
         $this->view->replace($data);
         $this->data = $this->view->render($template);
 
-        $this->headers->set('Content-Type', 'text/html');
+        $this->headers->set('Content-Type', 'text/html;charset=utf-8');
 
         return $this;
     }
@@ -161,7 +161,7 @@ class Response extends Object implements ShouldBeRefreshed
     {
         $this->data = json_encode($data, JSON_UNESCAPED_UNICODE);
 
-        $this->headers->set('Content-Type', 'application/json');
+        $this->headers->set('Content-Type', 'application/json;charset=utf-8');
 
         return $this;
     }
@@ -261,7 +261,7 @@ class Response extends Object implements ShouldBeRefreshed
         return $this->_cookies;
     }
 
-    public function setCookie($key, $value, $ttl = 0, $path = '/', $domain = '.putao.com', $secure = false, $httponly=false)
+    public function setCookie($key, $value, $ttl = 0, $path = '/', $domain = '.putao.com', $secure = false, $httponly = false)
     {
         $this->_cookies[] = [$key, $value, $ttl, $path, $domain, $secure, $httponly];
         return $this;

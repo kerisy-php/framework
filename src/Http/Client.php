@@ -30,9 +30,9 @@ class Client
         return $this->request('GET', $url, $data);
     }
 
-    public function post($url, $data = array())
+    public function post($url, $data = array(), $flag = true)
     {
-        return $this->request('POST', $url, $data);
+        return $this->request('POST', $url, $data, $flag);
     }
 
     public function put($url, $data = array())
@@ -40,7 +40,7 @@ class Client
         return $this->request('FILE', $url, $data);
     }
 
-    public function request($type = 'GET', $url, $data = array())
+    public function request($type = 'GET', $url, $data = array(), $flag = true)
     {
         $fromData = array();
 
@@ -55,8 +55,15 @@ class Client
             }
         }
 
-        $res = $this->client->request($type, $url, $fromData);
-        return json_decode($res->getBody(), true);
+		$response = $this->client->request($type, $url, $fromData);
+		
+		if ( $response->getStatusCode() != 200 )
+		{
+			return "Error code " . $response->getStatusCode();
+		}
+		
+        // $res = $this->client->request($type, $url, $fromData)->getBody();
+        return $flag ? json_decode($response->getBody(), true) : $response->getBody()->getContents();
     }
 
 }

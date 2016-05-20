@@ -14,6 +14,7 @@
 
 namespace Kerisy\Core;
 
+use Kerisy;
 use Kerisy\Di\Container;
 use Kerisy\Log\Logger;
 use Kerisy\Http\Request;
@@ -85,6 +86,8 @@ class Application extends ServiceLocator
         $this->components = array_merge($this->defaultComponents(), $this->config('components')->all());
 
         Container::getInstance()->setApp($this);
+
+        Kerisy::$app = $this;
     }
 
 

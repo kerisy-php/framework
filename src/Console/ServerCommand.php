@@ -1,9 +1,9 @@
 <?php
 /**
  * Kerisy Framework
- * 
+ *
  * PHP Version 7
- * 
+ *
  * @author          Jiaqing Zou <zoujiaqing@gmail.com>
  * @copyright      (c) 2015 putao.com, Inc.
  * @package         kerisy/framework
@@ -35,12 +35,13 @@ class ServerCommand extends Command
     protected function configure()
     {
         $this->addArgument('operation', InputArgument::REQUIRED, 'the operation: serve, start, restart or stop');
+        $this->addOption('alias_name', '-i', InputArgument::OPTIONAL, 'pls add operation alias name');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $operation = $input->getArgument('operation');
-
+        !is_null($input->getOption('alias_name')) && $this->setAliases(['alias_name' => $input->getOption('alias_name')]);
         if (!in_array($operation, ['run', 'start', 'restart', 'stop'])) {
             throw new InvalidParamException('The <operation> argument is invalid');
         }
@@ -53,8 +54,9 @@ class ServerCommand extends Command
     {
         $server = config('service')->all();
         $server['asDaemon'] = 0;
-
-        return make($server)->run();
+        $serv = make($server);
+        isset($this->getAliases()['alias_name']) && $serv->setAliasName($this->getAliases()['alias_name']);
+        return $serv->run();
     }
 
     protected function handleStart()
@@ -69,7 +71,9 @@ class ServerCommand extends Command
         $server['asDaemon'] = 1;
         $server['pidFile'] = APPLICATION_PATH . 'runtime/server.pid';
 
-        return make($server)->run();
+        $serv = make($server);
+        isset($this->getAliases()['alias_name']) && $serv->setAliasName($this->getAliases()['alias_name']);
+        return $serv->run();
     }
 
     protected function handleRestart()
@@ -85,7 +89,7 @@ class ServerCommand extends Command
         if (file_exists($pidFile) && posix_kill(file_get_contents($pidFile), 15)) {
             do {
                 usleep(100000);
-            } while(file_exists($pidFile));
+            } while (file_exists($pidFile));
             return 0;
         }
 

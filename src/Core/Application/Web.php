@@ -169,7 +169,7 @@ class Web extends Application
     protected function dispatch($request)
     {
         if (!$route = $this->dispatcher->dispatch($request)) {
-            throw new HttpException(404);
+            throw new \HttpException(404);
         }
 
         return $route;

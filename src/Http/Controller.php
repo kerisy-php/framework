@@ -19,7 +19,7 @@ use Kerisy\Core\MiddlewareTrait;
 class Controller
 {
     private $_user_id;
-    
+
     use MiddlewareTrait;
 
 //    public function before()
@@ -31,11 +31,13 @@ class Controller
 //    {
 //    
 //    }
-    
+
     public function userId()
     {
+        return array_get(request()->all(), 'user_id');
         return $this->_user_id;
     }
+
     public function guestActions()
     {
         return [];

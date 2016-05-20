@@ -77,7 +77,13 @@ class Router
 
         if (isset($config['domain']) && $config['domain'] != '')
         {
-            $this->_domain_groups[$config['domain']] = &$this->_groups[$config['prefix']];
+            if (is_array($config['domain'])) {
+                foreach ($config['domain'] as $domain) {
+                    $this->_domain_groups[$domain] = &$this->_groups[$config['prefix']];
+                }
+            } else {
+                $this->_domain_groups[$config['domain']] = &$this->_groups[$config['prefix']];
+            }
         }
         elseif(isset($config['directory']) && $config['directory'] != '')
         {
