@@ -26,7 +26,7 @@ class DB extends Object
             $config = config('database')->all();
             $capsule = new PTCapsule();
 	    foreach($config as $key=>$value){
-            	$capsule->addConnection($key, $value);
+            	$capsule->addConnection($value,$key);
 	    }
             $capsule->setEventDispatcher(new Dispatcher(new Container));
             $capsule->setAsGlobal();
