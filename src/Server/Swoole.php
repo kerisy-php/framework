@@ -23,8 +23,8 @@ use Kerisy;
  */
 class Swoole extends Base
 {
-
     public $alias_name = '';
+
     /**
      * The number of requests each process should execute before respawning, This can be useful to work around
      * with possible memory leaks.
@@ -54,7 +54,11 @@ class Swoole extends Base
      */
     public $logFile;
 
-
+    /**
+     * Normalized Swoole Http Server Config
+     *
+     * @return array
+     */
     private function normalizedConfig()
     {
         $config = [];
@@ -73,6 +77,11 @@ class Swoole extends Base
         return $config;
     }
 
+    /**
+     * Create Server
+     *
+     * @return \swoole_http_server
+     */
     private function createServer()
     {
         $server = new \swoole_http_server($this->host, $this->port);
@@ -113,7 +122,11 @@ class Swoole extends Base
         return $server;
     }
 
-
+    /**
+     * Listen Server Start Event
+     *
+     * @param \swoole_http_server $server
+     */
     public function onServerStart($server)
     {
         PHP_OS != 'Darwin' && cli_set_process_title($this->name . ': master');
@@ -122,6 +135,11 @@ class Swoole extends Base
         }
     }
 
+    /**
+     * Listen Manager Start Event
+     *
+     * @param \swoole_http_server $server
+     */
     public function onManagerStart($server)
     {
         PHP_OS != 'Darwin' && cli_set_process_title($this->name . ': manager');
@@ -134,6 +152,9 @@ class Swoole extends Base
         }
     }
 
+    /**
+     * Listen Worker Start Event
+     */
     public function onWorkerStart()
     {
         PHP_OS != 'Darwin' && cli_set_process_title($this->name . ': worker');
@@ -156,8 +177,10 @@ class Swoole extends Base
     }
 
     /**
+     * Prepare Request
+     *
      * @param \swoole_http_request $request
-     * @return mixed
+     * @return Kerisy\Http\Request
      */
     protected function prepareRequest($request)
     {
@@ -187,6 +210,12 @@ class Swoole extends Base
         return Kerisy::$app->makeRequest($config);
     }
 
+    /**
+     * Listen Request Event
+     *
+     * @param \swoole_http_request $request
+     * @param \swoole_http_response $response
+     */
     public function onRequest($request, $response)
     {
         $res = $this->handleRequest($this->prepareRequest($request));
@@ -209,6 +238,9 @@ class Swoole extends Base
         $response->end($content);
     }
 
+    /**
+     * Server Start
+     */
     public function run()
     {
         $server = $this->createServer();

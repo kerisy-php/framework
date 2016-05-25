@@ -23,13 +23,16 @@ class DB extends Object
         $connection = $default_connection ?: static::$connection;
 
         if (!isset(self::$capsule[$connection])) {
-            $config = config('database')->get($connection);
             $capsule = new PTCapsule();
-            $capsule->addConnection($config, $connection);
             $capsule->setEventDispatcher(new Dispatcher(new Container));
             $capsule->setAsGlobal();
             $capsule->bootEloquent();
-            self::$capsule[$connection] = $capsule->connection($connection);
+
+            $configs = config('database')->all();
+            foreach ($configs as $k => $config) {
+                $capsule->addConnection($config, $k);
+                self::$capsule[$k] = $capsule->connection($k);
+            }
         }
         return self::$capsule[$connection];
     }

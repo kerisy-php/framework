@@ -66,8 +66,13 @@ class Application extends ServiceLocator
 
     public $runtime;
 
+    /**
+     * @var \Kerisy\Core\Dispatcher
+     */
     protected $dispatcher;
+
     protected $bootstrapped = false;
+
     protected $refreshing = [];
 
     private $_configs;
@@ -85,6 +90,7 @@ class Application extends ServiceLocator
 
         $this->components = array_merge($this->defaultComponents(), $this->config('components')->all());
 
+        //兼容老系统
         Container::getInstance()->setApp($this);
 
         Kerisy::$app = $this;
@@ -108,7 +114,7 @@ class Application extends ServiceLocator
     protected function registerComponents()
     {
         foreach ($this->components as $id => $definition) {
-            $this->bind($id, $definition);
+            $this->set($id, $definition);
         }
 
         foreach ($this->components as $id => $_) {
@@ -149,8 +155,19 @@ class Application extends ServiceLocator
         return $app->run($input, $output);
     }
 
+    /**
+     * @param $service
+     * @return mixed
+     */
+    public function getService($service)
+    {
+        return $this->get($service);
+    }
 
-
+    /**
+     * 默认加载的组件
+     * @return array
+     */
     public function defaultComponents()
     {
         return [

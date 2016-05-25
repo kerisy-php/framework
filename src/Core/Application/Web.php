@@ -9,13 +9,12 @@
 namespace Kerisy\Core\Application;
 
 use Kerisy\Core\Dispatcher;
+use Kerisy\Core\HttpException;
 use Kerisy\Core\Route;
-use Kerisy\Di\Container;
-use Kerisy\Log\Logger;
 use Kerisy\Http\Request;
 use Kerisy\Http\Response;
-use Kerisy\Database\Database;
 use Kerisy\Core\Application;
+use Kerisy\Database\Database;
 
 class Web extends Application
 {
@@ -41,9 +40,17 @@ class Web extends Application
         $this->dispatcher->getRouter()->setConfig($this->config('routes')->all());
     }
 
-
+    /**
+     * Make a Request Object
+     * @param array $config
+     * @return Request
+     * @throws \Kerisy\Core\InvalidConfigException
+     */
     public function makeRequest($config = [])
     {
+        /**
+         * @var \Kerisy\Http\Request $request
+         */
         $request = $this->get('request');
 
         foreach ($config as $name => $value) {
@@ -62,7 +69,7 @@ class Web extends Application
     public function handleRequest($request)
     {
         /** @var Response $response */
-        $response = $this->get('response');
+        $response = $this->getResponse();
 
         try {
             $this->exec($request, $response);
@@ -85,7 +92,23 @@ class Web extends Application
         return $response;
     }
 
+    /**
+     * Get Request Object
+     * @return \Kerisy\Http\Request
+     */
+    public function getRequest()
+    {
+        return $this->get('request');
+    }
 
+    /**
+     * Get Response Object
+     * @return \Kerisy\Http\Response
+     */
+    public function getResponse()
+    {
+        return $this->get('response');
+    }
 
     protected function formatException($e, $response)
     {
@@ -97,10 +120,6 @@ class Web extends Application
             $response->status($e->statusCode);
             $response->data = $this->exceptionToArray($e);
         } else {
-            if ($this->environment === 'test') {
-                throw $e;
-            }
-
             $response->status(500);
             $response->data = $this->exceptionToArray($e);
         }
@@ -133,34 +152,41 @@ class Web extends Application
     protected function refreshComponents()
     {
         foreach ($this->refreshing as $id => $_) {
-            $this->unbind($id);
-            $this->bind($id, $this->components[$id]);
+            //$this->unbind($id);
+            //$this->bind($id, $this->components[$id]);
+            $this->clear($id);
+            $this->set($id, $this->components[$id]);
         }
     }
 
-
+    /**
+     * @param \Exception $exception
+     * @return array
+     */
     protected function exceptionToArray(\Exception $exception)
     {
         $array = [
-            'name' => get_class($exception),
-            'message' => $exception->getMessage(),
-            'code' => $exception->getCode(),
             'http_status' => $exception->getCode(),
             'msg' => '异常请求'
         ];
+
+        //非生产环境输出详细Exception
+        if (KERISY_ENV != 'production') {
+            $array['name'] = get_class($exception);
+            $array['file'] = $exception->getFile();
+            $array['line'] = $exception->getLine();
+            $array['message'] = $exception->getMessage();
+        }
 
         if ($exception instanceof HttpException) {
             $array['status'] = $exception->statusCode;
         }
 
         if ($this->debug) {
-            $array['file'] = $exception->getFile();
-            $array['line'] = $exception->getLine();
             $array['trace'] = explode("\n", $exception->getTraceAsString());
-        }
-
-        if (($prev = $exception->getPrevious()) !== null) {
-            $array['previous'] = $this->exceptionToArray($prev);
+            if (($prev = $exception->getPrevious()) !== null) {
+                $array['previous'] = $this->exceptionToArray($prev);
+            }
         }
 
         return $array;
@@ -181,7 +207,8 @@ class Web extends Application
 
         $method = $route->getAction();
 
-        $controller = $this->get($class);
+        //$controller = $this->get($class);
+        $controller = \Kerisy::make($class);
 
         $controller->callMiddleware();
 

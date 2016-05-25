@@ -1,9 +1,9 @@
 <?php
 /**
  * Kerisy Framework
- * 
+ *
  * PHP Version 7
- * 
+ *
  * @author          Jiaqing Zou <zoujiaqing@gmail.com>
  * @copyright      (c) 2015 putao.com, Inc.
  * @package         kerisy/framework
@@ -24,8 +24,14 @@ use Psr\Log\LogLevel;
 class ErrorHandler extends Object
 {
     public $memoryReserveSize = 262144;
+
     public $exception;
+
+    /**
+     * @var \Kerisy\Log\Logger
+     */
     public $logger;
+
     public $discardExistingOutput;
 
     /**
@@ -40,7 +46,7 @@ class ErrorHandler extends Object
     public function init()
     {
         if (!$this->logger) {
-            $this->logger = service('log');
+            $this->logger = \Kerisy::$app->getService('log');
         }
 
         $this->register();
@@ -127,7 +133,7 @@ class ErrorHandler extends Object
 
         // load ErrorException manually here because autoloading them will not work
         // when error occurs while autoloading a class
-        if (!class_exists('Kerisy\\core\\ErrorException', false)) {
+        if (!class_exists('Kerisy\\Core\\ErrorException', false)) {
             require_once(__DIR__ . '/ErrorException.php');
         }
 
@@ -157,28 +163,34 @@ class ErrorHandler extends Object
         }
 
         $errorLevelMap = [
-            E_ERROR             => LogLevel::CRITICAL,
-            E_WARNING           => LogLevel::WARNING,
-            E_PARSE             => LogLevel::ALERT,
-            E_NOTICE            => LogLevel::NOTICE,
-            E_CORE_ERROR        => LogLevel::CRITICAL,
-            E_CORE_WARNING      => LogLevel::WARNING,
-            E_COMPILE_ERROR     => LogLevel::ALERT,
-            E_COMPILE_WARNING   => LogLevel::WARNING,
-            E_USER_ERROR        => LogLevel::ERROR,
-            E_USER_WARNING      => LogLevel::WARNING,
-            E_USER_NOTICE       => LogLevel::NOTICE,
-            E_STRICT            => LogLevel::NOTICE,
+            E_ERROR => LogLevel::CRITICAL,
+            E_WARNING => LogLevel::WARNING,
+            E_PARSE => LogLevel::ALERT,
+            E_NOTICE => LogLevel::NOTICE,
+            E_CORE_ERROR => LogLevel::CRITICAL,
+            E_CORE_WARNING => LogLevel::WARNING,
+            E_COMPILE_ERROR => LogLevel::ALERT,
+            E_COMPILE_WARNING => LogLevel::WARNING,
+            E_USER_ERROR => LogLevel::ERROR,
+            E_USER_WARNING => LogLevel::WARNING,
+            E_USER_NOTICE => LogLevel::NOTICE,
+            E_STRICT => LogLevel::NOTICE,
             E_RECOVERABLE_ERROR => LogLevel::ERROR,
-            E_DEPRECATED        => LogLevel::NOTICE,
-            E_USER_DEPRECATED   => LogLevel::NOTICE,
+            E_DEPRECATED => LogLevel::NOTICE,
+            E_USER_DEPRECATED => LogLevel::NOTICE,
         ];
 
         if ($exception instanceof ErrorException) {
             $level = $errorLevelMap[$exception->getCode()];
-            $this->logger->log($level, $exception);
+            $message = "Exception '" . get_class($exception) . "' with message '{$exception->getMessage()}' in "
+                . $exception->getFile() . ':' . $exception->getLine();
+            $this->logger->log($level, $message, \Kerisy::$app->getRequest()->server);
+        } else if ($exception instanceof \Exception) {
+            $message = "Exception '" . get_class($exception) . "' with message '{$exception->getMessage()}' in "
+                . $exception->getFile() . ':' . $exception->getLine();
+            $this->logger->error($message, \Kerisy::$app->getRequest()->server);
         } else {
-            $this->logger->error($exception);
+            $this->logger->error($exception, \Kerisy::$app->getRequest()->server);
         }
     }
 

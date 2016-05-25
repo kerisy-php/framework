@@ -16,8 +16,6 @@ namespace Kerisy\Log;
 
 use Kerisy\Core\InvalidParamException;
 use Kerisy\Core\Object;
-use Kerisy\Di\Instance;
-use Monolog\Formatter\JsonFormatter;
 use Psr\Log\LoggerInterface;
 use Psr\Log\LoggerTrait;
 use Monolog\Logger as BaseMonoLogger;
@@ -35,6 +33,9 @@ class Logger extends Object implements LoggerInterface
     public $name = 'kerisy';
     public $targets = [];
 
+    /**
+     * @var MonoLogger
+     */
     protected $monolog;
 
     protected $levelMap = [
