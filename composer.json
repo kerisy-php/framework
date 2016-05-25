@@ -18,7 +18,8 @@
     },
     "autoload": {
         "files": [
-            "src/functions.php"
+            "src/functions.php",
+            "src/Kerisy.php"
         ],
         "psr-4": {
             "Kerisy\\": "src"
