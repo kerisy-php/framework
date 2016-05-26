@@ -11,6 +11,20 @@ namespace Kerisy\Nosql;
 
 use Kerisy\Core\Object;
 
+/**
+ * Class Redis
+ * @package Kerisy\Nosql
+ *
+ * @config:
+ * 'redisMain' => [
+ *      'class' => 'Kerisy\Nosql\Redis', 'host' => 'redis1.putao.io', 'port' => 6379, 'serializer' => \Redis::SERIALIZER_PHP
+ * ],
+ *
+ * @usage
+ * $redisInstance = Kerisy::$app->getRedis('redisMain');
+ *
+ * @return \Redis
+ */
 class Redis extends Object
 {
     public $host = 'locahost';
@@ -27,6 +41,11 @@ class Redis extends Object
      * @var \Redis
      */
     private $redis;
+
+    public function init()
+    {
+
+    }
 
     /**
      * @return \Redis

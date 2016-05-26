@@ -56,6 +56,11 @@ class Connection extends Object
 
     public $config = null;
 
+    public function init()
+    {
+        
+    }
+
     public function getConnection()
     {
         if ($this->conntection == null) {

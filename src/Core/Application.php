@@ -24,6 +24,9 @@ use Kerisy\Database\Database;
 /**
  * Class Application
  *
+ * Components Property
+ * @property Kerisy\Cache\Manager $cache
+ *
  * @package Kerisy\Http
  */
 class Application extends ServiceLocator
@@ -153,6 +156,37 @@ class Application extends ServiceLocator
         }
 
         return $app->run($input, $output);
+    }
+
+    /**
+     * 缓存组件
+     * @return Kerisy\Cache\Manager
+     * @throws InvalidConfigException
+     */
+    public function getCache()
+    {
+        return $this->get('cache');
+    }
+
+    /**
+     * Returns the redis connection.
+     * @param string $instance  redis instance name
+     * @return \Redis the redis application component.
+     */
+    public function getRedis($instance = 'redis')
+    {
+        return $this->get($instance)->connect();
+    }
+
+    /**
+     * Return the db connection
+     * @param string $dbInstance
+     * @return \Illuminate\Database\Connection
+     * @throws InvalidConfigException
+     */
+    public function getDbConnection($dbInstance = 'db')
+    {
+        return $this->get($dbInstance)->getConnection();
     }
 
     /**

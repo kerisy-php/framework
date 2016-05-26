@@ -16,6 +16,7 @@ use Kerisy\Di\Container;
 use Kerisy\Core\InvalidConfigException;
 use Kerisy\Core\HttpException;
 
+
 /**
  * Shortcut helper function to create object via Object Configuration.
  *
@@ -23,6 +24,7 @@ use Kerisy\Core\HttpException;
  * @param array $params
  * @return mixed
  * @throws InvalidConfigException
+ * @deprecated
  */
 function make($type, $params = [])
 {
@@ -40,17 +42,22 @@ function make($type, $params = [])
         throw new InvalidConfigException("Unsupported configuration type: " . gettype($type));
     }
 }
-
 /**
  * Helper function to get application instance or registered application services.
  *
  * @return \Kerisy\Core\Application
+ * @deprecated
  */
 function app()
 {
     return Container::getInstance()->getApp();
 }
 
+/**
+ * @param $service
+ * @return mixed
+ * @deprecated
+ */
 function service($service)
 {
     return Container::getInstance()->getApp()->get($service);
@@ -61,6 +68,7 @@ function service($service)
  *
  * @param string $config
  * @return \Kerisy\Core\Config
+ * @deprecated
  */
 function config($config)
 {
@@ -71,17 +79,28 @@ function config($config)
  * Helper function to get session service.
  *
  * @return \Kerisy\Session\Contract
+ * @deprecated
  */
 function session()
 {
     return app()->get('session');
 }
 
+/**
+ * @return null|object
+ * @throws InvalidConfigException
+ * @deprecated
+ */
 function cache()
 {
     return app()->get('cache');
 }
 
+/**
+ * @return null|object
+ * @throws InvalidConfigException
+ * @deprecated
+ */
 function redis()
 {
     return app()->get('redis');
@@ -91,6 +110,7 @@ function redis()
  * Helper function to get auth service.
  *
  * @return \Kerisy\auth\Contract
+ * @deprecated
  */
 function auth()
 {
@@ -101,6 +121,7 @@ function auth()
  * Helper function to get current request.
  *
  * @return \Kerisy\Http\Request
+ * @deprecated
  */
 function request()
 {
@@ -111,6 +132,7 @@ function request()
  * Helper function to get current response.
  *
  * @return \Kerisy\Http\Response
+ * @deprecated
  */
 function response()
 {
@@ -124,15 +146,21 @@ function response()
  * @param $status
  * @param string $message
  * @throws \Kerisy\Core\HttpException
+ * @deprecated
  */
 function abort($status, $message = null)
 {
     throw new HttpException($status, $message);
 }
 
-
 if (!function_exists('jsonSuccess')) {
 
+    /**
+     * @param $data
+     * @param string $code
+     * @return string
+     * @deprecated
+     */
     function jsonSuccess($data, $code = '200')
     {
         $res = [
@@ -144,6 +172,12 @@ if (!function_exists('jsonSuccess')) {
 }
 if (!function_exists('jsonError')) {
 
+    /**
+     * @param $msg
+     * @param string $code
+     * @return string
+     * @deprecated
+     */
     function jsonError($msg, $code = '400')
     {
         $res = [
@@ -154,6 +188,12 @@ if (!function_exists('jsonError')) {
     }
 }
 if (!function_exists('successFormat')) {
+    /**
+     * @param $data
+     * @param int $code
+     * @return array
+     * @deprecated
+     */
     function successFormat($data, $code = 200)
     {
         return [
@@ -164,6 +204,12 @@ if (!function_exists('successFormat')) {
 }
 if (!function_exists('errorFormat')) {
 
+    /**
+     * @param $msg
+     * @param int $code
+     * @return array
+     * @deprecated
+     */
     function errorFormat($msg, $code = 400)
     {
         return [
@@ -203,6 +249,11 @@ if (!function_exists('base64_urlSafeDecode')) {
         return base64_decode(str_replace($find, $replace, $str));
     }
 }
+
+/**
+ * @return mixed
+ * @deprecated 
+ */
 function ip()
 {
     return request()->server['remote_addr'];
