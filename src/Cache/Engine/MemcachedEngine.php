@@ -34,7 +34,7 @@ class MemcachedEngine extends Object implements EngineContract
     private $_memcache;
 
     public function init()
-    {var_dump('init');
+    {
         $this->_memcache = new \Memcached();
         if (!$this->_memcache->addServer($this->host, $this->port)) {
             throw new InvalidConfigException("The memcached host '{$this->host}' error.");
