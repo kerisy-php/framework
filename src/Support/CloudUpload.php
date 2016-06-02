@@ -25,7 +25,7 @@ class CloudUpload
         $file_cloud = config('config')->get('file_cloud');
         $check = $this->curl($file_cloud['check'], ['sha1' => $sha1]);
 
-//        var_dump($check);exit;
+        //var_dump($check);exit;
         $upload = ['appid' => $file_cloud['appid'], 'uploadToken' => $this->createToken(), 'filename' => $file['name']];
         if (isset($check['error_code'])) {
             /******图片不存在的情况下,添加附件上传信息*******/
@@ -51,6 +51,7 @@ class CloudUpload
             ]
         ];
     }
+
     public function curl($url, $params)
     {
         $curl = curl_init();
@@ -73,6 +74,7 @@ class CloudUpload
         }
         return $result;
     }
+
     public function createToken()
     {
         self::$app_key = config('config')->get('file_cloud')['key'];

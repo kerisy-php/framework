@@ -69,7 +69,8 @@ class Console extends Application
     {
         $class = "App\\" . ucfirst($route->getModule()) . "\\Execuor\\"  . ucfirst($route->getController()) . "Execuor";
         $method = $route->getAction();
-        $controller = $this->get($class);
+        //$controller = $this->get($class);
+        $controller = \Kerisy::make($class);
         //$controller->callMiddleware();
 
         $action = [$controller, $method];

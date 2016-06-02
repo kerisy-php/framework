@@ -127,6 +127,10 @@ class Application extends ServiceLocator
         }
     }
 
+    /**
+     * @param $config_group
+     * @return Config
+     */
     public function config($config_group)
     {
         if (!isset($this->_configs[$config_group])) {

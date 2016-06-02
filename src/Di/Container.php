@@ -440,7 +440,7 @@ class Container extends Object
      * @param array $config configurations to be applied to the new instance
      * @return object the newly created instance of the specified class
      */
-protected function build($class, $params, $config)
+    protected function build($class, $params, $config)
     {
         /* @var $reflection ReflectionClass */
         list ($reflection, $dependencies) = $this->getDependencies($class);
@@ -449,7 +449,7 @@ protected function build($class, $params, $config)
             $dependencies[$index] = $param;
         }
 
-        if (!empty($dependencies) && is_a($class, 'Kerisy\core\Configurable', true)) {
+        if (!empty($dependencies) && is_a($class, 'Kerisy\Core\Configurable', true)) {
             // set $config as the last parameter (existing one will be overwritten)
             $dependencies[count($dependencies) - 1] = $config;
             $dependencies = $this->resolveDependencies($dependencies, $reflection);

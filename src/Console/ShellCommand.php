@@ -50,7 +50,7 @@ class ShellCommand extends Command
         }
         $alias_name = $input->getOption('alias_name');
 
-        if(is_null($alias_name) && in_array(KERISY_ENV ,['development','test'])){
+        if(is_null($alias_name) && in_array(KERISY_ENV ,['development', 'test'])){
             throw new AggregateException('The <alias_name> argument isnt exist!');
         }
         return call_user_func([$this, 'command' . $operation], $router);
