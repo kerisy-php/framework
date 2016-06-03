@@ -1,9 +1,9 @@
 <?php
 /**
  * Kerisy Framework
- * 
+ *
  * PHP Version 7
- * 
+ *
  * @author          Jiaqing Zou <zoujiaqing@gmail.com>
  * @copyright      (c) 2015 putao.com, Inc.
  * @package         kerisy/framework
@@ -36,8 +36,8 @@ class ShellCommand extends Command
     protected function configure()
     {
         $this->addArgument('operation', InputArgument::OPTIONAL, 'the operation:run');
-        $this->addOption('router', '-r', InputArgument::OPTIONAL , 'define operation router crond path');
-        $this->addOption('alias_name', '-i', InputArgument::OPTIONAL , 'pls add operation alias name');
+        $this->addOption('router', '-r', InputArgument::OPTIONAL, 'define operation router crond path');
+        $this->addOption('alias_name', '-i', InputArgument::OPTIONAL, 'pls add operation alias name');
 
     }
 
@@ -50,8 +50,8 @@ class ShellCommand extends Command
         }
         $alias_name = $input->getOption('alias_name');
 
-        if(is_null($alias_name) && in_array(KERISY_ENV ,['development', 'test'])){
-            throw new AggregateException('The <alias_name> argument isnt exist!');
+        if (is_null($alias_name) && in_array(KERISY_ENV, ['development', 'test'])) {
+            //throw new AggregateException('The <alias_name> argument isn\'t exist!');
         }
         return call_user_func([$this, 'command' . $operation], $router);
 
