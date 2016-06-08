@@ -22,7 +22,7 @@
         ],
         "psr-4": {
             "Kerisy\\": "src" ,
-            "Google\\FlatBuffers\\": "src/Rpc/flatbuffers"
+            "Google\\FlatBuffers\\": "src/Rpc/Flatbuffers"
         }
     },
     "minimum-stability": "stable",
