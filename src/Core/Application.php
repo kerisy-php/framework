@@ -121,7 +121,6 @@ class Application extends ServiceLocator
             $config = new Config($config_group);
             $this->_configs[$config_group] = $config;
         }
-
         return $this->_configs[$config_group];
     }
 
@@ -134,11 +133,16 @@ class Application extends ServiceLocator
             'kerisy' => $this,
         ]);
 
+        $commandPath = 'Kerisy\Console\ServerCommand';
+        if($_SERVER['argv'][1] == "rpcserver"){
+            $commandPath = 'Kerisy\Rpc\Console\RpcServerCommand';
+        }
+        
         $commands = array_merge($this->commands, [
-            'Kerisy\Console\ServerCommand',
+            $commandPath,
             'Kerisy\Console\ShellCommand'
         ]);
-
+        
         foreach ($commands as $command) {
             $app->add(make(['class' => $command, 'kerisy' => $this]));
         }

@@ -21,7 +21,8 @@
             "src/functions.php"
         ],
         "psr-4": {
-            "Kerisy\\": "src"
+            "Kerisy\\": "src" ,
+            "Google\\FlatBuffers\\": "src/Rpc/flatbuffers"
         }
     },
     "minimum-stability": "stable",
