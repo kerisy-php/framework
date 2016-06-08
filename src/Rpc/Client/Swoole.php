@@ -15,57 +15,53 @@ class Swoole extends Base{
     private $host=null;
     private $port=null;
     private $client = null;
-    private $servicePath = null;
-    private $params = null;
-    private $sockType = null;
+    private $fnData = null;
+    private $recvfn = null;
+    private  $sourceType = null;
+    private $compressType = null;
+    
     static $timeout = 2;
     
-    function __construct($host,$port,$isAsync=0)
+    function __construct($host,$port)
     {
-        if($isAsync ==1){
-            $sockType = SWOOLE_SOCK_ASYNC;
-        }else{
-            $sockType = SWOOLE_SOCK_SYNC;
-        }
-        $client = new \swoole_client(SWOOLE_SOCK_TCP,$sockType);
         $this->host = $host;
         $this->port =$port;
-        $this->client = $client;
-        $this->sockType =$sockType;
     }
 
-    /**
-     * request method
-     * @param $servicePath service route path
-     * @param mixed $params
-     */
-    function invoke($servicePath,$params=array()){
-        $this->params = $params;
-        $this->servicePath = $servicePath;
+    
+    function invoke($sourceType,$fn,$compressType=0){
+        $client = new \swoole_client(SWOOLE_SOCK_TCP,SWOOLE_SOCK_SYNC);
+        $data = $this->syncSendAndReceive($client,$fn,$sourceType,$compressType);
+        return $data;
 
-     
-        if ($this->sockType == SWOOLE_SOCK_ASYNC) {
-            $this->client->on('connect', [$this, 'onClientConnect']);
-            $this->client->on('receive', [$this, 'onClientReceive']);
-            $this->client->on('error', [$this, 'onClientError']);
-            $this->client->on('close', [$this, 'onClientClose']);
-            if (!$this->client->connect($this->host, $this->port, self::$timeout)) {
-                throw new \Exception(socket_strerror($this->client->errCode));
-            }
-        } else {
-            //同步处理
-            $data = $this->syncSendAndReceive($this->client);
-            return $data;
+    }
+    
+    
+    function invokeAsy($sourceType,$fn,$recvfn,$compressType=0){
+        $client = new \swoole_client(SWOOLE_SOCK_TCP,SWOOLE_SOCK_ASYNC);
+        $this->client = $client;
+        
+        $this->fnData = $fn;
+        $this->recvfn = $recvfn;
+        $this->sourceType = $sourceType;
+        $this->compressType = $compressType;
+ 
+        $this->client->on('connect', [$this, 'onClientConnect']);
+        $this->client->on('receive', [$this, 'onClientReceive']);
+        $this->client->on('error', [$this, 'onClientError']);
+        $this->client->on('close', [$this, 'onClientClose']);
+        if (!$this->client->connect($this->host, $this->port, self::$timeout)) {
+            throw new \Exception(socket_strerror($this->client->errCode));
         }
     }
 
-    function syncSendAndReceive($client){
+    function syncSendAndReceive($client,$fnData,$sourceType,$compressType=0){
         if(!$client->isConnected()){
             if (!$client->connect($this->host, $this->port, self::$timeout)) {
                 throw new \Exception("connect failed");
             }
         }
-        if($this->send($client,$this->servicePath,$this->params)){
+        if($this->send($client,$fnData,$sourceType,$compressType)){
             try {
                 $data = $client->recv();
             }catch (Exception $e){
@@ -84,7 +80,7 @@ class Swoole extends Base{
     }
     
     public function onClientConnect($client){
-        $this->send($client,$this->servicePath,$this->params);
+        $this->send($client,$this->fnData,$this->sourceType,$this->compressType);
     }
 
     public function onClientReceive($client,$dataBuffer){
@@ -98,8 +94,8 @@ class Swoole extends Base{
                 $data = $this->getResult($dataBuffer);
             }
         }
-        if(gettype($this->params) == "object"){
-            call_user_func_array($this->params,array($data));
+        if(gettype($this->recvfn) == "object"){
+            return call_user_func_array($this->recvfn,array($data));
         }
     }
 

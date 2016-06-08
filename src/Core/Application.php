@@ -121,7 +121,6 @@ class Application extends ServiceLocator
             $config = new Config($config_group);
             $this->_configs[$config_group] = $config;
         }
-
         return $this->_configs[$config_group];
     }
 

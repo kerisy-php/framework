@@ -14,7 +14,6 @@
 
 namespace Kerisy\Http;
 
-use Doctrine\Instantiator\Exception\InvalidArgumentException;
 use GuzzleHttp\Client as Gclient;
 
 class Client

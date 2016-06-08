@@ -8,20 +8,28 @@
  */
 namespace Kerisy\Rpc\Client;
 
-use \Google\FlatBuffers\ByteBuffer;
+use Google\FlatBuffers\ByteBuffer;
 use Kerisy\Rpc\Core\Tool;
 
 class Base{
-    
-    function send($client,$servicePath,$params=array()){
-        $data = [];
-        $data['path'] = $servicePath;
-        $data['params'] = $params;
-        $json = json_encode($data);
-        return $client->send($json);
+
+    function send($client,$fnData,$sourceType,$compressType=0){
+        $data = Tool::binFormat($fnData,$sourceType,$compressType);
+        return $client->send($data);
     }
 
+    /**
+     * 结果处理
+     * @param $response
+     * @return ByteBuffer|string
+     */
     function getResult($response){
-        return ByteBuffer::wrap($response);
+        if($response){
+            $result = Tool::parse($response);
+        }else{
+            $result = "";
+        }
+        $data = ByteBuffer::wrap($result);
+        return $data;
     }
 }
