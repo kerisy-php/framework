@@ -8,34 +8,34 @@
  */
 namespace Kerisy\Rpc\Server;
 
+use Kerisy\Core\Exception;
 use Kerisy\Rpc\Core\Tool;
+use \Google\FlatBuffers\ByteBuffer;
 
 abstract class Base extends \Kerisy\Server\Base{
 
-    public function send($server, $fd, $data) {
-        if(error::$errorMsg){
-            $data = error::$errorMsg;
-        }
+    public function send($server, $fd, $data,$requestData) {
+        $data = Tool::binFormat($data,$requestData['bufferRouteMatch'],$requestData['bufferCompressType']);
         $server->send($fd, $data);
         $server->close($fd);
     }
 
     public function  prepareRequest($data){
-        $initData = json_decode($data,true);
-        $path = isset($initData) ? $initData:"";
-        if(!$path){
-            error::$errorMsg = "request path is null";
-            return false;
+
+        if(!isset($data['content'])){
+            throw new Exception("request is null");
         }
-        $requestData = array();
-        $requestData['path'] = $initData['path'];
-        $requestData['params'] = $initData['params'];
-        $requestData['method'] = "post";
+        $dataBuffer = ByteBuffer::wrap($data['content']);
+        $routeData = \Kerisy\Rpc\Core\Hook::fire($data['bufferRouteMatch'],$dataBuffer);
+        list($path,$params) = $routeData;
+        if(!$path){
+            throw new Exception("path is null");
+        }
         
+        $requestData = array();
+        $requestData['path'] = $path;
+        $requestData['params'] = $params;
+        $requestData['method'] = "post";
         return app()->makeRequest($requestData);
     }
-}
-
-class error{
-    static $errorMsg = "";
 }

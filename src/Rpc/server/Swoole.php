@@ -13,6 +13,10 @@ namespace Kerisy\Rpc\Server;
  *
  * @package Kerisy\Server
  */
+use Kerisy\Log\Logger;
+use Kerisy\Log\StreamTarget;
+use Kerisy\Rpc\Core\Tool;
+
 class Swoole extends Base
 {
 
@@ -85,8 +89,8 @@ class Swoole extends Base
     }
     
     public function onWorkerStart(){
+        echo("application started\r\n");
         cli_set_process_title($this->name . ': worker');
-        
     }
 
     public function onWorkerStop(){
@@ -108,13 +112,14 @@ class Swoole extends Base
     
     public function onServerReceive($server, $fd, $from_id, $data){
         $this->startApp();
-        $resData = $this->prepareRequest($data);
+        $requestData = Tool::getParseInfo($data);
+        $resData = $this->prepareRequest($requestData);
         $content = "";
         if($resData){
             $res = $this->handleRequest($resData);
             $content = $res->content();
         }
-        $this->send($server,$fd,$content);
+        $this->send($server,$fd,$content,$requestData);
         $this->stopApp();
     }
     
