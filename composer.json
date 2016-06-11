@@ -9,7 +9,7 @@
         }
     ],
     "require": {
-        "php": ">=5.5.0",
+        "php": ">=7",
         "symfony/console": "^2.7",
         "symfony/event-dispatcher": "2.*",
         "ext-apcu": ">=4.0.7",
