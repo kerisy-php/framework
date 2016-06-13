@@ -29,9 +29,9 @@ class RabbitMq{
 
     const MESSAGE_DURABLE_NO = 1;
 
-    const CONNECT_TIMEOUT=1.0;
+    const CONNECT_TIMEOUT=1.0; //链接超时时间
 
-    const READ_TIMEOUT=3.0;
+    const READ_TIMEOUT=3.0;//读取超时时间
 
 
     function __construct($configKey = "default")
@@ -49,6 +49,17 @@ class RabbitMq{
         register_shutdown_function([$this,'close']);
     }
 
+    /**
+     * @param $message
+     * @param $queue
+     * @param $exchange
+     * @param string $type
+     * @param bool $passive 队列已存在是否新建队列
+     * @param bool $durable  是否持久化保存
+     * @param bool $exclusive 是否是排他队列,排他队列首次可见
+     * @param bool $auto_delete 队列如果没有消息,是否自动删除
+     * @return bool
+     */
     function publishMessage($message,$queue,$exchange,$type=self::EXCHANGE_TYPE_DIRECT,$passive=false,$durable=true,$exclusive=false,$auto_delete=false){
         $this->channel->queue_declare($queue, $passive, $durable, $exclusive, $auto_delete);
         $this->channel->exchange_declare($exchange, $type, $passive, $durable, $auto_delete);
@@ -59,6 +70,17 @@ class RabbitMq{
         return true;
     }
 
+    /**
+     * @param $message
+     * @param $queue
+     * @param $exchange
+     * @param string $type
+     * @param bool $passive 队列已存在是否新建队列
+     * @param bool $durable  是否持久化保存
+     * @param bool $exclusive 是否是排他队列,排他队列首次可见
+     * @param bool $auto_delete 队列如果没有消息,是否自动删除
+     * @return bool
+     */
     function getMessage($queue,$exchange,$type=self::EXCHANGE_TYPE_DIRECT,$passive=false,$durable=true,$exclusive=false,$auto_delete=false){
         $this->channel->queue_declare($queue, $passive, $durable, $exclusive, $auto_delete);
         $this->channel->exchange_declare($exchange, $type, $passive, $durable, $auto_delete);
@@ -69,7 +91,7 @@ class RabbitMq{
 
     function getBody($message){
         if($message){
-            return $message->body; 
+            return $message->body;
         }else{
             return null;
         }
@@ -81,8 +103,18 @@ class RabbitMq{
         return true;
     }
 
-
-    function publishMessageWhithConfirm($message,$queue,$exchange,$ackfn,$nackfn,$returnfn,$type=self::EXCHANGE_TYPE_DIRECT,$passive=false,$durable=true,$exclusive=false,$auto_delete=false){
+    /**
+     * @param $message
+     * @param $queue
+     * @param $exchange
+     * @param string $type
+     * @param bool $passive 队列已存在是否新建队列
+     * @param bool $durable  是否持久化保存
+     * @param bool $exclusive 是否是排他队列,排他队列首次可见
+     * @param bool $auto_delete 队列如果没有消息,是否自动删除
+     * @return bool
+     */
+    function publishMessageWhithConfig($message,$queue,$exchange,$ackfn,$nackfn,$returnfn,$type=self::EXCHANGE_TYPE_DIRECT,$passive=false,$durable=true,$exclusive=false,$auto_delete=false){
         $this->channel->set_ack_handler($ackfn);
         $this->channel->set_nack_handler($nackfn);
         $this->channel->set_return_listener($returnfn);
@@ -91,11 +123,13 @@ class RabbitMq{
 //                echo "Message acked with content " . $message->body . PHP_EOL;
 //            }
 //        );
+//
 //        $this->channel->set_nack_handler(
 //            function (AMQPMessage $message) {
 //                echo "Message nacked with content " . $message->body . PHP_EOL;
 //            }
 //        );
+//
 //        $this->channel->set_return_listener(
 //            function ($replyCode, $replyText, $exchange, $routingKey, AMQPMessage $message) {
 //                echo "replyCode:".$replyCode."\r\n";
@@ -109,7 +143,7 @@ class RabbitMq{
         $this->channel->confirm_select();
         $this->channel->queue_declare($queue, $passive, $durable, $exclusive, $auto_delete);
         $this->channel->exchange_declare($exchange, $type, $passive, $durable, $auto_delete);
-        
+
         $this->channel->queue_bind($queue, $exchange);
 
         $message = new AMQPMessage($message, array('content_type' => 'text/plain'));
@@ -124,11 +158,11 @@ class RabbitMq{
         if($this->connection){
             $this->connection->close();
         }
-        
+
         if($this->channel){
-            $this->channel->close(); 
+            $this->channel->close();
         }
-        
+
     }
 
 
