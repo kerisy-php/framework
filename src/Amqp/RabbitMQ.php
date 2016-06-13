@@ -91,13 +91,11 @@ class RabbitMq{
 //                echo "Message acked with content " . $message->body . PHP_EOL;
 //            }
 //        );
-//
 //        $this->channel->set_nack_handler(
 //            function (AMQPMessage $message) {
 //                echo "Message nacked with content " . $message->body . PHP_EOL;
 //            }
 //        );
-//
 //        $this->channel->set_return_listener(
 //            function ($replyCode, $replyText, $exchange, $routingKey, AMQPMessage $message) {
 //                echo "replyCode:".$replyCode."\r\n";
