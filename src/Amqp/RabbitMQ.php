@@ -82,7 +82,7 @@ class RabbitMq{
     }
 
 
-    function publishMessageWhithConfig($message,$queue,$exchange,$ackfn,$nackfn,$returnfn,$type=self::EXCHANGE_TYPE_DIRECT,$passive=false,$durable=true,$exclusive=false,$auto_delete=false){
+    function publishMessageWhithConfirm($message,$queue,$exchange,$ackfn,$nackfn,$returnfn,$type=self::EXCHANGE_TYPE_DIRECT,$passive=false,$durable=true,$exclusive=false,$auto_delete=false){
         $this->channel->set_ack_handler($ackfn);
         $this->channel->set_nack_handler($nackfn);
         $this->channel->set_return_listener($returnfn);
