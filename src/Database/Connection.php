@@ -252,39 +252,24 @@ class Connection
         );
     }
 
-    public function fetchAll()
+    public function fetchAll($where = '')
     {
         $table = $this->createQueryBuilder()->from($this->table);
-        $table = $this->format($table);
+        if (!empty($where)) {
+            $table->where($where);
+        }
+//        var_dump($this->createQueryBuilder()->from($this->table)->where($where)->execute());
         return $table->execute()->fetchAll();
     }
 
-    public function fetchRow()
+    public function fetchRow($where = '')
     {
         $table = $this->createQueryBuilder()->from($this->table);
-        $table = $this->format($table);
+        if (!empty($where)) {
+            $table->where($where);
+        }
         return $table->execute()->fetch();
 
-    }
-
-    public function format(QueryBuilder $table):QueryBuilder
-    {
-        if (empty($this->parts)) {
-            return $table;
-        }
-        foreach ($this->parts as $part) {
-            $condition = $part[0];
-            $table->$condition($part[1][0]);
-        }
-        return $table;
-    }
-
-    protected $parts = [];
-
-    public function __call($name, $args)
-    {
-        $this->parts[] = [$name, $args];
-        return $this;
     }
 
     public function update($where, array $update)

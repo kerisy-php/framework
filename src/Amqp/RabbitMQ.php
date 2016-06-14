@@ -17,11 +17,11 @@ class RabbitMq{
     protected $channel = null;
     protected $connection = null;
 
-    const EXCHANGE_TYPE_DIRECT = 'direct';
+    const EXCHANGE_TYPE_DIRECT = 'direct';//直连
 
-    const EXCHANGE_TYPE_FANOUT = 'fanout';
+    const EXCHANGE_TYPE_FANOUT = 'fanout';//广播
 
-    const EXCHANGE_TYPE_TOPIC = 'topic';
+    const EXCHANGE_TYPE_TOPIC = 'topic';//模糊搜索
 
     const EXCHANGE_TYPE_HEADER = 'header';
 
@@ -49,31 +49,12 @@ class RabbitMq{
         register_shutdown_function([$this,'close']);
     }
 
-    /**
-     * @param $message
-     * @param $queue
-     * @param $exchange
-     * @param string $type
-     * @param bool $passive 队列已存在是否新建队列
-     * @param bool $durable  是否持久化保存
-     * @param bool $exclusive 是否是排他队列,排他队列首次可见
-     * @param bool $auto_delete 队列如果没有消息,是否自动删除
-     * @return bool
-     */
-    function publishMessage($message,$queue,$exchange,$type=self::EXCHANGE_TYPE_DIRECT,$passive=false,$durable=true,$exclusive=false,$auto_delete=false){
-        $this->channel->queue_declare($queue, $passive, $durable, $exclusive, $auto_delete);
-        $this->channel->exchange_declare($exchange, $type, $passive, $durable, $auto_delete);
-        $this->channel->queue_bind($queue, $exchange);
-        $delivery_mode = ($durable)?self::MESSAGE_DURABLE_YES:self::MESSAGE_DURABLE_NO;
-        $message = new AMQPMessage($message, array('content_type' => 'text/plain', 'delivery_mode' => $delivery_mode));
-        $this->channel->basic_publish($message, $exchange);
-        return true;
-    }
 
     /**
      * @param $message
      * @param $queue
      * @param $exchange
+     * @param $retry 重试次数
      * @param string $type
      * @param bool $passive 队列已存在是否新建队列
      * @param bool $durable  是否持久化保存
@@ -81,17 +62,26 @@ class RabbitMq{
      * @param bool $auto_delete 队列如果没有消息,是否自动删除
      * @return bool
      */
-    function getMessage($queue,$exchange,$type=self::EXCHANGE_TYPE_DIRECT,$passive=false,$durable=true,$exclusive=false,$auto_delete=false){
+    function getMessage($queue,$exchange,$retry=0,$type=self::EXCHANGE_TYPE_DIRECT,$passive=false,$durable=true,$exclusive=false,$auto_delete=false){
         $this->channel->queue_declare($queue, $passive, $durable, $exclusive, $auto_delete);
         $this->channel->exchange_declare($exchange, $type, $passive, $durable, $auto_delete);
         $this->channel->queue_bind($queue, $exchange);
         $message = $this->channel->basic_get($queue);
+        if(!$message) return null;
+        if($retry>0){
+            if($message->delivery_info["redelivered"]>=($retry-1)){
+                $body = $message->body;
+                $body = is_string($body)?$body:json_encode($body);
+                \Kerisy\Tool\FileLog::info($body,"ack.log");
+                $this->ack($message);
+            } 
+        }
         return $message;
     }
 
     function getBody($message){
         if($message){
-            return $message->body;
+            return $message->body; 
         }else{
             return null;
         }
@@ -103,6 +93,13 @@ class RabbitMq{
         return true;
     }
 
+    function nack($message){
+        if(!$message) return true;
+        $this->channel->basic_nack($message->delivery_info['delivery_tag']);
+        return true;
+    }
+
+
     /**
      * @param $message
      * @param $queue
@@ -114,7 +111,7 @@ class RabbitMq{
      * @param bool $auto_delete 队列如果没有消息,是否自动删除
      * @return bool
      */
-    function publishMessageWhithConfig($message,$queue,$exchange,$ackfn,$nackfn,$returnfn,$type=self::EXCHANGE_TYPE_DIRECT,$passive=false,$durable=true,$exclusive=false,$auto_delete=false){
+    function publishMessage($message,$queue,$exchange,$ackfn,$nackfn,$returnfn,$type=self::EXCHANGE_TYPE_DIRECT,$passive=false,$durable=true,$exclusive=false,$auto_delete=false){
         $this->channel->set_ack_handler($ackfn);
         $this->channel->set_nack_handler($nackfn);
         $this->channel->set_return_listener($returnfn);
@@ -143,7 +140,7 @@ class RabbitMq{
         $this->channel->confirm_select();
         $this->channel->queue_declare($queue, $passive, $durable, $exclusive, $auto_delete);
         $this->channel->exchange_declare($exchange, $type, $passive, $durable, $auto_delete);
-
+        
         $this->channel->queue_bind($queue, $exchange);
 
         $message = new AMQPMessage($message, array('content_type' => 'text/plain'));
@@ -158,11 +155,11 @@ class RabbitMq{
         if($this->connection){
             $this->connection->close();
         }
-
+        
         if($this->channel){
-            $this->channel->close();
+            $this->channel->close(); 
         }
-
+        
     }
 
 
