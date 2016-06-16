@@ -14,7 +14,7 @@ use \Kerisy\Database\Connection;
 
 abstract class Model
 {
-    public $connection;
+    static public $connection = null;
 
     public $configure;
 
@@ -22,19 +22,20 @@ abstract class Model
 
     public $debug;
 
+
     public function signton():Connection
     {
-        $this->setDatabaseConfigure();
+        if (is_null(self::$connection)) {
+            $this->setDatabaseConfigure();
 
-        $driver = $this->getDriver();
+            $driver = $this->getDriver();
+            $configure = new Configuration($this->debug);
 
-        $configure = new Configuration($this->debug);
+            $configure->setParameters($this->configure);
+            self::$connection = (new Connection($driver, $configure))->setTable($this->table);
+        }
+        return self::$connection;
 
-        $configure->setParameters($this->configure);
-
-        $connection = (new Connection($driver, $configure))->setTable($this->table);
-
-        return $connection;
     }
 
     abstract public function getDriver();
