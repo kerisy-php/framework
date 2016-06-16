@@ -90,6 +90,8 @@ class Application extends ServiceLocator
 
     protected function initializeConfig()
     {
+        //开始执行时间
+        \Kerisy\Tool\RunTime::setStartTime();
         date_default_timezone_set($this->timezone);
     }
 

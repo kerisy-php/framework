@@ -166,14 +166,6 @@ class Response extends Object implements ShouldBeRefreshed
         return $this;
     }
 
-    public function text($string = '', $type = 'text/html', $code = 200)
-    {
-        $this->data = $string;
-        $this->headers->set('Content-Type', $type);
-        $this->status($code);
-        return $this;
-    }
-
     /**
      * @describe 跳转
      * @auth     haoyanfei<haoyf@putao.com>
@@ -269,7 +261,7 @@ class Response extends Object implements ShouldBeRefreshed
         return $this->_cookies;
     }
 
-    public function setCookie($key, $value, $ttl = 0, $path = '/', $domain = '.putao.com', $secure = false, $httponly = false)
+    public function setCookie($key, $value, $ttl = 0, $path = '/', $domain = '.putao.com', $secure = false, $httponly=false)
     {
         $this->_cookies[] = [$key, $value, $ttl, $path, $domain, $secure, $httponly];
         return $this;
