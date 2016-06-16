@@ -54,5 +54,8 @@ class MySQLDriver implements DriverInterface
         if (isset($parameters['port']) && !empty($parameters['port'])) {
             $this->getDsn()->setAttribute('port', $parameters['port']);
         }
+        if (isset($parameters['charset']) && !empty($parameters['charset'])) {
+            $this->getDsn()->setAttribute('charset', $parameters['charset']);
+        }
     }
 }
