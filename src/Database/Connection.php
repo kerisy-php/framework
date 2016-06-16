@@ -43,6 +43,12 @@ class Connection
         $this->close();
     }
 
+    public function setTable($table)
+    {
+        $this->table = $this->getConfiguration()->getParameter('prefix') . $table;
+        return $this;
+    }
+
     public function setDriver(DriverInterface $driver):Connection
     {
         $this->driver = $driver;
