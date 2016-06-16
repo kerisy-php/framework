@@ -43,12 +43,6 @@ class Connection
         $this->close();
     }
 
-    public function setTable($table)
-    {
-        $this->table = $this->getConfiguration()->getParameter('prefix') . $table;
-        return $this;
-    }
-
     public function setDriver(DriverInterface $driver):Connection
     {
         $this->driver = $driver;
@@ -258,24 +252,39 @@ class Connection
         );
     }
 
-    public function fetchAll($where = '')
+    public function fetchAll()
     {
         $table = $this->createQueryBuilder()->from($this->table);
-        if (!empty($where)) {
-            $table->where($where);
-        }
-//        var_dump($this->createQueryBuilder()->from($this->table)->where($where)->execute());
+        $table = $this->format($table);
         return $table->execute()->fetchAll();
     }
 
-    public function fetchRow($where = '')
+    public function fetchRow()
     {
         $table = $this->createQueryBuilder()->from($this->table);
-        if (!empty($where)) {
-            $table->where($where);
-        }
+        $table = $this->format($table);
         return $table->execute()->fetch();
 
+    }
+
+    public function format(QueryBuilder $table):QueryBuilder
+    {
+        if (empty($this->parts)) {
+            return $table;
+        }
+        foreach ($this->parts as $part) {
+            $condition = $part[0];
+            $table->$condition($part[1][0]);
+        }
+        return $table;
+    }
+
+    protected $parts = [];
+
+    public function __call($name, $args)
+    {
+        $this->parts[] = [$name, $args];
+        return $this;
     }
 
     public function update($where, array $update)
