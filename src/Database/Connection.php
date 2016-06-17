@@ -262,14 +262,14 @@ class Connection
     {
         $table = $this->createQueryBuilder()->from($this->table);
         $table = $this->format($table);
-        return $table->execute()->fetchAll();
+        return $table->execute()->fetchAll(\PDO::FETCH_ASSOC);
     }
 
     public function fetchRow()
     {
         $table = $this->createQueryBuilder()->from($this->table);
         $table = $this->format($table);
-        return $table->execute()->fetch();
+        return $table->execute()->fetch(\PDO::FETCH_ASSOC);
 
     }
 
@@ -282,6 +282,8 @@ class Connection
             $condition = $part[0];
             $table->$condition($part[1][0]);
         }
+        unset($this->parts);
+
         return $table;
     }
 
