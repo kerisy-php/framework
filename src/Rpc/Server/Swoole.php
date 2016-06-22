@@ -85,7 +85,7 @@ class Swoole extends Base
     }
 
     public function onClose($server, $fd){
-
+        $server->close($fd);
     }
     
     public function onWorkerStart(){
