@@ -20,7 +20,7 @@ class Swoole extends Base{
     private  $sourceType = null;
     private $compressType = null;
     
-    static $timeout = 2;
+    static $timeout = 5;
     
     function __construct($host,$port)
     {
