@@ -47,20 +47,19 @@ class Console extends Application
     }
 
 
-    public function makeExecuor($router){
-        $this->execExecuor($router);
+    public function makeExecuor($router, $arguments){
+        $this->execExecuor($router, $arguments);
     }
 
-    protected function execExecuor($router)
+    protected function execExecuor($router, $arguments)
     {
-
         $this->dispatcher = new Dispatcher();
 
         $route = $this->dispatcher->getRouter()->getRouteByPath($router);
 
         $command = $this->createCommand($route);
 
-       return $this->runCommand($command);
+       return $this->runCommand($command, $arguments);
 
     }
 
@@ -81,8 +80,6 @@ class Console extends Application
     protected function runCommand($action, $request=false, $response=false)
     {
         $data = call_user_func_array($action, [$request, $response]);
-
         return $data;
     }
-
 }

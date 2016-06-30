@@ -180,17 +180,20 @@ class ErrorHandler extends Object
             E_USER_DEPRECATED => LogLevel::NOTICE,
         ];
 
+        $context = !CLI_MODE ? \Kerisy::$app->getRequest()->server : [];
+
         if ($exception instanceof ErrorException) {
             $level = $errorLevelMap[$exception->getCode()];
             $message = "Exception '" . get_class($exception) . "' with message '{$exception->getMessage()}' in "
                 . $exception->getFile() . ':' . $exception->getLine();
-            $this->logger->log($level, $message, \Kerisy::$app->getRequest()->server);
+
+            $this->logger->log($level, $message, $context);
         } else if ($exception instanceof \Exception) {
             $message = "Exception '" . get_class($exception) . "' with message '{$exception->getMessage()}' in "
                 . $exception->getFile() . ':' . $exception->getLine();
-            $this->logger->error($message, \Kerisy::$app->getRequest()->server);
+            $this->logger->error($message, $context);
         } else {
-            $this->logger->error($exception, \Kerisy::$app->getRequest()->server);
+            $this->logger->error($exception, $context);
         }
     }
 

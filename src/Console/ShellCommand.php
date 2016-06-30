@@ -38,7 +38,7 @@ class ShellCommand extends Command
         $this->addArgument('operation', InputArgument::OPTIONAL, 'the operation:run');
         $this->addOption('router', '-r', InputArgument::OPTIONAL, 'define operation router crond path');
         $this->addOption('alias_name', '-i', InputArgument::OPTIONAL, 'pls add operation alias name');
-
+        $this->addArgument('arguments', InputArgument::OPTIONAL, '可选参数:如有多个请用下划线代替空格分割 eg:argv1_argv2_...');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)
@@ -53,13 +53,17 @@ class ShellCommand extends Command
         if (is_null($alias_name) && in_array(KERISY_ENV, ['development', 'test'])) {
             //throw new AggregateException('The <alias_name> argument isn\'t exist!');
         }
-        return call_user_func([$this, 'command' . $operation], $router);
+
+        $arguments = $input->getArgument('arguments');
+
+        return call_user_func([$this, 'command' . $operation], $router, $arguments);
 
     }
 
-    protected function commandRun($router)
+    protected function commandRun($router, $arguments)
     {
-        return app()->makeExecuor($router);
+        $arguments = explode('_', $arguments);
+        return app()->makeExecuor($router, $arguments);
     }
 
 }

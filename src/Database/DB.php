@@ -17,7 +17,6 @@ class DB extends Object
     public static $capsule = [];
     protected static $connection = 'default';
 
-
     public static function signton($default_connection = '')
     {
         $connection = $default_connection ?: static::$connection;

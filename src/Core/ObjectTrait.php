@@ -84,4 +84,9 @@ trait ObjectTrait
     {
         throw new UnknownMethodException('Calling unknown method: ' . get_class($this) . "::$name()");
     }
+
+    public function __toString()
+    {
+        
+    }
 }

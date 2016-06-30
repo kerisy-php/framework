@@ -238,7 +238,7 @@ class Response extends Object implements ShouldBeRefreshed
             if (!is_string($this->data)) {
                 $this->headers->set('Content-Type', 'application/json;charset=UTF-8');
             }
-            $this->prepared = TRUE;
+            $this->prepared = true;
         }
     }
 
