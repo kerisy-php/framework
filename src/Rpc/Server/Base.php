@@ -17,7 +17,7 @@ abstract class Base extends \Kerisy\Server\Base{
     public function send($server, $fd, $data,$requestData) {
         $data = Tool::binFormat($data,$requestData['bufferRouteMatch'],$requestData['bufferCompressType']);
         $server->send($fd, $data);
-        $server->stop();
+//        $server->stop();
     }
 
     public function  prepareRequest($data){
