@@ -1,9 +1,9 @@
 <?php
 /**
  * Kerisy Framework
- * 
+ *
  * PHP Version 7
- * 
+ *
  * @author          Jiaqing Zou <zoujiaqing@gmail.com>
  * @copyright      (c) 2015 putao.com, Inc.
  * @package         kerisy/framework
@@ -174,11 +174,21 @@ class ErrorHandler extends Object
             E_USER_DEPRECATED   => LogLevel::NOTICE,
         ];
 
+        $context = !CLI_MODE ? request()->server : [];
+
         if ($exception instanceof ErrorException) {
             $level = $errorLevelMap[$exception->getCode()];
-            $this->logger->log($level, $exception);
+            $message = "ErrorException '" . get_class($exception) . "' with message '{$exception->getMessage()}' in "
+                . $exception->getFile() . ':' . $exception->getLine();
+
+            $this->logger->log($level, $message, $context);
+        } else if ($exception instanceof \Exception) {
+            $message = "Exception '" . get_class($exception) . "' with message '{$exception->getMessage()}' in "
+                . $exception->getFile() . ':' . $exception->getLine();
+                
+            $this->logger->error($message, $context);
         } else {
-            $this->logger->error($exception);
+            $this->logger->error($exception, $context);
         }
     }
 
