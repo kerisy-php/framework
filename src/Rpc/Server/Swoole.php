@@ -64,6 +64,10 @@ class Swoole extends Base
             $config['log_file'] = $this->logFile;
         }
 
+        $config['dispatch_mode'] = 3;
+        $config['open_eof_check'] = true;
+        $config['package_eof'] = "\r\n";
+        $config['open_eof_split'] = true;
         return $config;
     }
 
