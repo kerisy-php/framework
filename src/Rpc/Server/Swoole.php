@@ -42,6 +42,10 @@ class Swoole extends Base
      */
     public $asDaemon = FALSE;
 
+    public $taskWorkerNum = 4;
+
+    public $reactorNum=4;
+
     /**
      * Specifies the path where logs should be stored in.
      *
@@ -68,6 +72,9 @@ class Swoole extends Base
         $config['open_eof_check'] = true;
         $config['package_eof'] = "\r\n";
         $config['open_eof_split'] = true;
+//        $config['task_worker_num'] = $this->taskWorkerNum;
+        $config['reactor_num'] = $this->reactorNum;
+        $config['log_file'] = "/tmp/rpcserver.log";
         return $config;
     }
 
@@ -84,8 +91,23 @@ class Swoole extends Base
         $server->on('workerStart' , [ $this , 'onWorkerStart' ]);
         $server->on('workerStop' , [ $this , 'onWorkerStop' ]);
         $server->on('close' , [ $this , 'onClose' ]);
+
+        $server->on('task' , [ $this , 'onTask' ]);
+
+        $server->on('finish' , [ $this , 'onFinish' ]);
+
+        //onFinish
+
         
         return $server;
+    }
+
+    function onTask(){
+
+    }
+
+    function onFinish(){
+
     }
 
     public function onClose($server, $fd){
