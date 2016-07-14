@@ -65,7 +65,7 @@ class Swoole extends Base
         }
 
         if ( $this->logFile ) {
-            $config['log_file'] = $this->logFile;
+            $config['log_file'] = $this->logFile?$this->logFile:"/tmp/rpcserver.log";
         }
 
         $config['dispatch_mode'] = 3;
@@ -74,7 +74,7 @@ class Swoole extends Base
         $config['open_eof_split'] = true;
 //        $config['task_worker_num'] = $this->taskWorkerNum;
         $config['reactor_num'] = $this->reactorNum;
-        $config['log_file'] = "/tmp/rpcserver.log";
+        
         return $config;
     }
 
