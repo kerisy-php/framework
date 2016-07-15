@@ -71,9 +71,9 @@ class RpcServerCommand extends Command{
     {
         $pidFile = APPLICATION_PATH . '/runtime/rpcserver.pid';
         if (file_exists($pidFile) && posix_kill(file_get_contents($pidFile), 15)) {
-            echo "del_ok\r\n";
-            print_r(posix_get_last_error());
-            echo "\r\n";
+//            echo "del_ok\r\n";
+//            print_r(posix_get_last_error());
+//            echo "\r\n";
             do {
                 usleep(100000);
             } while(file_exists($pidFile));
