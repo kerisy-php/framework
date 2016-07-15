@@ -7,7 +7,7 @@
  * @since           16/5/31
  */
 
-namespace Kerisy\Rpc\Console;
+namespace Kerisy\Job;
 
 use Kerisy\Core\Console\Command;
 use Kerisy\Core\InvalidParamException;
@@ -16,9 +16,9 @@ use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
-class RpcServerCommand extends Command{
-    public $name = 'rpcserver';
-    public $description = 'Kerisy rpc-server management';
+class JobServerCommand extends Command{
+    public $name = 'jobserver';
+    public $description = 'Kerisy jobserver management';
 
     protected function configure()
     {
@@ -39,25 +39,26 @@ class RpcServerCommand extends Command{
 
     protected function handleRun()
     {
-        $server = config('rpcservice')->all();
-        $server['asDaemon'] = 0;
-        
-        return make($server)->run();
+        $options = [];
+        $options['asDaemon'] = 0;
+        \Kerisy\Job\Worker::run($options);
     }
 
     protected function handleStart()
     {
-        $pidFile = APPLICATION_PATH . '/runtime/rpcserver.pid';
+        $pidFile = APPLICATION_PATH . '/runtime/jobserver.pid';
+
+        if(!is_dir(dirname($pidFile))){
+            throw new InvalidValueException('The runtime dir not exists');
+        }
 
         if (file_exists($pidFile)) {
             throw new InvalidValueException('The pidfile exists, it seems the server is already started');
         }
-
-        $server = config('rpcservice')->all();
+        $server = [];
         $server['asDaemon'] = 1;
-        $server['pidFile'] = APPLICATION_PATH . '/runtime/rpcserver.pid';
-
-        return make($server)->run();
+        $server['pidFile'] = $pidFile;
+        \Kerisy\Job\Worker::run($server);
     }
 
     protected function handleRestart()
@@ -69,15 +70,30 @@ class RpcServerCommand extends Command{
 
     protected function handleStop()
     {
-        $pidFile = APPLICATION_PATH . '/runtime/rpcserver.pid';
-        if (file_exists($pidFile) && posix_kill(file_get_contents($pidFile), 15)) {
-//            echo "del_ok\r\n";
-//            print_r(posix_get_last_error());
-//            echo "\r\n";
-            do {
-                usleep(100000);
-            } while(file_exists($pidFile));
-            return 0;
+        $pidFile = APPLICATION_PATH . '/runtime/jobserver.pid';
+        if (file_exists($pidFile)) {
+            $pids = explode("|",file_get_contents($pidFile));
+            $del = 1;
+            foreach ($pids as $pid){
+                $rs = posix_kill($pid, 15);
+                if(!$rs){
+                    $del = 0;
+                    echo "del_fail\r\n";
+                    print_r(posix_get_last_error());
+                    echo "\r\n";
+                }
+            }
+            if($del){
+                echo "del_ok\r\n";
+                print_r(posix_get_last_error());
+                echo "\r\n";
+                do {
+                    unlink($pidFile);
+                    usleep(100000);
+                } while(file_exists($pidFile));
+                return 0;
+            }
+
         }
 
         return 1;

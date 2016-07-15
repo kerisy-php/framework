@@ -138,6 +138,8 @@ class Application extends ServiceLocator
         $commandPath = 'Kerisy\Console\ServerCommand';
         if($_SERVER['argv'][1] == "rpcserver"){
             $commandPath = 'Kerisy\Rpc\Console\RpcServerCommand';
+        }elseif($_SERVER['argv'][1] == "jobserver"){
+            $commandPath = 'Kerisy\Job\JobServerCommand';
         }
         
         $commands = array_merge($this->commands, [
