@@ -1,6 +1,8 @@
 <?php
 namespace Kerisy\Database\Model;
 
+use Kerisy\Database\Configuration;
+use \Kerisy\Database\Connection;
 use Kerisy\Database\MySQLDriver;
 
 /**
@@ -17,6 +19,7 @@ use Kerisy\Database\MySQLDriver;
  */
 class MySQLModel extends Model
 {
+    static public $connection = null;
 
     public function getDriver()
     {
@@ -26,15 +29,29 @@ class MySQLModel extends Model
     public function setDatabaseConfigure()
     {
 //        $this->configure = config('database')->get('mysql');
-        $this->configure = [
-            'host' => '10.1.11.166',
-            'dbname' => 'putao_mall',
-            'port' => 3306,
-            'username' => 'root',
-            'password' => '123456',
-            'prefix' => 'mall_',
-            'charset' => 'utf8'
-        ];
+    }
+
+
+    public function __call($method, $parameters)
+    {
+        return call_user_func_array([$this->signton(), $method], $parameters);
+    }
+
+    static public function __callStatic($method, $parameters)
+    {
+        $static = new static;
+        return call_user_func_array([$static, $method], $parameters);
+    }
+
+
+    public function setDebug($debug)
+    {
+        $this->debug = $debug;
+    }
+
+    public function lastInsertId()
+    {
+        $this->lastInsertId();
     }
 
 

@@ -9,6 +9,8 @@
 namespace Kerisy\Database;
 
 
+use Kerisy\Core\Exception;
+
 class MySQLDriver implements DriverInterface
 {
     /** Properties */
@@ -22,7 +24,7 @@ class MySQLDriver implements DriverInterface
     public function __construct()
     {
         if (static::PREFIX === 'Unknown') {
-            throw new \Exception('Constant PREFIX need to be redefined in class.');
+            throw new Exception('Constant PREFIX need to be redefined in class.');
         }
 
         $this->dsn = new Dsn(static::PREFIX);
