@@ -134,17 +134,13 @@ class Application extends ServiceLocator
             'version' => self::VERSION,
             'kerisy' => $this,
         ]);
-
-        $commandPath = 'Kerisy\Console\ServerCommand';
-        if($_SERVER['argv'][1] == "rpcserver"){
-            $commandPath = 'Kerisy\Rpc\Console\RpcServerCommand';
-        }elseif($_SERVER['argv'][1] == "jobserver"){
-            $commandPath = 'Kerisy\Job\JobServerCommand';
-        }
         
         $commands = array_merge($this->commands, [
-            $commandPath,
-            'Kerisy\Console\ShellCommand'
+            'Kerisy\Console\ServerCommand',
+            'Kerisy\Console\ShellCommand',
+            'Kerisy\Rpc\Console\RpcServerCommand',
+            'Kerisy\Job\JobServerCommand',
+            'Kerisy\Console\PHPCsCommand',
         ]);
         
         foreach ($commands as $command) {
@@ -179,6 +175,5 @@ class Application extends ServiceLocator
      */
     public function shutdown()
     {
-
     }
 }
