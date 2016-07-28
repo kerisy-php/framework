@@ -9,6 +9,7 @@
 namespace Kerisy\Database;
 
 
+use Kerisy\Core\Exception;
 use Kerisy\Database\Expression\ExpressionBuilder;
 use Kerisy\Database\Debug\QueryDebugger;
 use Kerisy\Database\Event\Events;
@@ -30,6 +31,7 @@ class Connection
     protected $configure;
 
     protected $driverConnection;
+    protected $primary_key = 'id';
 
 
     public function __construct(DriverInterface $driver, Configuration $configuration)
@@ -47,6 +49,16 @@ class Connection
     {
         $this->table = $this->getConfiguration()->getParameter('prefix') . $table;
         return $this;
+    }
+
+    public function getTable()
+    {
+        return $this->table;
+    }
+
+    public function setPrimaryKey($primary_key)
+    {
+        $this->primary_key = $primary_key;
     }
 
     public function setDriver(DriverInterface $driver):Connection
@@ -121,9 +133,15 @@ class Connection
         return true;
     }
 
-
+    /**
+     * Closes the connection with the database.
+     */
     public function close()
     {
+        $this->connected = false;
+        $this->driverConnection = null; // Attention: Can not use setDriverConnection() here !
+        $this->transactionLevel = 0;
+//        $this->transactionIsolation = $this->getPlatform()->getDefaultTransactionIsolation();
         $this->connected = false;
     }
 
@@ -154,15 +172,15 @@ class Connection
 
         }
         $this->debugQuery($queryDebugger);
-
+        if ($this->getDriverConnection()->errorCode() !== '00000') {
+            throw new Exception($this->getDriverConnection()->errorInfo()[2]);
+        }
         return $statement;
     }
 
     public function executeUpdate($query, array $parameters = [], array $types = [])
     {
-
         $queryDebugger = $this->createQueryDebugger($query, $parameters, $types);
-
         if (!empty($parameters)) {
             list($query, $parameters, $types) = $this->queryRewrite($query, $parameters, $types);
 
@@ -176,14 +194,16 @@ class Connection
             }
             $affectedRows = $statement->rowCount();
         } else {
-            $affectedRows = $this->getDriverConnection()->exec($query);
+            $statement = $this->getDriverConnection();
+            $affectedRows = $statement->exec($query);
+
         }
-
         $this->debugQuery($queryDebugger);
-
+        if ($this->getDriverConnection()->errorCode() !== '00000') {
+            throw new Exception($this->getDriverConnection()->errorInfo()[2]);
+        }
         return $affectedRows;
     }
-
 
     public function query(...$params)
     {
@@ -260,17 +280,36 @@ class Connection
 
     public function fetchAll()
     {
-        $table = $this->createQueryBuilder()->from($this->table);
-        $table = $this->format($table);
-        return $table->execute()->fetchAll(\PDO::FETCH_ASSOC);
+        $table = $this->createQueryBuilder()->select()->from($this->table);
+        $statement = $this->format($table)->execute();
+        if ($statement) {
+            return $statement->fetchAll(\PDO::FETCH_ASSOC);
+        } else {
+            return false;
+        }
     }
 
     public function fetchRow()
     {
-        $table = $this->createQueryBuilder()->from($this->table);
-        $table = $this->format($table);
-        return $table->execute()->fetch(\PDO::FETCH_ASSOC);
+        $table = $this->createQueryBuilder()->select()->from($this->table);
+        $statement = $this->format($table)->execute();
+        if ($statement) {
+            return $statement->fetch(\PDO::FETCH_ASSOC);
+        } else {
+            return false;
+        }
+    }
 
+    public function count()
+    {
+        $table = $this->createQueryBuilder()->select('count(*) as counter ')->from($this->table);
+        $statement = $this->format($table)->execute();
+        if ($statement) {
+            $res = $statement->fetch(\PDO::FETCH_ASSOC);
+            return $res['counter'];
+        } else {
+            return 0;
+        }
     }
 
     public function format(QueryBuilder $table):QueryBuilder
@@ -280,10 +319,18 @@ class Connection
         }
         foreach ($this->parts as $part) {
             $condition = $part[0];
-            $table->$condition($part[1][0]);
+            if ($condition == 'where' && (count($part[1]) > 1)) {//兼容处理
+                if (count($part[1]) == 2)
+                    $value = $part[1][0] . '=' . $part[1][1];
+                elseif (count($part[1]) == 3)
+                    $value = $part[1][0] . $part[1][1] . $part[1][2];
+            } else {
+                $value = $part[1][0];
+            }
+            $table->$condition($value);
+
         }
         unset($this->parts);
-
         return $table;
     }
 
@@ -295,12 +342,18 @@ class Connection
         return $this;
     }
 
-    public function update($where, array $update)
+    public function update(array $update)
     {
-        $table = $this->createQueryBuilder()->where($where)->update($this->table);
+        $table = $this->createQueryBuilder()->update($this->table);
+        $table = $this->format($table);
 
         foreach ($update as $k => $v) {
-            $table->set($k, $v);
+            if ($v !== '') {
+                if (is_string($v)) {
+                    $v = " '$v' ";
+                }
+                $table->set($k, $v);
+            }
         }
         return $table->execute();
     }
@@ -309,7 +362,12 @@ class Connection
     {
         $table = $this->createQueryBuilder()->insert($this->table);
         foreach ($update as $k => $v) {
-            $table->set($k, $v);
+            if ($v !== '') {
+                if (is_string($v)) {
+                    $v = " '$v' ";
+                }
+                $table->set($k, $v);
+            }
         }
         return $table->execute();
     }
@@ -418,5 +476,86 @@ class Connection
 
         return $this;
     }
+
+    /**
+     * Executes an SQL statement.
+     * @param string $statement The statement to execute.
+     * @return integer The number of affected rows.
+     */
+    public function exec($statement)
+    {
+        $queryDebugger = $this->createQueryDebugger($statement);
+        $affectedRows = $this->getDriverConnection()->exec($statement);
+        $this->debugQuery($queryDebugger);
+
+        return $affectedRows;
+    }
+
+    public $transactionLevel = 0;
+
+    /**
+     * Starts a transaction.
+     * @return boolean TRUE if the transaction has been started else FALSE.
+     */
+    public function beginTransaction()
+    {
+        $this->transactionLevel++;
+
+        if ($this->transactionLevel === 1) {
+            $queryDebugger = $this->createQueryDebugger('BEGIN TRANSACTION');
+            $this->getDriverConnection()->beginTransaction();
+            $this->debugQuery($queryDebugger);
+        }
+    }
+
+    /**
+     * Saves a transaction.
+     * @return bool TRUE if the transaction has been saved else FALSE.
+     * @throws ConnectionException
+     */
+    public function commit()
+    {
+        if ($this->transactionLevel === 0) {
+            throw ConnectionException::noActiveTransaction();
+        }
+
+        if ($this->transactionLevel === 1) {
+            $queryDebugger = $this->createQueryDebugger('COMMIT TRANSACTION');
+            $this->getDriverConnection()->commit();
+            $this->debugQuery($queryDebugger);
+        }
+
+        $this->transactionLevel--;
+    }
+
+    /**
+     * Cancels a transaction.
+     * @return bool TRUE if the transaction has been canceled else FALSE.
+     * @throws ConnectionException
+     */
+    public function rollBack()
+    {
+        if ($this->transactionLevel === 0) {
+            throw ConnectionException::noActiveTransaction();
+        }
+
+        if ($this->transactionLevel === 1) {
+            $queryDebugger = $this->createQueryDebugger('ROLLBACK TRANSACTION');
+            $this->getDriverConnection()->rollBack();
+            $this->debugQuery($queryDebugger);
+        }
+
+        $this->transactionLevel--;
+    }
+
+    /**
+     * Checks if a transaction has been started.
+     * @return boolean TRUE if a transaction has been started else FALSE.
+     */
+    public function inTransaction()
+    {
+        return $this->transactionLevel !== 0;
+    }
+
 
 }

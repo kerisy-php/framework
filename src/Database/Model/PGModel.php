@@ -1,6 +1,8 @@
 <?php
 namespace Kerisy\Database\Model;
 
+use Kerisy\Database\Configuration;
+use \Kerisy\Database\Connection;
 use Kerisy\Database\PGDriver;
 
 /**
@@ -17,6 +19,9 @@ use Kerisy\Database\PGDriver;
  */
 class PGModel extends Model
 {
+    static public $connection = null;
+
+
     public function getDriver()
     {
         return new PGDriver();
@@ -24,17 +29,31 @@ class PGModel extends Model
 
     public function setDatabaseConfigure()
     {
-//        $this->configure = config('database')->get('mysql');
-        $this->configure = [
-            'host' => 'localhost',
-            'dbname' => 'putao_store',
-            'port' => 5432,
-            'username' => 'postgres',
-            'password' => '1',
-            'prefix' => 'mall_',
-            'charset' => 'utf8'
-        ];
+//        $this->configure = config('database')->get('pgsql');
+
     }
 
+    public function __call($method, $parameters)
+    {
+        return call_user_func_array([$this->signton(), $method], $parameters);
+    }
+
+    static public function __callStatic($method, $parameters)
+    {
+        $static = new static;
+        return call_user_func_array([$static, $method], $parameters);
+    }
+
+
+    public function setDebug($debug)
+    {
+        $this->debug = $debug;
+    }
+
+    public function lastInsertId()
+    {
+        $sequeue = $this->signton()->getTable() . '_'.$this->primary_key.'_seq';
+        return $this->signton()->getDriverConnection()->lastInsertId($sequeue);
+    }
 
 }
