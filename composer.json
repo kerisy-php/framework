@@ -17,7 +17,9 @@
         "monolog/monolog": "~1.0",
         "guzzlehttp/guzzle": "^6.1" ,
         "php-amqplib/php-amqplib": "2.6.*",
-        "predis/predis":"v1.1.0"
+        "predis/predis":"v1.1.0",
+        "squizlabs/php_codesniffer": "^2.6",
+        "symfony/process": "^3.1"
     },
     "autoload": {
         "files": [
