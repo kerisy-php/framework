@@ -54,7 +54,7 @@ class FileStorage extends Object implements StorageContract
     /**
      * @inheritDoc
      */
-    public function write($id, array $data)
+    public function write($id, $data)
     {
         return file_put_contents($this->path . '/' . $id, serialize($data)) !== false;
     }
