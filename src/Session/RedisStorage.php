@@ -67,7 +67,7 @@ class RedisStorage extends Object implements StorageContract
     /**
      * @inheritDoc
      */
-    public function write($id, array $data)
+    public function write($id, $data)
     {
         return $this->_redis->set($this->getPrefixKey($id), serialize($data), $this->timeout) !== false;
     }

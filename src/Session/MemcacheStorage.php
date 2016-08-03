@@ -63,7 +63,7 @@ class MemcacheStorage extends Object implements StorageContract
     /**
      * @inheritDoc
      */
-    public function write($id, array $data)
+    public function write($id, $data)
     {
         return $this->_memcache->set($this->getPrefixKey($id), serialize($data), 0, $this->timeout) !== false;
     }
