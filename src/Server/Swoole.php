@@ -161,6 +161,11 @@ class Swoole extends Base
             $port = $hosts[1];
         }
         $host = $hosts[0];
+        $params = [];
+        if ($request->server['request_method'] === 'POST') {
+           isset($request->post) && $params = $request->post;
+       }
+       isset($request->get) && $params += $request->get;
         $config = [
             'protocol' => $request->server['server_protocol'] ,
             'host'     => $host ,
@@ -208,5 +213,9 @@ class Swoole extends Base
     {
         $server = $this->createServer();
         $server->start();
+    }
+    public function setAliasName($alias_name = '')
+    {
+        $this->name .= ' '.$alias_name ?: 'server';
     }
 }
