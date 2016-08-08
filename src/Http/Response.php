@@ -161,7 +161,7 @@ class Response extends Object implements ShouldBeRefreshed
     {
         $this->data = json_encode($data, JSON_UNESCAPED_UNICODE);
 
-        $this->headers->set('Content-Type', 'application/json');
+        $this->headers->set('Content-Type', 'application/json; charset=UTF-8');
 
         return $this;
     }
@@ -178,24 +178,27 @@ class Response extends Object implements ShouldBeRefreshed
      */
     public function redirect($url, $code = 302, $text = '')
     {
-        if (empty($url)) {
-            throw new \InvalidArgumentException('Cannot redirect to an empty URL.');
+        if(PHP_SAPI === 'cli') {
+            if (empty($url)) {
+                throw new \InvalidArgumentException('Cannot redirect to an empty URL.');
+            }
+            $this->data =
+                sprintf('<!DOCTYPE html>
+    <html>
+        <head>
+            <meta charset="UTF-8" />
+            <meta http-equiv="refresh" content="0;url=%1$s" />
+            <title>Redirecting to %1$s</title>
+        </head>
+        <body>
+            Redirecting to <a href="%1$s">%1$s</a>.
+        </body>
+    </html>', htmlspecialchars($url, ENT_QUOTES, 'UTF-8'));
+            $this->headers->set('Location', $url);
+            $this->status($code, $text);
+        }else{
+            header("LOCATION:".$url,true,$code);
         }
-        $this->data =
-            sprintf('<!DOCTYPE html>
-<html>
-    <head>
-        <meta charset="UTF-8" />
-        <meta http-equiv="refresh" content="0;url=%1$s" />
-        <title>Redirecting to %1$s</title>
-    </head>
-    <body>
-        Redirecting to <a href="%1$s">%1$s</a>.
-    </body>
-</html>', htmlspecialchars($url, ENT_QUOTES, 'UTF-8'));
-        $this->headers->set('Location', $url);
-        $this->status($code, $text);
-
         return $this;
     }
 
@@ -236,7 +239,7 @@ class Response extends Object implements ShouldBeRefreshed
         if (!$this->prepared) {
             $this->content = is_string($this->data) ? $this->data : Json::encode($this->data);
             if (!is_string($this->data)) {
-                $this->headers->set('Content-Type', 'application/json');
+                $this->headers->set('Content-Type', 'application/json; charset=UTF-8');
             }
             $this->prepared = TRUE;
         }
@@ -263,7 +266,11 @@ class Response extends Object implements ShouldBeRefreshed
 
     public function setCookie($key, $value, $ttl = 0, $path = '/', $domain = '.putao.com', $secure = false, $httponly=false)
     {
-        $this->_cookies[] = [$key, $value, $ttl, $path, $domain, $secure, $httponly];
+        if(PHP_SAPI === 'cli') {
+            $this->_cookies[] = [$key, $value, $ttl, $path, $domain, $secure, $httponly];
+        }else{
+            setCookie($key, $value, $ttl, $path, $domain, $secure, $httponly);
+        }
         return $this;
     }
 

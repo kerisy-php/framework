@@ -20,6 +20,11 @@ use Kerisy\Core\Application;
 class Web extends Application
 {
 
+    public function __construct()
+    {
+        parent::__construct();
+    }
+
     public function bootstrap()
     {
         if (!$this->bootstrapped) {
@@ -33,6 +38,127 @@ class Web extends Application
         }
 
         return $this;
+    }
+
+    protected function prepareRequest($request)
+    {
+//        print_r($_SERVER);
+        $port = 80;
+        $hosts = explode(':' , $_SERVER['HTTP_HOST']);
+
+        if ( count($hosts) > 1 ) {
+            $port = $hosts[1];
+        }
+        $host = $hosts[0];
+        $params = [];
+
+        //输入过滤
+        !empty($_POST) && self::addS($_POST);
+        !empty($_GET) && self::addS($_GET);
+        !empty($_COOKIE) && self::addS($_COOKIE);
+        !empty($_FILES) && self::addS($_FILES);
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $_POST && $params = $_POST;
+        }
+
+        $urlParse = parse_url($_SERVER['REQUEST_URI']);
+
+        $_GET && $params += $_GET;
+
+        $_FILES && $params += $_FILES;
+
+        $config = [
+            'protocol' => $_SERVER['SERVER_PROTOCOL'] ,
+            'host'     => $host ,
+            'port'     => $port ,
+            'method'   => $_SERVER['REQUEST_METHOD'] ,
+            'path'     => str_replace($_SERVER['SCRIPT_NAME'],'',$urlParse['path']) ,
+//            'headers'  => $request->header ,
+//            'headers' =>"",
+            'params'   => $params,
+//            'content'  => $request->rawcontent() ,
+            'content'  => "" ,
+//            'server'   => $request->server
+            'server'   => $_SERVER
+        ];
+        if ($_FILES) {
+            $config['files'] = $_FILES;
+        }
+        if ($_COOKIE) {
+            $config['cookie'] = $_COOKIE;
+        }
+
+        return app()->makeRequest($config);
+    }
+
+    public static function addS(&$array)
+    {
+        if (is_array($array)) {
+            foreach ($array as $key => $value) {
+                if (!is_array($value)) {
+                    $array[$key] = addslashes($value);
+                } else {
+                    self::addS($array[$key]);
+                }
+            }
+        } else {
+            $array = addslashes($array);
+        }
+    }
+
+    public function webHandle()
+    {
+        $this->bootstrap();
+        $request = $this->get('request');
+        $request = $this->prepareRequest($request);
+
+        $response = $this->get('response');
+//        print_r($request);
+        ob_start();
+        try {
+            $this->exec($request, $response);
+        } catch (\Exception $e) {
+            $response->data = $e;
+            $this->get('errorHandler')->handleException($e);
+        }
+
+        try {
+            $response->callMiddleware();
+        } catch (\Exception $e) {
+            $response->data = $e;
+        }
+
+        $this->formatException($response->data, $response);
+
+        $response->prepare();
+
+        $this->refreshComponents();
+//        $content = is_string($response->data) ? $response->data : Json::encode($response->data);
+//
+//        if (!is_string($response->data)) {
+//            $response->headers->set('Content-Type', 'application/json; charset=UTF-8');
+//        }
+        $content = $response->content();
+
+        if(!headers_sent()){
+            foreach ( $response->headers->all() as $name => $values ) {
+                $name = str_replace(' ' , '-' , ucwords(str_replace('-' , ' ' , $name)));
+                foreach ( $values as $value ) {
+                    $header = "{$name}:{$value}";
+                    if($header){
+                        header($header);
+                    }
+                }
+            }
+        }
+
+        $ob_content = ob_get_contents();
+
+        ob_end_clean();
+        $content = $ob_content?$ob_content:$content;
+        echo $content;
+        return $content;
     }
 
     protected function registerRoutes()
@@ -84,7 +210,6 @@ class Web extends Application
 
         return $response;
     }
-
 
 
     protected function formatException($e, $response)
