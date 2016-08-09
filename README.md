@@ -51,7 +51,7 @@ server {
             include fastcgi.conf;
             fastcgi_pass  127.0.0.1:9000;
         }
-        
+
         location ~ ^/(images|video|static)/ {
                 root /home/sysadm/statistics/public;
                 #expires 30d;

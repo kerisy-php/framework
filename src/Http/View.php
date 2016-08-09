@@ -25,6 +25,8 @@ class View extends Set
 
     public function __construct($prefix = 'front')
     {
+        $this->_prefix = $prefix;
+        
         $this->_template_dir = APPLICATION_PATH . 'views/' . strtolower($prefix) . '/';
         if (!is_dir($this->_template_dir))
         {
@@ -42,6 +44,11 @@ class View extends Set
 
         return $template_file;
     }
+    
+    public function getTplPath($template)
+    {
+        return strtolower($this->_prefix) . '/'. $template;
+    }
 
     private function template($template)
     {
@@ -49,7 +56,7 @@ class View extends Set
         include $this->getTemplateFile($template);
     }
 
-    public function render($template)
+    public function render($template,$data = [])
     {
         ob_start(null, 0, false);
 

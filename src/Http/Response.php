@@ -19,6 +19,8 @@ use Kerisy\Core\Object;
 use Kerisy\Core\ShouldBeRefreshed;
 use Kerisy\Support\Json;
 use Kerisy\Core\InvalidParamException;
+use Jenssegers\Blade\Blade;
+use Kerisy\Core\Config;
 
 /**
  * Class Response
@@ -148,8 +150,29 @@ class Response extends Object implements ShouldBeRefreshed
         if (!is_null($this->attach) && is_array($this->attach)) {
             $data += $this->attach;
         }
-        $this->view->replace($data);
-        $this->data = $this->view->render($template);
+
+        $configObj = new Config("config");
+        $templateConfig = $configObj->get("template_engine");
+        $templateConfig = $templateConfig?$templateConfig:"default";
+
+        if($templateConfig == 'blade'){
+            $viewPath = APPLICATION_PATH . 'views/' ;
+            $compilePath = APPLICATION_PATH . "/runtime/complie/";
+            if (!is_dir($compilePath)) {
+                mkdir($compilePath, 0777, true);
+            }
+            $obj = new Blade($viewPath, $compilePath);
+
+            $template = $this->view->getTplPath($template);
+            $template = str_replace("\\",".",$template);
+
+            $html = $obj->render($template, $data);
+            $this->data = $html;
+        }
+        else{
+            $this->view->replace($data);
+            $this->data = $this->view->render($template);
+        }
 
         $this->headers->set('Content-Type', 'text/html');
 
