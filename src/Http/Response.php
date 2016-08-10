@@ -19,7 +19,6 @@ use Kerisy\Core\Object;
 use Kerisy\Core\ShouldBeRefreshed;
 use Kerisy\Support\Json;
 use Kerisy\Core\InvalidParamException;
-use Jenssegers\Blade\Blade;
 use Kerisy\Core\Config;
 
 /**
@@ -153,26 +152,13 @@ class Response extends Object implements ShouldBeRefreshed
 
         $configObj = new Config("config");
         $templateConfig = $configObj->get("template_engine");
-        $templateConfig = $templateConfig?$templateConfig:"default";
+        $templateConfig = $templateConfig ? $templateConfig : "kerisy";
 
-        if($templateConfig == 'blade'){
-            $viewPath = APPLICATION_PATH . 'views/' ;
-            $compilePath = APPLICATION_PATH . "/runtime/complie/";
-            if (!is_dir($compilePath)) {
-                mkdir($compilePath, 0777, true);
-            }
-            $obj = new Blade($viewPath, $compilePath);
-
-            $template = $this->view->getTplPath($template);
-            $template = str_replace("\\",".",$template);
-
-            $html = $obj->render($template, $data);
-            $this->data = $html;
-        }
-        else{
-            $this->view->replace($data);
-            $this->data = $this->view->render($template);
-        }
+        $tplClassName = "\\Kerisy\\Template\\" . ucfirst($templateConfig);
+        $obj = new $tplClassName;
+        $obj->path($template, $this->view);
+        $html = $obj->render($data);
+        $this->data = $html;
 
         $this->headers->set('Content-Type', 'text/html');
 
@@ -201,7 +187,7 @@ class Response extends Object implements ShouldBeRefreshed
      */
     public function redirect($url, $code = 302, $text = '')
     {
-        if(PHP_SAPI === 'cli') {
+        if (PHP_SAPI === 'cli') {
             if (empty($url)) {
                 throw new \InvalidArgumentException('Cannot redirect to an empty URL.');
             }
@@ -219,8 +205,8 @@ class Response extends Object implements ShouldBeRefreshed
     </html>', htmlspecialchars($url, ENT_QUOTES, 'UTF-8'));
             $this->headers->set('Location', $url);
             $this->status($code, $text);
-        }else{
-            header("LOCATION:".$url,true,$code);
+        } else {
+            header("LOCATION:" . $url, true, $code);
         }
         return $this;
     }
@@ -287,11 +273,11 @@ class Response extends Object implements ShouldBeRefreshed
         return $this->_cookies;
     }
 
-    public function setCookie($key, $value, $ttl = 0, $path = '/', $domain = '.putao.com', $secure = false, $httponly=false)
+    public function setCookie($key, $value, $ttl = 0, $path = '/', $domain = '.putao.com', $secure = false, $httponly = false)
     {
-        if(PHP_SAPI === 'cli') {
+        if (PHP_SAPI === 'cli') {
             $this->_cookies[] = [$key, $value, $ttl, $path, $domain, $secure, $httponly];
-        }else{
+        } else {
             setCookie($key, $value, $ttl, $path, $domain, $secure, $httponly);
         }
         return $this;
