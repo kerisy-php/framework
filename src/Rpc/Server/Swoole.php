@@ -70,7 +70,7 @@ class Swoole extends Base
 
         $config['dispatch_mode'] = 3;
         $config['open_eof_check'] = true;
-        $config['package_eof'] = "\r\n";
+        $config['package_eof'] = "\r\n\*";
         $config['open_eof_split'] = true;
 //        $config['task_worker_num'] = $this->taskWorkerNum;
         $config['reactor_num'] = $this->reactorNum;

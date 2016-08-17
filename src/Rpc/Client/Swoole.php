@@ -33,7 +33,7 @@ class Swoole extends Base{
         $client = new \swoole_client(SWOOLE_SOCK_TCP,SWOOLE_SOCK_SYNC);
         $client->set(array(
             'open_eof_check' => true,
-            'package_eof' => "\r\n",
+            'package_eof' => "\r\n\*",
             'open_eof_split'=>true
         ));
         $data = $this->syncSendAndReceive($client,$fn,$sourceType,$compressType);
@@ -46,7 +46,7 @@ class Swoole extends Base{
         $client = new \swoole_client(SWOOLE_SOCK_TCP,SWOOLE_SOCK_ASYNC);
         $client->set(array(
             'open_eof_check' => true,
-            'package_eof' => "\r\n",
+            'package_eof' => "\r\n\*",
         ));
         $this->client = $client;
         
