@@ -13,9 +13,9 @@ class Tool{
 static function binFormat($bufferData,$routeMatch=0,$compressType=0){
 //    echo bin2hex($bufferData)."\r\n";
     $packRouteMatch = pack("n",$routeMatch);
-    $len = strlen($bufferData.$packRouteMatch);
-    $packLen = pack("N",$len);
     $packType = pack("C",$compressType);
+    $len = strlen($packType.$packRouteMatch.$bufferData);
+    $packLen = pack("N",$len);
     return $packLen.$packType.$packRouteMatch.$bufferData;
 }
 
