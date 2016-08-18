@@ -16,18 +16,26 @@ use Kerisy\Http\Request;
 use Kerisy\Http\Response;
 use Kerisy\Database\Database;
 use Kerisy\Core\Application;
+use Kerisy\Core\Hook;
 
 class Web extends Application
 {
 
     public function __construct()
     {
+        //添加开始时间钩子
+        \Kerisy\Core\Hook::add("server_start", function () {
+            $startTime = \Kerisy\Tool\RunTime::getmicrotime();
+            return $startTime;
+        });
+        
         parent::__construct();
     }
 
     public function bootstrap()
     {
         if (!$this->bootstrapped) {
+
             $this->initializeConfig();
             $this->registerComponents();
             $this->registerRoutes();
@@ -109,6 +117,8 @@ class Web extends Application
 
     public function webHandle()
     {
+        Hook::fire("server_start");
+
         $this->bootstrap();
         $request = $this->get('request');
         $request = $this->prepareRequest($request);
@@ -158,6 +168,9 @@ class Web extends Application
         ob_end_clean();
         $content = $ob_content?$ob_content:$content;
         echo $content;
+        
+        Hook::fire("server_end",[$request,$response]);
+        
         return $content;
     }
 
@@ -248,8 +261,10 @@ class Web extends Application
 
         $response->setPrefix($route->getPrefix());
 
+        Hook::fire("action_pre",[$request,$response]);
+        
         $data = $this->runAction($action, $request, $response);
-
+        
         if (!$data instanceof Response && $data !== null) {
             $response->with($data);
         }
@@ -303,7 +318,20 @@ class Web extends Application
     protected function createAction(Route $route)
     {
         $class = "App\\" . ucfirst($route->getModule()) . "\\Controller\\" . ucfirst($route->getPrefix()) . "\\" . ucfirst($route->getController()) . "Controller";
-
+        
+        if(!class_exists($class)){
+           $prefixs = $route->getALLPrefix();
+            if($prefixs){
+                foreach ($prefixs as $v){
+                    $class = "App\\" . ucfirst($route->getModule()) . "\\Controller\\" . ucfirst($v) . "\\" . ucfirst($route->getController()) . "Controller";
+                    if(class_exists($class)){
+                        $route->setPrefix($v);
+                        break;
+                    }
+                }
+            }
+        }
+        
         $method = $route->getAction();
 
         $controller = $this->get($class);

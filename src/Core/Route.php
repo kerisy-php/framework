@@ -36,7 +36,18 @@ class Route extends Object
     private $_controller;
     private $_action;
     private $_method;
+    private $_allprefix;
 
+    public function setAllPrefix($prefix)
+    {
+        $this->_allprefix = $prefix;
+    }
+
+    public function getALLPrefix()
+    {
+        return $this->_allprefix;
+    }
+    
     public function setPrefix($prefix)
     {
         $this->_prefix = $prefix;

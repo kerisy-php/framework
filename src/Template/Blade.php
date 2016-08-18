@@ -45,7 +45,7 @@ class Blade extends Base
     {
         $template = $viewObj->getTplPath($tplPath);
         $template = str_replace("/", ".", $template);
-        $template = str_replace("\\", ".", $template);
+//        $template = str_replace("\\", ".", $template);
         $this->path = $template;
         return $template;
     }

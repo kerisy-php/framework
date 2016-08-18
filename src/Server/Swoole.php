@@ -14,6 +14,8 @@
 
 namespace Kerisy\Server;
 
+use Kerisy\Core\Hook;
+
 /**
  * A Swoole based server implementation.
  *
@@ -189,6 +191,8 @@ class Swoole extends Base
 
     public function onRequest($request , $response)
     {
+        Hook::fire("server_start");
+        
         $res = $this->handleRequest($this->prepareRequest($request));
 
         $content = $res->content();
@@ -206,6 +210,9 @@ class Swoole extends Base
             }
         }
         $response->status($res->statusCode);
+        
+        Hook::fire("server_end",[$request,$response]);
+        
         $response->end($content);
     }
 

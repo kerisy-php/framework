@@ -1,5 +1,5 @@
-DROP TABLE IF EXISTS `mall_jobs`;
-CREATE TABLE `mall_jobs` (
+DROP TABLE IF EXISTS `psm_jobs`;
+CREATE TABLE `psm_jobs` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `handler` text NOT NULL,
   `queue` varchar(255) NOT NULL DEFAULT 'default',
