@@ -67,12 +67,20 @@ class Swoole extends Base
         if ( $this->logFile ) {
             $config['log_file'] = $this->logFile?$this->logFile:"/tmp/rpcserver.log";
         }
-
-        $config['dispatch_mode'] = 3;
-        $config['open_eof_check'] = true;
-        $config['package_eof'] = "\r\n\*";
-        $config['open_eof_split'] = true;
+//
+//        $config['dispatch_mode'] = 3;
+//        $config['open_eof_check'] = true;
+//        $config['package_eof'] = "\r\n\*";
+//        $config['open_eof_split'] = true;
 //        $config['task_worker_num'] = $this->taskWorkerNum;
+
+        $config['open_length_check'] = true;
+        $config['dispatch_mode'] = 1;
+        $config['package_length_type'] = 'N';
+        $config['package_length_offset'] = 0;
+        $config['package_body_offset'] = 4;
+        $config['package_max_length'] = 2000000;
+
         $config['reactor_num'] = $this->reactorNum;
         
         return $config;
