@@ -75,7 +75,7 @@ class Swoole extends Base
 //        $config['task_worker_num'] = $this->taskWorkerNum;
 
         $config['open_length_check'] = true;
-        $config['dispatch_mode'] = 1;
+        $config['dispatch_mode'] = 3;
         $config['package_length_type'] = 'N';
         $config['package_length_offset'] = 0;
         $config['package_body_offset'] = 4;
