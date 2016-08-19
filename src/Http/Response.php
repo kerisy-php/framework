@@ -150,6 +150,11 @@ class Response extends Object implements ShouldBeRefreshed
             $data += $this->attach;
         }
 
+        if($this->headers->get("Location")){
+            $this->headers->set('Content-Type', 'text/html');
+            return $this;
+        }
+
         $configObj = new Config("config");
         $templateConfig = $configObj->get("template_engine");
         $templateConfig = $templateConfig ? $templateConfig : "kerisy";
