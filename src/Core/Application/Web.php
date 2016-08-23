@@ -25,7 +25,7 @@ class Web extends Application
     {
         //添加开始时间钩子
         \Kerisy\Core\Hook::add("server_start", function () {
-            $startTime = \Kerisy\Tool\RunTime::getmicrotime();
+            $startTime = \Kerisy\Tool\RunTime::setStartTime();
             return $startTime;
         });
         
