@@ -180,12 +180,13 @@ class ErrorHandler extends Object
             $level = $errorLevelMap[$exception->getCode()];
             $message = "ErrorException '" . get_class($exception) . "' with message '{$exception->getMessage()}' in "
                 . $exception->getFile() . ':' . $exception->getLine();
-
+            \Kerisy\Core\Hook::fire("exception_report",[$level,$message]);
             $this->logger->log($level, $message, $context);
         } else if ($exception instanceof \Exception) {
             $message = "Exception '" . get_class($exception) . "' with message '{$exception->getMessage()}' in "
                 . $exception->getFile() . ':' . $exception->getLine();
-                
+            $level = isset($errorLevelMap[$exception->getCode()])?$errorLevelMap[$exception->getCode()]:"error";
+            \Kerisy\Core\Hook::fire("exception_report",[$level,$message]);
             $this->logger->error($message, $context);
         } else {
             $this->logger->error($exception, $context);
