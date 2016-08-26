@@ -131,7 +131,7 @@ class Server extends \Kerisy\Server\Base
      */
     public function onReceive($serv, $fd, $from_id, $data)
     {
-        Hook::fire("monitor_receive", $data);
+        Hook::fire("monitor_receive", [$fd, $from_id, $data]);
     }
 
     /**
