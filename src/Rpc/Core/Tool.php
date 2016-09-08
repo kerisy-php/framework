@@ -16,13 +16,12 @@ static function binFormat($bufferData,$routeMatch=0,$compressType=0){
     $len = strlen($bufferData.$packRouteMatch);
     $packLen = pack("N",$len);
     $packType = pack("C",$compressType);
-    return $packLen.$packType.$packRouteMatch.$bufferData."\r\n";
+    return $packLen.$packType.$packRouteMatch.$bufferData;
 }
 
     static function getParseInfo($bufferData){
 //        echo bin2hex($bufferData);
 //        echo "\r\n";
-        $bufferData = rtrim($bufferData,"\r\n");
         $bufferLenPack = substr($bufferData,0,4);
 //        echo bin2hex($bufferLenPack);
 //        echo "\r\n";

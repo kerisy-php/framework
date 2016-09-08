@@ -42,8 +42,7 @@ class Router
 
     public static function getInstance()
     {
-        if (!self::$_instance)
-        {
+        if (!self::$_instance) {
             self::$_instance = new Router();
         }
 
@@ -52,8 +51,7 @@ class Router
 
     public function setConfig($configs)
     {
-        foreach ($configs as $config)
-        {
+        foreach ($configs as $config) {
             $this->addGroup($config);
         }
     }
@@ -75,21 +73,16 @@ class Router
 
         $this->_groups[$config['prefix']] = $group;
 
-        if (isset($config['domain']) && $config['domain'] != '')
-        {
+        if (isset($config['domain']) && $config['domain'] != '') {
             $this->_domain_groups[$config['domain']] = &$this->_groups[$config['prefix']];
-        }
-        elseif(isset($config['directory']) && $config['directory'] != '')
-        {
+        } elseif (isset($config['directory']) && $config['directory'] != '') {
             $this->_directory_groups[$config['directory']] = &$this->_groups[$config['prefix']];
-        }
-        else
-        {
+        } else {
             $this->_default_group = &$this->_groups[$config['prefix']];
         }
 
-        foreach ($config['routes'] as $route)
-        {
+
+        foreach ($config['routes'] as $route) {
             $group->addRoute($route);
         }
     }
@@ -101,58 +94,70 @@ class Router
         $path = trim($request->path, '/');
 
         $cacheKey = "route_cached_" . $request->host . '_' . base64_encode($path);
-        if ($route = \apcu_fetch($cacheKey))
-        {
+        if ($route = \apcu_fetch($cacheKey)) {
             return $route;
         }
 
-        if ($path == null)
-        {
+        if ($path == null) {
             $path = "/";
         }
 
-        if (!$group = $this->getGroupByDomain($request->host))
-        {
-            if ($path == null && $this->_default_group)
-            {
+        if (!$group = $this->getGroupByDomain($request->host)) {
+            if ($path == null && $this->_default_group) {
                 $group = $this->_default_group;
-            }
-            else
-            {
+            } else {
                 $tmp = explode('/', $path);
 
                 $directory = $tmp[0];
-                if ($group = $this->getGroupByDirectory($directory))
-                {
+                if ($group = $this->getGroupByDirectory($directory)) {
                     unset($tmp[0]);
                     $path = implode('/', $tmp);
-                }
-                elseif ($this->_default_group)
-                {
-                    $group = $this->_default_group;
+                } elseif ($this->_default_group) {
+//                    $group = $this->_default_group;
                 }
 
                 unset($tmp);
             }
         }
 
-        if ($group && $route = $group->match($path))
-        {
-        }
-        else
-        {
-            $route = $this->getRouteByPath($path);
-            $route->setPrefix($group->getPrefix());
+        //打补丁 如果没有匹配, 取所有路由循环
+        if ($this->_groups && !$group) {
+            foreach ($this->_groups as $v) {
+                $route = $v->match($path);
+                if ($route) {
+                    $group = $v;
+                    break;
+                }
+            }
         }
 
-        if ($route !== null)
-        {
+        $group = $group ? $group : $this->_default_group;
+
+        $route = $route ? $route : ($group ? $group->match($path) : null);
+
+        if ($group && $route) {
+        } else {
+            $route = $this->getRouteByPath($path);
+            $route->setPrefix($group->getPrefix());
+
+            //传递所有前缀
+            $allPrefix = [];
+            if ($this->_groups) {
+                foreach ($this->_groups as $k=>$v) {
+                    $allPrefix[] =$k;
+                }
+            }
+            $route->setAllPrefix($allPrefix);
+        }
+
+        if ($route !== null) {
             \apcu_add($cacheKey, $route, 3600);
             return $route;
         }
 
         return false;
     }
+
 
     public function getRouteByPath($path = '/')
     {

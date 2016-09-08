@@ -7,9 +7,9 @@
  */
 
 namespace Kerisy\Support;
+use Kerisy\Core\Object;
 
-
-class Redis
+class Redis extends Object
 {
     public $host = "127.0.0.1";
     public $port = 6379;
@@ -19,9 +19,9 @@ class Redis
 
     private $redis;
 
-    public function __construct()
+    public function init()
     {
-        if (!get_loaded_extensions('redis')) {
+        if (!in_array('redis',get_loaded_extensions())) {
             throw new InvalidConfigException("not exist redis extensions error.");
         }
         $this->redis = new \Redis();

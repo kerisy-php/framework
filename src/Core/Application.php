@@ -141,6 +141,7 @@ class Application extends ServiceLocator
             'Kerisy\Rpc\Console\RpcServerCommand',
             'Kerisy\Job\JobServerCommand',
             'Kerisy\Console\PHPCsCommand',
+            'Kerisy\Monitor\Console\MonitorServerCommand',
         ]);
         
         foreach ($commands as $command) {

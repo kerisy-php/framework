@@ -19,6 +19,7 @@ use Kerisy\Core\Object;
 use Kerisy\Core\ShouldBeRefreshed;
 use Kerisy\Support\Json;
 use Kerisy\Core\InvalidParamException;
+use Kerisy\Core\Config;
 
 /**
  * Class Response
@@ -148,8 +149,21 @@ class Response extends Object implements ShouldBeRefreshed
         if (!is_null($this->attach) && is_array($this->attach)) {
             $data += $this->attach;
         }
-        $this->view->replace($data);
-        $this->data = $this->view->render($template);
+
+        if($this->headers->get("Location")){
+            $this->headers->set('Content-Type', 'text/html');
+            return $this;
+        }
+
+        $configObj = new Config("config");
+        $templateConfig = $configObj->get("template_engine");
+        $templateConfig = $templateConfig ? $templateConfig : "kerisy";
+
+        $tplClassName = "\\Kerisy\\Template\\" . ucfirst($templateConfig);
+        $obj = new $tplClassName;
+        $obj->path($template, $this->view);
+        $html = $obj->render($data);
+        $this->data = $html;
 
         $this->headers->set('Content-Type', 'text/html');
 
@@ -161,7 +175,7 @@ class Response extends Object implements ShouldBeRefreshed
     {
         $this->data = json_encode($data, JSON_UNESCAPED_UNICODE);
 
-        $this->headers->set('Content-Type', 'application/json');
+        $this->headers->set('Content-Type', 'application/json; charset=UTF-8');
 
         return $this;
     }
@@ -178,24 +192,27 @@ class Response extends Object implements ShouldBeRefreshed
      */
     public function redirect($url, $code = 302, $text = '')
     {
-        if (empty($url)) {
-            throw new \InvalidArgumentException('Cannot redirect to an empty URL.');
+        if (PHP_SAPI === 'cli') {
+            if (empty($url)) {
+                throw new \InvalidArgumentException('Cannot redirect to an empty URL.');
+            }
+            $this->data =
+                sprintf('<!DOCTYPE html>
+    <html>
+        <head>
+            <meta charset="UTF-8" />
+            <meta http-equiv="refresh" content="0;url=%1$s" />
+            <title>Redirecting to %1$s</title>
+        </head>
+        <body>
+            Redirecting to <a href="%1$s">%1$s</a>.
+        </body>
+    </html>', htmlspecialchars($url, ENT_QUOTES, 'UTF-8'));
+            $this->headers->set('Location', $url);
+            $this->status($code, $text);
+        } else {
+            header("LOCATION:" . $url, true, $code);
         }
-        $this->data =
-            sprintf('<!DOCTYPE html>
-<html>
-    <head>
-        <meta charset="UTF-8" />
-        <meta http-equiv="refresh" content="0;url=%1$s" />
-        <title>Redirecting to %1$s</title>
-    </head>
-    <body>
-        Redirecting to <a href="%1$s">%1$s</a>.
-    </body>
-</html>', htmlspecialchars($url, ENT_QUOTES, 'UTF-8'));
-        $this->headers->set('Location', $url);
-        $this->status($code, $text);
-
         return $this;
     }
 
@@ -236,7 +253,7 @@ class Response extends Object implements ShouldBeRefreshed
         if (!$this->prepared) {
             $this->content = is_string($this->data) ? $this->data : Json::encode($this->data);
             if (!is_string($this->data)) {
-                $this->headers->set('Content-Type', 'application/json');
+                $this->headers->set('Content-Type', 'application/json; charset=UTF-8');
             }
             $this->prepared = TRUE;
         }
@@ -261,9 +278,13 @@ class Response extends Object implements ShouldBeRefreshed
         return $this->_cookies;
     }
 
-    public function setCookie($key, $value, $ttl = 0, $path = '/', $domain = '.putao.com', $secure = false, $httponly=false)
+    public function setCookie($key, $value, $ttl = 0, $path = '/', $domain = '.putao.com', $secure = false, $httponly = false)
     {
-        $this->_cookies[] = [$key, $value, $ttl, $path, $domain, $secure, $httponly];
+        if (PHP_SAPI === 'cli') {
+            $this->_cookies[] = [$key, $value, $ttl, $path, $domain, $secure, $httponly];
+        } else {
+            setCookie($key, $value, $ttl, $path, $domain, $secure, $httponly);
+        }
         return $this;
     }
 

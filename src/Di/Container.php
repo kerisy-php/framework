@@ -495,7 +495,6 @@ protected function build($class, $params, $config)
         if (isset($this->_reflections[$class])) {
             return [$this->_reflections[$class], $this->_dependencies[$class]];
         }
-
         $dependencies = [];
         $reflection = new ReflectionClass($class);
 
