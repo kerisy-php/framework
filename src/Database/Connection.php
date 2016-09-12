@@ -320,10 +320,13 @@ class Connection
         foreach ($this->parts as $part) {
             $condition = $part[0];
             if ($condition == 'where' && (count($part[1]) > 1)) {//兼容处理
-                if (count($part[1]) == 2)
+                if (count($part[1]) == 2) {
+                    is_string($part[1][1]) && $part[1][1] = " '{$part[1][1]}'";
                     $value = $part[1][0] . '=' . $part[1][1];
-                elseif (count($part[1]) == 3)
+                } elseif (count($part[1]) == 3) {
+                    is_string($part[1][2]) && $part[1][2] = " '{$part[1][2]}'";
                     $value = $part[1][0] . $part[1][1] . $part[1][2];
+                }
             } else {
                 $value = $part[1][0];
             }
