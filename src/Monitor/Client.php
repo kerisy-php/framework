@@ -46,7 +46,11 @@ class Client
         $client = new \swoole_client(SWOOLE_SOCK_UDP, SWOOLE_SOCK_ASYNC);
 
         $client->on('connect', function ($cli) use ($msg) {
-            $cli->send($msg);
+            try{
+                $cli->send($msg);
+            }catch (Exception $e){
+
+            }
         });
         $client->on("receive", [$this, "onReceive"]);
         $client->on('close', [$this, 'onClose']);
