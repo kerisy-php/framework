@@ -48,7 +48,7 @@ class Client
         $client->on('connect', function ($cli) use ($msg) {
             try{
                 $cli->send($msg);
-            }catch (Exception $e){
+            }catch (\Exception $e){
 
             }
         });
