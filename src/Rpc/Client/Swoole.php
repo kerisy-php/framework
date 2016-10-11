@@ -30,7 +30,12 @@ class Swoole extends Base{
 
     
     function invoke($sourceType,$fn,$compressType=0){
-        $client = new \swoole_client(SWOOLE_SOCK_TCP,SWOOLE_SOCK_SYNC);
+        try{
+            $client = new \swoole_client(SWOOLE_SOCK_TCP,SWOOLE_SOCK_SYNC);
+        }catch (Exception $e){
+            echo $e->getMessage()."\r\n";
+        }
+
         $client->set(array(
                 'open_length_check'     => true,
                 'package_length_type'   => 'N',

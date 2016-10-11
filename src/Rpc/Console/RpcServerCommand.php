@@ -28,7 +28,7 @@ class RpcServerCommand extends Command{
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $operation = $input->getArgument('operation');
-
+        swoole_set_process_name("kerisy-rpcserver:manage");
         if (!in_array($operation, ['run',"stop","start","restart"])) {
             throw new InvalidParamException('The <operation> argument is invalid');
         }

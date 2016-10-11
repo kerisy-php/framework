@@ -43,6 +43,7 @@ class Swoole extends Base
     public $asDaemon = FALSE;
 
     public $taskWorkerNum = 4;
+    protected $memoryLimit = "1024m";
 
     public $reactorNum=4;
 
@@ -52,6 +53,7 @@ class Swoole extends Base
      * @var string
      */
     public $logFile;
+
 
     private function normalizedConfig()
     {
@@ -75,7 +77,7 @@ class Swoole extends Base
 //        $config['task_worker_num'] = $this->taskWorkerNum;
 
         $config['open_length_check'] = true;
-        $config['dispatch_mode'] = 3;
+        $config['dispatch_mode'] = 1;
         $config['package_length_type'] = 'N';
         $config['package_length_offset'] = 0;
         $config['package_body_offset'] = 4;
@@ -110,8 +112,7 @@ class Swoole extends Base
         return $server;
     }
 
-    function onTask(){
-
+    function onTask($serv, $task_id, $from_id, $data){
     }
 
     function onFinish(){
@@ -121,19 +122,32 @@ class Swoole extends Base
     public function onClose($server, $fd){
     }
     
-    public function onWorkerStart(){
-        echo("application started\r\n");
-        cli_set_process_title($this->name . ': worker');
+    public function onWorkerStart($swooleServer, $workerId){
+        if (function_exists("apc_clear_cache")) {
+            apc_clear_cache();
+        }
+
+        if (function_exists("opcache_reset")) {
+            opcache_reset();
+        }
+
+        echo("application started\n");
+        swoole_set_process_name($this->name . ":worker");
     }
 
     public function onWorkerStop(){
-        cli_set_process_title($this->name . ': worker stop');
+        echo("worker stop\n");
     }
     
     public function onServerStart($server){
-        cli_set_process_title($this->name . ': master');
+        swoole_set_process_name($this->name . ":master");
         if ( $this->pidFile ) {
             file_put_contents($this->pidFile , $server->master_pid);
+        }
+        
+        if($this->memoryLimit){
+            ini_set("memory_limit", $this->memoryLimit);
+            $this->memoryCheck();
         }
     }
 

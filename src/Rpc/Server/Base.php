@@ -10,14 +10,14 @@ namespace Kerisy\Rpc\Server;
 
 use Kerisy\Core\Exception;
 use Kerisy\Rpc\Core\Tool;
-use \Google\FlatBuffers\ByteBuffer;
+use Google\FlatBuffers\ByteBuffer;
 
 abstract class Base extends \Kerisy\Server\Base{
 
     public function send($server, $fd, $data,$requestData) {
         $data = Tool::binFormat($data,$requestData['bufferRouteMatch'],$requestData['bufferCompressType']);
         $server->send($fd, $data);
-        $server->close($fd);
+//        $server->stop();
     }
 
     public function  prepareRequest($data){
@@ -37,5 +37,23 @@ abstract class Base extends \Kerisy\Server\Base{
         $requestData['params'] = $params;
         $requestData['method'] = "post";
         return app()->makeRequest($requestData);
+    }
+
+    protected function memoryCheck()
+    {
+        $process = new \swoole_process(function(\swoole_process $worker){
+            $worker->name("kerisy-rpcserver:memoryCheck");
+            swoole_timer_tick(1000, function(){
+                $serverName = "kerisy-rpcserver:master";
+                Reload::load($serverName, 0.8);
+//                echo date('H:i:s')."\r\n";
+                if((date('H:i') == '04:00')){
+                    Reload::reload($serverName);
+                    //休息70s
+                    sleep(70);
+                }
+            });
+        });
+        $process->start();
     }
 }
