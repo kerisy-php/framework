@@ -132,7 +132,7 @@ class Swoole extends Base
         }
 
         echo("application started\n");
-        swoole_set_process_name($this->name . ":worker");
+        swoole_set_process_name("kerisy-rpcserver:worker");
     }
 
     public function onWorkerStop(){
@@ -140,10 +140,7 @@ class Swoole extends Base
     }
     
     public function onServerStart($server){
-        swoole_set_process_name($this->name . ":master");
-        if ( $this->pidFile ) {
-            file_put_contents($this->pidFile , $server->master_pid);
-        }
+        swoole_set_process_name("kerisy-rpcserver:master");
         
         if($this->memoryLimit){
             ini_set("memory_limit", $this->memoryLimit);

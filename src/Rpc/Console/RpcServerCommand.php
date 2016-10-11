@@ -47,15 +47,15 @@ class RpcServerCommand extends Command{
 
     protected function handleStart()
     {
-        $pidFile = APPLICATION_PATH . '/runtime/rpcserver.pid';
+//        $pidFile = APPLICATION_PATH . '/runtime/rpcserver.pid';
 
-        if (file_exists($pidFile)) {
-            throw new InvalidValueException('The pidfile exists, it seems the server is already started');
-        }
+//        if (file_exists($pidFile)) {
+//            throw new InvalidValueException('The pidfile exists, it seems the server is already started');
+//        }
 
         $server = config('rpcservice')->all();
         $server['asDaemon'] = 1;
-        $server['pidFile'] = APPLICATION_PATH . '/runtime/rpcserver.pid';
+//        $server['pidFile'] = APPLICATION_PATH . '/runtime/rpcserver.pid';
 
         return make($server)->run();
     }
@@ -69,18 +69,21 @@ class RpcServerCommand extends Command{
 
     protected function handleStop()
     {
-        $pidFile = APPLICATION_PATH . '/runtime/rpcserver.pid';
-        if (file_exists($pidFile) && posix_kill(file_get_contents($pidFile), 15)) {
-//            echo "del_ok\r\n";
-//            print_r(posix_get_last_error());
-//            echo "\r\n";
-            do {
-                usleep(100000);
-            } while(file_exists($pidFile));
-            return 0;
-        }
-
-        return 1;
+        $killStr = "kerisy-rpcserver";
+        exec("ps axu|grep " . $killStr . "|awk '{print $2}'|xargs kill -9", $masterPidArr);
+        return true;
+//        $pidFile = APPLICATION_PATH . '/runtime/rpcserver.pid';
+//        if (file_exists($pidFile) && posix_kill(file_get_contents($pidFile), 15)) {
+////            echo "del_ok\r\n";
+////            print_r(posix_get_last_error());
+////            echo "\r\n";
+//            do {
+//                usleep(100000);
+//            } while(file_exists($pidFile));
+//            return 0;
+//        }
+//
+//        return 1;
     }
 
 }
