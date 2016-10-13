@@ -83,7 +83,7 @@ class Swoole extends Base{
         if($this->send($client,$fnData,$sourceType,$compressType)){
             try {
                 $data = $client->recv();
-            }catch (Exception $e){
+            }catch (\Exception $e){
                 throw new \Exception(socket_strerror($client->errCode));
             }
             if ($data === false) {
