@@ -1,40 +1,53 @@
 {
-    "name" : "kerisy/framework",
-    "description": "A web framework on the swoole",
-    "keywords": ["framework", "swoole", "restful"],
-    "authors" : [
+    "name": "trendi/framework",
+    "description": "a fast php framework",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
         {
-            "name" : "Jiaqing Zou",
-            "email": "zoujiaqing@gmail.com"
+            "name": "Peter Wang",
+            "email": "hpuwang@gmail.com"
         }
     ],
     "require": {
-        "php": ">=7",
-        "symfony/console": "^2.7",
-        "symfony/event-dispatcher": "2.*",
-        "ext-apcu": ">=4.0.7",
-        "ext-swoole": ">=1.7.19",
-        "monolog/monolog": "~1.0",
-        "guzzlehttp/guzzle": "^6.1" ,
-        "php-amqplib/php-amqplib": "2.6.*",
-        "predis/predis":"v1.1.0",
-        "mtdowling/cron-expression": "^1.1",
-        "squizlabs/php_codesniffer": "^2.6",
-        "symfony/process": "^3.1",
-        "jenssegers/blade": "^1.0"
+        "php": ">=5.4.30",
+        "ext-swoole" : "1.8.*",
+        "ext-mbstring": "*",
+        "ext-posix":"*"
+    },
+    "replace":{
+
+    },
+    "bin": [
+        "trendi"
+    ],
+    "require-dev": {
     },
     "autoload": {
-        "files": [
-            "src/functions.php"
-        ],
         "psr-4": {
-            "Kerisy\\": "src" ,
-            "Google\\FlatBuffers\\": "src/Rpc/Flatbuffers"
+            "Trendi\\": "src/trendi"
+        },
+        "files":[
+            "src/trendi/Support/Predis.php"
+        ]
+    },
+    "suggest": {
+        "ext-msgpack": "data serialize tool",
+        "ext-igbinary":"data serialize tool",
+        "ext-hprose":"data serialize tool",
+        "ext-apc":"php opcode cache , not support7",
+        "ext-apcu":"php7 support "
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Trendi\\Test\\": "tests/application/src"
         }
     },
     "minimum-stability": "stable",
-    "config": {
-        "vendor-dir": "vendor",
-        "preferred-install": "dist"
+    "repositories": {
+        "packagist": {
+            "type": "composer",
+            "url": "https://packagist.phpcomposer.com"
+        }
     }
 }

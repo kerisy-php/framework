@@ -1,72 +1,51 @@
-#Kerisy - A web framework written in PHP 7.0+
-===========================================================
+# a fast php framework
 
-#####Kerisy use swoole http server.
+ include rpc server, web server, connection pool server
 
-web server run command : php kerisy server start
+### 快速体验:
 
-rpc server run command : php kerisy rpcserver start
+* 只支持linux, 以下以ubuntu为例
 
-job server run command : php kerisy jobserver start (first import jobs.sql)
+* 先安装或者开启swoole,mbstring,posix扩展
 
-#####use nginx  http server
+* 更好体验建议安装 apc ,msgpack 扩展, 安装apc提速30%
 
-* add "index.php", write follow code:
-
-```
-<?php
-
-require __DIR__ . '/vendor/autoload.php';
-
-ini_set('display_errors', 1);
-
-defined('APPLICATION_PATH') || define('APPLICATION_PATH', __DIR__ . '/application/');
-defined('CONFIG_PATH') || define('CONFIG_PATH', APPLICATION_PATH . '/config/');
-
-defined('KERISY_ENV') || define('KERISY_ENV', getenv('KERISY_ENV')?:'development');
-
-defined('CLI_MODE') || define('CLI_MODE', PHP_SAPI === 'cli' );
-
-$app = new \Kerisy\Core\Application\Web();
-$app->webHandle();
+* 根据 boilerplate 样板 安装 [代码](https://github.com/trendi/boilerplate)
 
 ```
 
-* nginx conf
+sudo git clone https://github.com/trendi/boilerplate
 
+cd boilerplate
+
+sudo composer install
+
+sudo chmod 0777 trendi
+
+sudo chmod -R 0777 storage
+
+sudo ./trendi server:restart
 ```
 
-server {
-        listen          80;
-        server_name     rpc.test;
-        root            /mnt/hgfs/code/kerisy_rpc;
-        access_log      /var/log/nginx/kerisy_rpc.access.log;
-        error_log       /var/log/nginx/kerisy_rpc.error.log;
-        index  index.php index.html;
+* 在浏览器打开地址
 
-        if (!-e $request_filename) {
-            rewrite ^(.*)$ /index.php$1 last;
-        }
+``
+http://127.0.0.1:7000/
+``
 
-        location ~ ^(.+?\.php)(/.*)?$ {
-                try_files $1 = 404;
-
-                fastcgi_split_path_info ^(.+\.php)(/.+)$;
-                include fastcgi_params;
-
-                fastcgi_param SCRIPT_FILENAME $document_root$1;
-                fastcgi_param PATH_INFO $2;
-                fastcgi_param HTTPS on;
-                fastcgi_pass unix:/var/run/php/php7.0-fpm.sock;
-        }
-
-        location ~ ^/(images|video|static)/ {
-                root /mnt/hgfs/code/kerisy_rpc;
-                #expires 30d;
-        }
-}
+* 支持 fis 前端工程构建工具, 需要安装 [nodejs](https://nodejs.org/en/), [npm](https://www.npmjs.com/), 安装教程请看各自官网
 
 ```
+//安装fis
+npm install -g fis3
+//安装必要依赖
+npm install
+//启动服务器
+sudo ./trendi server:restart
+```
 
+在浏览器 打开 http://127.0.0.1:7000/, 可以看到静态css,js 已经包含进去了
 
+* 欢迎大家发起pull request, 一起完善项目.
 
+[文档](doc/index.md)
