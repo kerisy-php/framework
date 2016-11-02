@@ -1,0 +1,17 @@
+#! /usr/bin/env php
+<?php
+/**
+ * User: Peter Wang
+ * Date: 16/10/11
+ * Time: 下午6:57
+ */
+foreach (array(__DIR__ . '/../../autoload.php', __DIR__ . '/../vendor/autoload.php', __DIR__ . '/vendor/autoload.php') as $file) {
+    if (is_file($file)) {
+        define('COMPOSER_PATH', dirname($file));
+        break;
+    }
+}
+$dir = COMPOSER_PATH."/..";
+define("ROOT_PATH", $dir);
+require_once COMPOSER_PATH."/autoload.php";
+\Trendi\Foundation\Application::runCmd();
