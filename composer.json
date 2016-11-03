@@ -1,5 +1,5 @@
 {
-    "name": "trendi/framework",
+    "name": "kerisy/framework",
     "description": "a fast php framework",
     "type": "library",
     "license": "MIT",
@@ -19,16 +19,16 @@
 
     },
     "bin": [
-        "trendi"
+        "kerisy"
     ],
     "require-dev": {
     },
     "autoload": {
         "psr-4": {
-            "Trendi\\": "src/trendi"
+            "Kerisy\\": "src/kerisy"
         },
         "files":[
-            "src/trendi/Support/Predis.php"
+            "src/kerisy/Support/Predis.php"
         ]
     },
     "suggest": {
@@ -40,7 +40,7 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "Trendi\\Test\\": "tests/application/src"
+            "Kerisy\\Test\\": "tests/application/src"
         }
     },
     "minimum-stability": "stable",
