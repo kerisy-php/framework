@@ -27,7 +27,14 @@ class Swift_Plugins_PopBeforeSmtpPlugin implements Swift_Events_TransportChangeL
     /** Encryption type to use (if any) */
     private $_crypto;
 
-    /** Username to use (if any) */
+    /** Kerisy Framework
+ *
+ * PHP Version 7
+ *
+ * @author          kaihui.wang <hpuwang@gmail.com>
+ * @copyright      (c) 2015 putao.com, Inc.
+ * @package         kerisy/framework
+ * @version         3.0.0
     private $_username;
 
     /** Password to use (if any) */

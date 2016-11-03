@@ -2,9 +2,14 @@
 /**
  *  runtime Exception
  *
- * User: Peter Wang
- * Date: 16/9/8
- * Time: 上午11:16
+ * Kerisy Framework
+ *
+ * PHP Version 7
+ *
+ * @author          kaihui.wang <hpuwang@gmail.com>
+ * @copyright      (c) 2015 putao.com, Inc.
+ * @package         kerisy/framework
+ * @version         3.0.0
  */
 
 namespace Kerisy\Support\Exception;

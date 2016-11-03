@@ -1,9 +1,14 @@
 <?php
 use Kerisy\Mvc\View\Engine\Blade\Support\Arr;
 /**
- * User: Peter Wang
- * Date: 16/10/8
- * Time: 下午3:36
+ * Kerisy Framework
+ *
+ * PHP Version 7
+ *
+ * @author          kaihui.wang <hpuwang@gmail.com>
+ * @copyright      (c) 2015 putao.com, Inc.
+ * @package         kerisy/framework
+ * @version         3.0.0
  */
 if (!function_exists('e')) {
     function e($value)

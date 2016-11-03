@@ -1,9 +1,14 @@
 #! /usr/bin/env php
 <?php
 /**
- * User: Peter Wang
- * Date: 16/10/11
- * Time: 下午6:57
+ * Kerisy Framework
+ *
+ * PHP Version 7
+ *
+ * @author          kaihui.wang <hpuwang@gmail.com>
+ * @copyright      (c) 2015 putao.com, Inc.
+ * @package         kerisy/framework
+ * @version         3.0.0
  */
 foreach (array(__DIR__ . '/../../autoload.php', __DIR__ . '/../vendor/autoload.php', __DIR__ . '/vendor/autoload.php') as $file) {
     if (is_file($file)) {

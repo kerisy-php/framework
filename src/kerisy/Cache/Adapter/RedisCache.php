@@ -1,10 +1,13 @@
 <?php
 /**
- * redis k/v 缓存
+ * Kerisy Framework
  *
- * User: Peter Wang
- * Date: 16/9/23
- * Time: 下午5:08
+ * PHP Version 7
+ *
+ * @author          kaihui.wang <hpuwang@gmail.com>
+ * @copyright      (c) 2015 putao.com, Inc.
+ * @package         kerisy/framework
+ * @version         3.0.0
  */
 
 namespace Kerisy\Cache\Adapter;

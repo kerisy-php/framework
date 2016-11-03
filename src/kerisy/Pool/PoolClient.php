@@ -1,9 +1,14 @@
 <?php
 /**
  * 连接池客户端
- * User: Peter Wang
- * Date: 16/9/20
- * Time: 上午9:18
+ * Kerisy Framework
+ *
+ * PHP Version 7
+ *
+ * @author          kaihui.wang <hpuwang@gmail.com>
+ * @copyright      (c) 2015 putao.com, Inc.
+ * @package         kerisy/framework
+ * @version         3.0.0
  */
 
 namespace Kerisy\Pool;

@@ -12160,7 +12160,6 @@ class SentinelReplication implements ReplicationInterface
     protected $retryLimit = 20;
 
     /**
-     * Time to wait in milliseconds before fetching a new configuration from one
      * of the sentinel servers.
      *
      * @var int

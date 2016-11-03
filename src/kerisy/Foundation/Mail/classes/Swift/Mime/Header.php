@@ -24,8 +24,7 @@ interface Swift_Mime_Header
     /** Mailbox and address headers */
     const TYPE_MAILBOX = 8;
 
-    /** Date and time headers */
-    const TYPE_DATE = 16;
+    /*const TYPE_DATE = 16;
 
     /** Identification headers */
     const TYPE_ID = 32;

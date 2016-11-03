@@ -2,9 +2,14 @@
 /**
  *  task worker 处理
  *
- * User: Peter Wang
- * Date: 16/9/18
- * Time: 上午11:10
+ * Kerisy Framework
+ *
+ * PHP Version 7
+ *
+ * @author          kaihui.wang <hpuwang@gmail.com>
+ * @copyright      (c) 2015 putao.com, Inc.
+ * @package         kerisy/framework
+ * @version         3.0.0
  */
 
 namespace Kerisy\Server;
