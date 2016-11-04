@@ -92,7 +92,8 @@ class Config implements ConfigInterface
                 $loadedConfig = require_once($file);
                 if($loadedConfig === true) continue;
                 if (!is_array($loadedConfig)) {
-                    throw new InvalidArgumentException("syntax error find in config file: " . $file);
+                    continue;
+//                    throw new InvalidArgumentException("syntax error find in config file: " . $file);
                 }
 
                 $loadedConfig = Arr::createTreeByList(explode('/', $keyString), $loadedConfig);
