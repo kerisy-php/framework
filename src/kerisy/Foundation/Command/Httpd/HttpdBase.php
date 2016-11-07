@@ -61,6 +61,18 @@ class HttpdBase
             exit(0);
         }
 
+        //连接池处理
+        $poolConfig = Config::get("server.pool");
+        $poolWorkrNumber = 0;
+        $poolWorkrNumberConfig = $poolConfig['pool_worker_number'];
+        if ($poolWorkrNumberConfig) {
+            foreach ($poolWorkrNumberConfig as $v) {
+                $poolWorkrNumber += $v;
+            }
+        }
+        $poolConfig['pool_worker_number'] = $poolWorkrNumber;
+        $config['server']['pool'] = $poolConfig;
+
         $adapter = new Application($root);
         self::doOperate($cmd, $config, $adapter, $root, $appName);
     }
@@ -109,6 +121,10 @@ class HttpdBase
 
         if(isset($config['server']['static_path']) && !is_dir($config['server']['static_path'])){
             mkdir($config['server']['static_path'], "0777", true);
+        }
+
+        if(isset($config['server']['pool']['pool_worker_number']) && $config['server']['pool']['pool_worker_number']){
+            $config['server']['task_worker_num'] = $config['server']['task_worker_num']+$config['server']['pool']['pool_worker_number'];
         }
 
         $viewCachePath = Config::get("app.view.compile_path");

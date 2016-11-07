@@ -29,6 +29,7 @@ use Kerisy\Support\ElapsedTime;
 use Kerisy\Support\Exception\RuntimeExitException;
 use Kerisy\Mvc\Route\Base\Exception\ResourceNotFoundException;
 use Kerisy\Support\Exception\Page404Exception;
+use Kerisy\Support\Exception as SupportException;
 
 class HttpServer
 {
@@ -84,6 +85,11 @@ class HttpServer
     {
         swoole_set_process_name($this->serverName . "-manage");
         Log::sysinfo($this->serverName . " manage start ......");
+        
+        $memRebootRate = isset($this->config['mem_reboot_rate'])?$this->config['mem_reboot_rate']:0;
+
+        Reload::load($this->serverName , $memRebootRate, $this->config);
+
     }
 
     /**
@@ -100,11 +106,11 @@ class HttpServer
         try {
             return FacadeTask::start($data);
         } catch (\Exception $e) {
-            $exception = \Kerisy\Support\Exception::formatException($e);
+            $exception = SupportException::formatException($e);
             Log::error($exception);
             return [false, $data, $exception];
         } catch (\Error $e) {
-            $exception = \Kerisy\Support\Exception::formatException($e);
+            $exception = SupportException::formatException($e);
             Log::error($exception);
             return [false, $data, $exception];
         }
@@ -120,9 +126,6 @@ class HttpServer
     {
         swoole_set_process_name($this->serverName . "-master");
         Log::sysinfo($this->serverName . " server start ......");
-        $memRebootRate = isset($this->config['mem_reboot_rate'])?$this->config['mem_reboot_rate']:0;
-        
-        Reload::load($this->serverName , $memRebootRate, $this->config);
     }
 
     public function onShutdown(SwooleServer $swooleServer)
@@ -149,10 +152,20 @@ class HttpServer
         if (function_exists("opcache_reset")) {
             opcache_reset();
         }
+        
+        Task::setConfig($this->config);
 
         if ($workerId >= $this->config["worker_num"]) {
-            swoole_set_process_name($this->serverName . "-task-worker");
-            Log::sysinfo($this->serverName . " task worker start ..... ");
+            $poolNumber = isset($this->config['pool']["pool_worker_number"])?$this->config['pool']["pool_worker_number"]:0;
+            $taskNumber = $this->config["task_worker_num"]-$poolNumber;
+            $taskNumber = $taskNumber+$this->config["worker_num"];
+            if($workerId >=$taskNumber){
+                swoole_set_process_name($this->serverName . "-task-worker");
+                Log::sysinfo($this->serverName . " task worker start ..... ");
+            }else{
+                swoole_set_process_name($this->serverName . "-pool-worker");
+                Log::sysinfo($this->serverName . " pool worker start ..... ");
+            }
         } else {
             swoole_set_process_name($this->serverName . "-worker");
             Log::sysinfo($this->serverName . " worker start ..... ");
@@ -161,8 +174,6 @@ class HttpServer
 
         if (Facade::getFacadeApplication()) {
             Context::set("server", $swooleServer, true, true);
-            FacadeTask::setLogPath($this->config["task_fail_log"]);
-            FacadeTask::setRetryCount($this->config["task_retry_count"]);
         }
     }
 
@@ -176,7 +187,6 @@ class HttpServer
         Log::sysinfo($this->serverName . " worker error ..... ");
         Log::sysinfo("======================");
         Log::error(socket_strerror($exitCode) . "");
-
         Event::fire("httpd.worker.error", [$exitCode, date('Y-m-d H:i:s')]);
     }
 
@@ -225,23 +235,30 @@ class HttpServer
 
     private function response(Request $request, Response $response)
     {
+        $workerId = posix_getpid();
         try {
             $content = $this->requestHtmlHandle($request, $response);
+            Event::fire("request.end",$workerId);
             $response->end($content);
         }catch (Page404Exception $e){
+            Event::fire("request.end",$workerId);
             Event::fire("404",[$e,"Page404Exception",$response]);
         }catch (ResourceNotFoundException $e){
+            Event::fire("request.end",$workerId);
             Event::fire("404",[$e,"ResourceNotFoundException",$response]);
         }catch (RuntimeExitException $e){
+            Event::fire("request.end",$workerId);
             Log::syslog("RuntimeExitException:".$e->getMessage());
         }catch (\Exception $e) {
+            Event::fire("request.end",$workerId);
+            Log::error(Exception::formatException($e));
             $response->status(500);
             $response->end();
-            Log::error(Exception::formatException($e));
         } catch (\Error $e) {
+            Event::fire("request.end",$workerId);
+            Log::error(Exception::formatException($e));
             $response->status(500);
             $response->end();
-            Log::error(Exception::formatException($e));
         }
     }
 

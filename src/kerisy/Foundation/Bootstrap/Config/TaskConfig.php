@@ -21,8 +21,8 @@ class TaskConfig
     {
         return [
             "email" => \Kerisy\Foundation\Bootstrap\Task\Email::class,
-            "pdo" => \Kerisy\Pool\Task\Pdo::class,
-            "redis" => \Kerisy\Pool\Task\Redis::class,
+            "pdo" => \Kerisy\Server\Task\Pdo::class,
+            "redis" => \Kerisy\Server\Task\Redis::class,
         ];
     }
 

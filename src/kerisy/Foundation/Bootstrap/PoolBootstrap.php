@@ -15,8 +15,8 @@
 namespace Kerisy\Foundation\Bootstrap;
 
 use Kerisy\Config\Config;
-use Kerisy\Pool\Task\Pdo;
-use Kerisy\Pool\Task\Redis;
+use Kerisy\Server\Task\Pdo;
+use Kerisy\Server\Task\Redis;
 
 class PoolBootstrap
 {

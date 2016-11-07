@@ -11,7 +11,7 @@
  * @package         kerisy/framework
  * @version         3.0.0
  */
-namespace Kerisy\Pool\Task;
+namespace Kerisy\Server\Task;
 
 class Pdo
 {
@@ -44,10 +44,10 @@ class Pdo
     {
         if (!$sql) return null;
         $conn = $this->setConn($dnType);
-        if (!$method) {
+        if (!$method || $method=='lastInsertId') {
             $conn->exec($sql);
             if($method){
-                $conn->$method();
+                return $conn->$method();
             }
             if ($conn->errorCode() != '00000') {
                 $error = $conn->errorInfo();

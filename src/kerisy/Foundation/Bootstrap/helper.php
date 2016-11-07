@@ -109,8 +109,9 @@ if (!function_exists('throwExit')) {
     /**
      * 404错误
      */
-    function throwExit()
+    function throwExit($str=null)
     {
+        $str && dump($str);
         throw new \Kerisy\Support\Exception\RuntimeExitException("exit");
     }
 }

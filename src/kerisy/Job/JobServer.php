@@ -13,7 +13,6 @@
 
 namespace Kerisy\Job;
 
-use Kerisy\Foundation\Application;
 use Kerisy\Foundation\Storage\Redis;
 use Kerisy\Server\ProcessServer;
 use Kerisy\Support\Log;
@@ -25,8 +24,6 @@ class JobServer
     public function __construct(array $config, $root)
     {
         $this->config = $config;
-        $obj = new Application($root);
-        $obj->baseBoostrap();
     }
 
     /**

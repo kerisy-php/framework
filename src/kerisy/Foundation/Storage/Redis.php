@@ -14,9 +14,10 @@ namespace Kerisy\Foundation\Storage;
 
 use Kerisy\Config\Config;
 use Kerisy\Foundation\Exception\ConfigNotFoundException;
-use Kerisy\Pool\PoolClient;
 use Kerisy\Support\Log;
 use Predis\Client;
+use Kerisy\Server\Pool;
+use Kerisy\Support\Exception as SupportException;
 
 class Redis
 {
@@ -30,7 +31,7 @@ class Redis
 
     public function __construct()
     {
-        $type = Config::get("app.adapter.redis");
+        $type = Config::get("storage.redis.adapter");
         $this->type = $type;
         if($this->type == self::ADAPTER_DEFAULT){
             $this->initializeDefault();
@@ -44,26 +45,23 @@ class Redis
         if(self::$conn) return ;
         $config = Config::get("storage.redis");
         $servers = $config['servers'];
+        if(!$servers) throw new ConfigNotFoundException("storage.redis.servers not config");
         $options = $config['options'];
         try {
             self::$conn = new Client($servers, $options);
         } catch (\Exception $e) {
-            throw $e;
+            Log::error(SupportException::formatException($e));
         }catch (\Error $e) {
-            throw $e;
+            Log::error(SupportException::formatException($e));
         }
     }
 
     protected function initializePool()
     {
         if(self::$client) return ;
-//        Log::sysinfo("new redis client conn");
-        $config = Config::get("client.pool");
-        if (!$config) {
-            throw new ConfigNotFoundException("client.pool not config");
-        }
 
-        self::$client = new PoolClient($config['host'], $config['port'], $config['serialization'], $config);
+        $poolConfig = Config::get("server.pool");
+        self::$client = new Pool($poolConfig);
     }
 
     public function __call($name, $arguments)
@@ -76,9 +74,9 @@ class Redis
                     return self::$conn->$name();
                 }
             } catch (\Exception $e) {
-                throw $e;
+                Log::error(SupportException::formatException($e));
             }catch (\Error $e) {
-                throw $e;
+                Log::error(SupportException::formatException($e));
             }
             
         }else{

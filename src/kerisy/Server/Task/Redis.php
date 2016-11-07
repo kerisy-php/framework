@@ -11,7 +11,7 @@
  * @version         3.0.0
  */
 
-namespace Kerisy\Pool\Task;
+namespace Kerisy\Server\Task;
 
 use Predis\Client;
 

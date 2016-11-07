@@ -19,6 +19,7 @@ use Kerisy\Foundation\Bootstrap\Config\AliasConfig;
 use Kerisy\Foundation\Bootstrap\Config\DiConfig;
 use Kerisy\Foundation\Bootstrap\Config\TaskConfig;
 use Kerisy\Server\Task;
+use Kerisy\Server\Pool;
 use Kerisy\Support\AliasLoader;
 use Kerisy\Support\Arr;
 use Kerisy\Support\Facade;
@@ -60,6 +61,17 @@ class Bootstrap
         $this->initFacade();
         $this->initTask();
         $this->init404();
+        $this->initEvent();
+    }
+
+    public function initEvent()
+    {
+        /**
+         * 请求结束清空连接池与worker进程对应关系
+         */
+        Event::bind("request.end", function($workerId){
+            unset(Pool::$poolTaskData[$workerId]);
+        });
     }
 
     /**

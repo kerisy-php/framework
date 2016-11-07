@@ -60,6 +60,18 @@ class RpcBase
             exit(0);
         }
 
+        //连接池处理
+        $poolConfig = Config::get("server.pool");
+        $poolWorkrNumber = 0;
+        $poolWorkrNumberConfig = $poolConfig['pool_worker_number'];
+        if ($poolWorkrNumberConfig) {
+            foreach ($poolWorkrNumberConfig as $v) {
+                $poolWorkrNumber += $v;
+            }
+        }
+        $poolConfig['pool_worker_number'] = $poolWorkrNumber;
+        $config['server']['pool'] = $poolConfig;
+
         self::doOperate($cmd, $config, $root, $appName, $output);
     }
 
@@ -93,6 +105,10 @@ class RpcBase
 
         if(isset($config['server']['log_file']) && !is_file($config['server']['log_file'])){
             mkdir(dirname($config['server']['log_file']), "0777", true);
+        }
+
+        if(isset($config['server']['pool']['pool_worker_number']) && $config['server']['pool']['pool_worker_number']){
+            $config['server']['task_worker_num'] = $config['server']['task_worker_num']+$config['server']['pool']['pool_worker_number'];
         }
         
 //        $config['server']["open_length_check"] = 0;

@@ -17,44 +17,21 @@ namespace Kerisy\Server;
 use Kerisy\Server\Exception\InvalidArgumentException;
 use Kerisy\Server\Facade\Context as FacedeContext;
 use Kerisy\Coroutine\Event;
+use Kerisy\Support\ElapsedTime;
 
 class Task
 {
     private $server = null;
-    private static $retryCount = 2;
-    private static $logPath = "/tmp/taskFail.log";
+    private  $retryCount = 2;
+    private  $logPath = "/tmp/taskFail.log";
+    private static $numbersTmp = [];
     protected static $taskConfig = [];
-    protected static $timeOut = 3;
+    protected  $timeOut = 3;
+    protected static $config;
 
-
-    public static function setTimeOut($timeOut)
+    public static function setConfig($config)
     {
-        self::$timeOut = $timeOut;
-    }
-
-    public static function getTimeOut()
-    {
-        return self::$timeOut;
-    }
-
-    public static function getLogPath()
-    {
-        return self::$logPath;
-    }
-
-    public static function setLogPath($logPath)
-    {
-        self::$logPath = $logPath;
-    }
-
-    public static function setRetryCount($retryCount)
-    {
-        self::$retryCount = $retryCount;
-    }
-
-    public static function getRetryCount()
-    {
-        return self::$retryCount;
+        self::$config = $config;
     }
 
     public static function setTaskConfig($taskConfig)
@@ -75,6 +52,12 @@ class Task
             throw new InvalidArgumentException(" swoole server is not get");
         }
 
+        if(self::$config){
+            $this->retryCount = self::$config['task_retry_count'];
+            $this->logPath = self::$config['task_fail_log'];
+            $this->timeOut = self::$config['task_timeout'];
+        }
+
         $this->server = $serv;
     }
 
@@ -92,7 +75,7 @@ class Task
 
         //如果执行不成功,进行重试
         if (!$status) {
-            if ($returnData[2] < self::$retryCount) {
+            if ($returnData[2] < $this->retryCount) {
                 //重试次数加1
                 list($taskName, $params, $retryNumber, $dstWorkerId) = $returnData;
                 $retryNumber = $retryNumber + 1;
@@ -113,11 +96,13 @@ class Task
                 $exception .
                 "\n================================================\n";
         }
-        swoole_async_write(self::$logPath, $msg);
+        swoole_async_write($this->logPath, $msg);
     }
 
     public function start($data)
     {
+        ElapsedTime::setStartTime(ElapsedTime::SYS_START);
+
         list($task, $params) = $data;
         if (is_string($task)) {
             $taskClass = isset(self::$taskConfig[$task]) ? self::$taskConfig[$task] : null;
@@ -138,12 +123,28 @@ class Task
 
     public function __call($name, $arguments)
     {
-        $this->send($name, $arguments);
+        $dstWorkerId = $this->getDstWorkerId();
+        $this->send($name, $arguments, $this->retryCount,$dstWorkerId);
     }
 
-    public function __destruct()
-    {
-        self::$taskConfig = [];
+
+    /**
+     * 获取进程对应关系
+     * @return mixed
+     */
+    protected function getDstWorkerId(){
+        $poolWorkerNum = self::$config['pool']['pool_worker_number'];
+        if(self::$numbersTmp){
+            return array_pop(self::$numbersTmp);
+        }else{
+            $taskNumber = self::$config["task_worker_num"]-1;
+            $start = $poolWorkerNum;
+            $end = $taskNumber;
+            $numbers = range($start, $end);
+            //按照顺序执行,保证每个连接池子数固定
+            self::$numbersTmp = $numbers;
+           return array_pop(self::$numbersTmp);
+        }
     }
 
 }

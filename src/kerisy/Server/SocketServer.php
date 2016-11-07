@@ -75,22 +75,33 @@ class SocketServer
     {
         swoole_set_process_name($this->serverName . "-manage");
         Log::sysinfo($this->serverName . " manage start ......");
+        
+        $memRebootRate = isset($this->config['mem_reboot_rate']) ? $this->config['mem_reboot_rate'] : 0;
+
+        Reload::load($this->serverName . "-master", $memRebootRate, $this->config);
     }
 
     public function onReceive(SwooleServer $serv, $fd, $from_id, $data)
     {
         ElapsedTime::setStartTime("sys_elapsed_time");
+        $workerId = posix_getpid();
         try {
             $this->adapter->perform($data, $serv, $fd, $from_id);
+            Event::fire("request.end",$workerId);
         } catch (Page404Exception $e) {
+            Event::fire("request.end",$workerId);
             Event::fire("404", [$e, "Page404Exception", [$serv, $fd, $this->adapter]]);
         } catch (ResourceNotFoundException $e) {
+            Event::fire("request.end",$workerId);
             Event::fire("404", [$e, "ResourceNotFoundException", [$serv, $fd, $this->adapter]]);
         } catch (RuntimeExitException $e) {
+            Event::fire("request.end",$workerId);
             Log::syslog("RuntimeExitException:" . $e->getMessage());
         } catch (\Exception $e) {
+            Event::fire("request.end",$workerId);
             Log::error(ExceptionFormat::formatException($e));
         } catch (\Error $e) { //php7.0兼容
+            Event::fire("request.end",$workerId);
             Log::error(ExceptionFormat::formatException($e));
         }
         Event::fire("clear");
@@ -122,8 +133,6 @@ class SocketServer
     {
         swoole_set_process_name($this->serverName . "-master");
         Log::sysinfo($this->serverName . " server start ......");
-        $memRebootRate = isset($this->config['mem_reboot_rate']) ? $this->config['mem_reboot_rate'] : 0;
-        Reload::load($this->serverName . "-master", $memRebootRate, $this->config);
     }
 
     public function onShutdown(SwooleServer $swooleServer)
@@ -144,10 +153,20 @@ class SocketServer
         if (function_exists("opcache_reset")) {
             opcache_reset();
         }
+        
+        Task::setConfig($this->config);
 
         if ($workerId >= $this->config["worker_num"]) {
-            swoole_set_process_name($this->serverName . "-task-worker");
-            Log::sysinfo($this->serverName . " task worker start ..... ");
+            $poolNumber = isset($this->config['pool']["pool_worker_number"])?$this->config['pool']["pool_worker_number"]:0;
+            $taskNumber = $this->config["task_worker_num"]-$poolNumber;
+            $taskNumber = $taskNumber+$this->config["worker_num"];
+            if($workerId >=$taskNumber){
+                swoole_set_process_name($this->serverName . "-task-worker");
+                Log::sysinfo($this->serverName . " task worker start ..... ");
+            }else{
+                swoole_set_process_name($this->serverName . "-pool-worker");
+                Log::sysinfo($this->serverName . " pool worker start ..... ");
+            }
         } else {
             swoole_set_process_name($this->serverName . "-worker");
             Log::sysinfo($this->serverName . " worker start ..... ");
@@ -155,8 +174,6 @@ class SocketServer
         $this->adapter->bootstrap();
         if (Facade::getFacadeApplication()) {
             Context::set("server", $swooleServer, true, true);
-            FacadeTask::setLogPath($this->config["task_fail_log"]);
-            FacadeTask::setRetryCount($this->config["task_retry_count"]);
         }
     }
 
