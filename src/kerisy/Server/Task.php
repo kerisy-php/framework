@@ -133,12 +133,11 @@ class Task
      * @return mixed
      */
     protected function getDstWorkerId(){
-        $poolWorkerNum = self::$config['pool']['pool_worker_number'];
         if(self::$numbersTmp){
             return array_pop(self::$numbersTmp);
         }else{
             $taskNumber = self::$config["task_worker_num"]-1;
-            $start = $poolWorkerNum;
+            $start = 0;
             $end = $taskNumber;
             $numbers = range($start, $end);
             //按照顺序执行,保证每个连接池子数固定

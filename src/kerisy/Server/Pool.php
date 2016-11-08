@@ -48,7 +48,11 @@ class Pool
     public function get($taskName, $params = [])
     {
         $workerId = posix_getpid();
-        $dstWorkerId = $this->getDstWorkerId($taskName, $workerId);
+        if($taskName == 'pdo'){
+            $dstWorkerId = $this->getDstWorkerId($taskName, $workerId);
+        }else{
+            $dstWorkerId = $this->getDstWorkerIdNotDb($taskName);
+        }
         $serv = FacedeContext::server();
         $sendData = [$taskName, $params];
         $result = $serv->taskwait($sendData, $this->timeOut, $dstWorkerId);
@@ -95,6 +99,38 @@ class Pool
                 self::$poolTaskData[$workerId] = array_pop(self::$numbersTmp[$taskName]);
                 return self::$poolTaskData[$workerId];
             }
+        }
+    }
+
+    /**
+     * 不同连接池,分配不同task worker
+     *
+     * @param $taskName
+     * @return int
+     */
+    protected function getDstWorkerIdNotDb($taskName)
+    {
+        $taskName = strtolower($taskName);
+        if (!isset($this->poolWorkrNumberConfig[$taskName])) return -1;
+        if(isset(self::$numbersTmp[$taskName]) && self::$numbersTmp[$taskName]){
+            return array_pop(self::$numbersTmp[$taskName]);
+        }else{
+            $pre = 0;
+            $current = 0;
+            foreach ($this->poolWorkrNumberConfig as $k => $v) {
+                if ($k == $taskName) {
+                    $current = $v;
+                    break;
+                }
+                $pre = $v;
+            }
+            $start = $pre;
+            $end = $pre + $current - 1;
+            $numbers = range($start, $end);
+            //按照顺序执行,保证每个连接池子数固定
+            self::$numbersTmp[$taskName] = $numbers;
+
+            return array_pop(self::$numbersTmp[$taskName]);
         }
     }
 

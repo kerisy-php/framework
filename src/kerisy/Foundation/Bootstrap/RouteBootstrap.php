@@ -103,6 +103,16 @@ class RouteBootstrap
         $routes = isset($config['routes'])?$config['routes']:[];
         if($routes){
             foreach ($routes as $v){
+                if(!isset($v['path'])&&!isset($v['method'])){
+                    list($path,$method,$uses,$name,$where,$domain,$middleware) = $v;
+                    $v['method'] = $method;
+                    $v['path'] = $path;
+                    $v['uses'] = $uses;
+                    $v['name'] = $name;
+                    $v['where'] = $where;
+                    $v['domain'] = $domain;
+                    $v['middleware'] = $middleware;
+                }
                 $method = isset($v['method'])?$v['method']:[];
                 $_method = $method=="*"?"any":$method;
                 $_method = $_method?$_method:"any";

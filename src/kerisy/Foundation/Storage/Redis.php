@@ -16,28 +16,18 @@ use Kerisy\Config\Config;
 use Kerisy\Foundation\Exception\ConfigNotFoundException;
 use Kerisy\Support\Log;
 use Predis\Client;
-use Kerisy\Server\Pool;
 use Kerisy\Support\Exception as SupportException;
 
 class Redis
 {
     protected static $client = null;
-    //适配器类型
-    const ADAPTER_DEFAULT = "default";
-    const ADAPTER_POOL = "pool";
-    private $type = self::ADAPTER_DEFAULT;
-    
+    protected static $lock = 0;
+
     protected static $conn = null;
 
     public function __construct()
     {
-        $type = Config::get("storage.redis.adapter");
-        $this->type = $type;
-        if($this->type == self::ADAPTER_DEFAULT){
-            $this->initializeDefault();
-        }else{
-            $this->initializePool(); 
-        }
+        $this->initializeDefault();
     }
     
     protected function initializeDefault()
@@ -56,41 +46,23 @@ class Redis
         }
     }
 
-    protected function initializePool()
-    {
-        if(self::$client) return ;
-
-        $poolConfig = Config::get("server.pool");
-        self::$client = new Pool($poolConfig);
-    }
-
     public function __call($name, $arguments)
     {
-        if($this->type == self::ADAPTER_DEFAULT){
-            try {
-                if ($arguments) {
-                    return self::$conn->$name(...$arguments);
-                } else {
-                    return self::$conn->$name();
-                }
-            } catch (\Exception $e) {
-                Log::error(SupportException::formatException($e));
-            }catch (\Error $e) {
-                Log::error(SupportException::formatException($e));
+        try {
+            if ($arguments) {
+                $result = self::$conn->$name(...$arguments);
+            } else {
+                $result = self::$conn->$name();
             }
-            
-        }else{
-            $params = [
-                $name,
-                $arguments
-            ];
-            $data = self::$client->get("redis", $params);
-            return $data; 
+            return $result;
+        } catch (\Exception $e) {
+            Log::error(SupportException::formatException($e));
+        }catch (\Error $e) {
+            Log::error(SupportException::formatException($e));
         }
     }
 
     public function __destruct()
     {
-//        $this->client->close();
     }
 }
