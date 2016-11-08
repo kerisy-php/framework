@@ -17,7 +17,6 @@ namespace Kerisy\Foundation;
 use Kerisy\Console\Application as CmdApplication;
 use Kerisy\Config\Config as CConfig;
 use Kerisy\Foundation\Bootstrap\Bootstrap;
-use Kerisy\Foundation\Bootstrap\PoolBootstrap;
 use Kerisy\Foundation\Bootstrap\RouteBootstrap;
 use Kerisy\Foundation\Command;
 use Kerisy\Mvc\Route\RouteMatch;
@@ -45,7 +44,6 @@ class Application
     {
         $this->initRelease();
         RouteBootstrap::getInstance();
-        PoolBootstrap::getInstance();
     }
 
     protected function initRelease()
@@ -62,7 +60,6 @@ class Application
     public function rpcBootstrap()
     {
         RouteBootstrap::getInstance();
-        PoolBootstrap::getInstance();
     }
 
 
