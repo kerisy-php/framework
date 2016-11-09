@@ -71,6 +71,17 @@ if (!function_exists('cache')) {
     }
 }
 
+if (!function_exists('mcache')) {
+    /**
+     * 缓存对象
+     * @return \Kerisy\Cache\Adapter\MemCache;
+     */
+    function mcache()
+    {
+        return new \Kerisy\Cache\Adapter\MemCache();
+    }
+}
+
 if (!function_exists('syscache')) {
     /**
      * 缓存对象
