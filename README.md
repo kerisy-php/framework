@@ -1,6 +1,6 @@
 # a fast php framework
 
- include rpc server, web server, connection pool server
+ include rpc server, web server
 
 ### 快速体验:
 
