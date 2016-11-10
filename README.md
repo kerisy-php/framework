@@ -8,13 +8,15 @@
 
 * 先安装或者开启swoole,mbstring,posix扩展
 
+* 安装好composer
+
 * 更好体验建议安装 apc ,msgpack 扩展, 安装apc提速30%
 
-* 根据 boilerplate 样板 安装 [代码](https://github.com/kerisy/boilerplate)
+* 安装
 
 ```
 
-sudo git clone https://github.com/kerisy/boilerplate
+sudo composer create-project --prefer-dist kerisy/app kerisy3
 
 cd boilerplate
 
