@@ -15,15 +15,14 @@ namespace Kerisy\Support;
 
 class Log
 {
-    private static $instance = null;
-
+    private static $callback = null;
     /**
      * 颜色初始化
      *
      * @param $foreground_colors
      * @param $background_colors
      */
-    protected function init()
+    protected static function init()
     {
         // Set up shell colors
         $foreground_colors['black'] = '0;30';
@@ -45,66 +44,68 @@ class Log
         return $foreground_colors;
     }
 
-    /**
-     * Returns colored string
-     * @param $string
-     * @param null $foreground_color
-     * @param null $background_color
-     * @return string
-     */
-    protected function getColoredString($string, $foreground_color = null, $clean=0)
+
+    protected static function preData()
     {
-        
-        
-        $foreground_colors = $this->init();
-        $colored_string = "";
         $ip = swoole_get_local_ip();
         $elapsedTime = ElapsedTime::runtime("sys_elapsed_time");
-        $preStr ="[". date('Y-m-d H:i:s')."][".posix_getpid()."][".current($ip)."][".$elapsedTime."ms]";
-        // Check if given foreground color found
-        if($clean){
-            $preStr = "";
-        }
-        if (isset($foreground_colors[$foreground_color])) {
-            $colored_string .= "\033[" . $foreground_colors[$foreground_color] . "m".$preStr;
-        }
 
-        // Add string and end coloring
-        $colored_string .= $string . "\033[0m";
-        return $colored_string;
+        $result = [];
+        $result[] = date('Y-m-d H:i:s');
+        $result[] = posix_getpid();
+        $result[] = current($ip);
+        $result[] = $elapsedTime;
+        return $result;
     }
 
+
+    public static function register($callback)
+    {
+        self::$callback = $callback;
+    }
+
+    protected static function outPut($type, $data)
+    {
+        if (self::$callback && (self::$callback instanceof \Closure)) {
+            $closureParam = [$type,$data];
+            return call_user_func(self::$callback, $closureParam);
+        }else{
+            $msg = array_pop($data);
+            if($type) $data[] = $type;
+            if($type == 'show'){
+                $string = $msg;
+            }else{
+                $string = "[".implode("][",$data)."] ".$msg;
+            }
+            $foreground_colors = self::init();
+            $color = [
+                "info"=>"light_gray",
+                "sysinfo"=>"dark_gray",
+                "warn"=>"yellow",
+                "debug"=>"green",
+                "show"=>"green",
+                "error"=>"red",
+            ];
+
+            if (isset($foreground_colors[$color[$type]])) {
+                $colorStr = $foreground_colors[$color[$type]];
+                $string = "\033[" . $colorStr . "m".$string;
+            }
+            $string = $string . "\033[0m\n";
+            echo $string;
+        }
+    }
 
     public static function __callStatic($name, $arguments)
     {
-        if(!self::$instance){
-            self::$instance = new self();
-        }
-        $pre = "[$name] ";
-
+        $msg = isset($arguments[0])?$arguments[0]:"";
         if(!is_string($arguments[0])){
-            $arguments[0] = print_r($arguments[0],true);
+            $msg = print_r($arguments[0],true);
         }
-        
-        switch ($name) {
-            case 'info':
-                echo self::$instance->getColoredString($pre.$arguments[0], 'light_gray')."\n";
-                break;
-            case 'sysinfo':
-                echo self::$instance->getColoredString($pre.$arguments[0], 'dark_gray')."\n";
-                break;
-            case 'warn':
-                echo self::$instance->getColoredString($pre.$arguments[0], 'yellow')."\n";
-                break;
-            case 'debug':
-                echo self::$instance->getColoredString($pre.$arguments[0], 'green')."\n";
-                break;
-            case 'show':
-                echo self::$instance->getColoredString($arguments[0], 'green', true)."\n";
-                break;
-            case 'error':
-                echo self::$instance->getColoredString($pre.$arguments[0], 'red')."\n";
-                break;
-        }
+
+        $data = self::preData();
+        $data[]=$msg;
+        self::outPut($name,$data);
     }
+
 }

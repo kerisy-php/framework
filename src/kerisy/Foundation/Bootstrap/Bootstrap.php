@@ -53,6 +53,7 @@ class Bootstrap
         $this->initEnv();
         $this->initConfig($path);
         $this->iniSet();
+        $this->initLog();
         $this->initMonitor();
         $this->initAlias();
         $this->initHelper();
@@ -63,9 +64,22 @@ class Bootstrap
         $this->initEvent();
     }
 
-    public function initEvent()
+    protected function initLog()
     {
-   
+        $config = Config::get("app.log");
+        if($config){
+            Log::register(function($params) use ($config){
+                $obj = new $config;
+                if (!method_exists($obj, "perform")) {
+                    throw new InvalidArgumentException(" log class perform not config ");
+                }
+                call_user_func_array([$obj, "perform"], [$params]);
+            });
+        }
+    }
+
+    protected function initEvent()
+    {
     }
 
     /**
