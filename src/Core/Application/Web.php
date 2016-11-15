@@ -17,6 +17,7 @@ use Kerisy\Http\Response;
 use Kerisy\Database\Database;
 use Kerisy\Core\Application;
 use Kerisy\Core\Hook;
+use Kerisy\Lang\Language;
 
 class Web extends Application
 {
@@ -40,12 +41,19 @@ class Web extends Application
             $this->registerComponents();
             $this->registerRoutes();
             //$this->registerEntities();
+            $this->registerLang();
             $this->bootstrapped = true;
 
             $this->get('log')->info('application started');
         }
 
         return $this;
+    }
+
+    protected function registerLang()
+    {
+        $l = new Language();
+        $l->register();
     }
 
     protected function prepareRequest($request)
