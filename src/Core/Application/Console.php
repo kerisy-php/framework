@@ -12,6 +12,7 @@ namespace Kerisy\Core\Application;
 use Kerisy\Core\Application;
 use Kerisy\Core\Dispatcher;
 use Kerisy\Core\Route;
+use Kerisy\Lang\Lang;
 
 class Console extends Application
 {
@@ -33,12 +34,19 @@ class Console extends Application
             $this->initializeConfig();
             $this->registerComponents();
             //$this->registerEntities();
+            $this->registerLang();
             $this->bootstrapped = true;
 
         }
 
         return $this;
     }
+
+    protected function registerLang()
+    {
+        new Lang();
+    }
+
     protected function runAction($action, $request=false, $response=false)
     {
         $data = call_user_func_array($action, [$request, $response]);
