@@ -19,7 +19,7 @@ use Kerisy\Support\Log;
 
 class Response
 {
-    public static $response;
+    public $response;
     private $hasEnd = 0;
     protected $headerStack = [];
 
@@ -36,7 +36,7 @@ class Response
     public function __construct(SwooleHttpResponse $response)
     {
         $this->view = new View();
-        self::$response = $response;
+        $this->response = $response;
     }
 
     public function setHasEnd($hasEnd)
@@ -57,7 +57,7 @@ class Response
      */
     public function cookie($key, $value = '', $expire = 0, $path = '/', $domain = '', $secure = false, $httponly = false)
     {
-        return self::$response->cookie($key, $value, $expire, $path, $domain, $secure, $httponly);
+        return $this->response->cookie($key, $value, $expire, $path, $domain, $secure, $httponly);
     }
 
     /**
@@ -74,7 +74,7 @@ class Response
      */
     public function rawcookie($key, $value = '', $expire = 0, $path = '/', $domain = '', $secure = false, $httponly = false)
     {
-        return self::$response->rawcookie($key, $value, $expire, $path, $domain, $secure, $httponly);
+        return $this->response->rawcookie($key, $value, $expire, $path, $domain, $secure, $httponly);
     }
 
     /**
@@ -84,7 +84,7 @@ class Response
      */
     public function status($http_status_code)
     {
-        return self::$response->status($http_status_code);
+        return $this->response->status($http_status_code);
     }
 
     /**
@@ -94,7 +94,7 @@ class Response
      */
     public function gzip($level = 1)
     {
-        return self::$response->gzip($level);
+        return $this->response->gzip($level);
     }
 
     /**
@@ -115,7 +115,7 @@ class Response
      */
     public function write($data)
     {
-        return self::$response->write($data);
+        return $this->response->write($data);
     }
 
     /**
@@ -133,10 +133,10 @@ class Response
         $this->hasEnd = 1;
         if ($this->headerStack) {
             foreach ($this->headerStack as $k => $v) {
-                self::$response->header($k, $v);
+                $this->response->header($k, $v);
             }
         }
-        $data = self::$response->end($html);
+        $data = $this->response->end($html);
         
         return $data;
     }
@@ -151,10 +151,10 @@ class Response
     {
         if ($this->headerStack) {
             foreach ($this->headerStack as $k => $v) {
-                self::$response->header($k, $v);
+                $this->response->header($k, $v);
             }
         }
-        return self::$response->sendfile($filename);
+        return $this->response->sendfile($filename);
     }
 
     /**

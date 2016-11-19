@@ -78,8 +78,9 @@ class Bootstrap
         }
     }
 
-    protected function initEvent()
+    public function initEvent()
     {
+        
     }
 
     /**
@@ -170,7 +171,7 @@ class Bootstrap
 
     /**
      * 配置初始化
-     * 
+     *
      * @param $path
      */
     protected function initConfig($path)

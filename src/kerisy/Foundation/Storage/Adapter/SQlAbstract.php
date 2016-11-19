@@ -20,10 +20,10 @@ abstract class SQlAbstract
     protected static $_sql = array();
     protected static $sqlinstance = array();
     protected $tableName = null;
-    protected $prefix = "";
+    protected static $prefix = "";
 
-    const CONN_MASTER = 0;
-    const CONN_SLAVE = 1;
+    const CONN_MASTER = "master";
+    const CONN_SLAVE = "slave";
 
     public abstract function fetch($sql, $connType);
 
@@ -42,13 +42,13 @@ abstract class SQlAbstract
         $className = get_called_class();
         $obj = new $className;
         $table = $obj->tableName;
-        $table = $this->prefix.$table;
+        $table = self::$prefix.$table;
         return $this->tableName = $table;
     }
 
     public function getPrefix()
     {
-        return $this->prefix;
+        return self::$prefix;
     }
 
     /**
@@ -96,7 +96,7 @@ abstract class SQlAbstract
      */
     public function insert(array $data, $tableName = null)
     {
-        $tableName = $tableName ? $this->prefix . $tableName : $this->getTableName();
+        $tableName = $tableName ? self::$prefix . $tableName : $this->getTableName();
 
         $keys = array_keys($data);
         $sql = "INSERT INTO " . $tableName . "(" . implode(',', $keys) . ")
@@ -105,10 +105,10 @@ abstract class SQlAbstract
             $v = $v === null ? "null" : $this->quote($v);
             $sql = str_replace(":" . $k . ":", $v, $sql);
         }
-        self::$_sql[] = $sql;
+
         return $this->exec($sql, self::CONN_MASTER, true);
     }
-    
+
 
     /**
      * 根据条件，有则更新，无则插入
@@ -119,7 +119,7 @@ abstract class SQlAbstract
             return false;
         }
 
-        $tableName = $tableName ? $this->prefix . $tableName : $this->getTableName();
+        $tableName = $tableName ? self::$prefix . $tableName : $this->getTableName();
 
         $whereSql = $this->parseWhere($where);
 
@@ -132,7 +132,7 @@ abstract class SQlAbstract
             $v = $v === null ? "null" : $this->quote($v);
             $sql = str_replace(":" . $k . ":", $v, $sql);
         }
-        self::$_sql[] = $sql;
+
         return $this->exec($sql, self::CONN_MASTER, true);
     }
 
@@ -141,13 +141,13 @@ abstract class SQlAbstract
      */
     public function delete($where = array(), $tableName = null)
     {
-        $tableName = $tableName ? $this->prefix . $tableName : $this->getTableName();
+        $tableName = $tableName ? self::$prefix . $tableName : $this->getTableName();
 
         $whereStr = $this->parseWhere($where);
         $whereStr = $whereStr ? " WHERE " . $whereStr : "";
 
         $sql = "DELETE FROM `" . $tableName . "`" . $whereStr;
-        self::$_sql[] = $sql;
+
         $return = $this->exec($sql, self::CONN_MASTER);
 
         return $return;
@@ -159,7 +159,7 @@ abstract class SQlAbstract
      */
     public function update(array $data, $where = array(), $tableName = null)
     {
-        $tableName = $tableName ? $this->prefix . $tableName : $this->getTableName();
+        $tableName = $tableName ? self::$prefix . $tableName : $this->getTableName();
 
         $whereStr = $this->parseWhere($where);
         $whereStr = $whereStr ? " WHERE " . $whereStr : "";
@@ -171,7 +171,7 @@ abstract class SQlAbstract
         }
         $sql = rtrim($sql, ',');
         $sql .= $whereStr;
-        self::$_sql[] = $sql;
+ 
 
         return $this->exec($sql, self::CONN_MASTER);
     }
@@ -184,13 +184,13 @@ abstract class SQlAbstract
      */
     public function inCrease($field, $where = array(), $number = 1, $tableName = null)
     {
-        $tableName = $tableName ? $this->prefix . $tableName : $this->getTableName();
+        $tableName = $tableName ? self::$prefix . $tableName : $this->getTableName();
 
         $whereSql = $this->parseWhere($where);
         $whereSql = $whereSql ? " WHERE " . $whereSql : "";
 
         $sql = "UPDATE `{$tableName}` SET {$field} = {$field} +{$number} " . $whereSql;
-        self::$_sql[] = $sql;
+
         $this->exec($sql, self::CONN_MASTER);
 
         return true;
@@ -205,13 +205,13 @@ abstract class SQlAbstract
      */
     public function deCrement($field, $where = array(), $number = 1, $tableName = null)
     {
-        $tableName = $tableName ? $this->prefix . $tableName : $this->getTableName();
+        $tableName = $tableName ? self::$prefix . $tableName : $this->getTableName();
 
         $whereSql = $this->parseWhere($where);
         $whereSql = $whereSql ? " WHERE " . $whereSql : "";
 
         $sql = "UPDATE `{$tableName}` SET {$field} = {$field} - {$number} " . $whereSql;
-        self::$_sql[] = $sql;
+    
         $this->exec($sql, self::CONN_MASTER);
         return true;
     }
@@ -390,7 +390,7 @@ abstract class SQlAbstract
         $whereSql = $this->parseWhere($where);
 
         $whereSql = $whereSql ? " WHERE " . $whereSql : "";
-        $tableName = $tableName ? $this->prefix . $tableName : $this->getTableName();
+        $tableName = $tableName ? self::$prefix . $tableName : $this->getTableName();
         $orderBySql = "";
         $groupBySql = "";
         $limitSql = "";
@@ -407,13 +407,7 @@ abstract class SQlAbstract
             $limitSql = " LIMIT {$limit} , {$offset} ";
         }
 
-
         $sql = "SELECT *  FROM `{$tableName}` " . $whereSql . $groupBySql . $orderBySql . $limitSql;
-
-        $key = base64_encode($sql) . $returnCount;
-        if (isset(self::$sqlinstance[$key]) && self::$sqlinstance[$key]) {
-            return self::$sqlinstance[$key];
-        }
 
         $rs = $this->fetchAll($sql, self::CONN_SLAVE);
         if ($returnCount) {
@@ -421,7 +415,6 @@ abstract class SQlAbstract
             $rsCount = $this->fetch($sqlCount, self::CONN_SLAVE);
             $this->_total = $rsCount['cnt'];
         }
-        self::$sqlinstance[$key] = $rs;
         return $rs;
     }
 
@@ -440,7 +433,7 @@ abstract class SQlAbstract
     {
         $whereSql = $this->parseWhere($where);
         $whereSql = $whereSql ? " WHERE " . $whereSql : "";
-        $tableName = $tableName ? $this->prefix . $tableName : $this->getTableName();
+        $tableName = $tableName ? self::$prefix . $tableName : $this->getTableName();
         $orderBySql = "";
         $groupBySql = "";
         $limitSql = "";
@@ -458,10 +451,7 @@ abstract class SQlAbstract
         }
         $resultKeyStr = $resultKey ? $resultKey . "," : "";
         $sql = "SELECT " . $resultKeyStr . " " . $field . "  FROM `{$tableName}` " . $whereSql . $groupBySql . $orderBySql . $limitSql;
-        $key = base64_encode($sql) . $field . $isMore;
-        if (isset(self::$sqlinstance[$key]) && self::$sqlinstance[$key]) {
-            return self::$sqlinstance[$key];
-        }
+
         if ($isMore) {
             $rs = $this->fetchAll($sql, self::CONN_SLAVE);
             if (!$rs) {
@@ -471,12 +461,10 @@ abstract class SQlAbstract
             foreach ($rs as $key => $value) {
                 $result[$value[$resultKey]] = $value[$field];
             }
-            self::$sqlinstance[$key] = $result;
             return $result;
         } else {
             $rs = $this->fetch($sql, self::CONN_SLAVE);
             $result = $rs ? $rs[$field] : "";
-            self::$sqlinstance[$key] = $result;
             return $result;
         }
     }
@@ -488,22 +476,17 @@ abstract class SQlAbstract
      */
     public function get($where, $orderBy = "", $tableName = null)
     {
+
         $whereSql = $this->parseWhere($where);
         $whereSql = $whereSql ? " WHERE " . $whereSql : "";
 
-        $tableName = $tableName ? $this->prefix . $tableName : $this->getTableName();
+        $tableName = $tableName ? self::$prefix . $tableName : $this->getTableName();
 
         $sql = "SELECT * FROM `{$tableName}` " . $whereSql;
         if ($orderBy) {
             $sql .= " ORDER BY " . $orderBy;
         }
-
-        $key = base64_encode($sql);
-        if (isset(self::$sqlinstance[$key]) && self::$sqlinstance[$key]) {
-            return self::$sqlinstance[$key];
-        }
         $result = $this->fetch($sql, self::CONN_SLAVE);
-        self::$sqlinstance[$key] = $result;
         return $result;
     }
 
@@ -517,7 +500,7 @@ abstract class SQlAbstract
     {
         $whereSql = $this->parseWhere($where);
         $whereSql = $whereSql ? " WHERE " . $whereSql : "";
-        $tableName = $tableName ? $this->prefix . $tableName : $this->getTableName();
+        $tableName = $tableName ? self::$prefix . $tableName : $this->getTableName();
         $groupBySql = "";
         if ($groupBy) {
             $groupBySql = " GROUP BY " . $groupBy;
@@ -549,7 +532,6 @@ abstract class SQlAbstract
      */
     public static function clearStaticData()
     {
-        self::$sqlinstance = [];
         self::$_sql = [];
     }
 }

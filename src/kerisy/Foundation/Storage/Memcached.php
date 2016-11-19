@@ -1,6 +1,7 @@
 <?php
 /**
  * memcached 客户端
+ * Kerisy Framework
  *
  * PHP Version 7
  *
@@ -11,6 +12,7 @@
  */
 
 namespace Kerisy\Foundation\Storage;
+
 
 use Kerisy\Config\Config;
 use Memcached as MemcacheExt;
@@ -32,8 +34,8 @@ class Memcached
     private function initialize()
     {
         if(self::$conn) return ;
-        $config = Config::get("storage.memcache");
-        if(!$config) throw new ConfigNotFoundException("storage.memcache not config");
+        $config = Config::get("storage.server.memcache");
+        if(!$config) throw new ConfigNotFoundException("storage.server.memcache not config");
 
         if (class_exists("Memcached")) {
             $memcached = new MemcacheExt;

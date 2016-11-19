@@ -14,18 +14,19 @@
 
 namespace Kerisy\Mvc\Route;
 
-use Kerisy\Mvc\Route\Base\Generator\UrlGenerator;
-use Kerisy\Mvc\Route\Base\Matcher\UrlMatcher;
-use Kerisy\Mvc\Route\Base\RouteCollection as BaseRouteCollection;
-use Kerisy\Mvc\Route\Base\RequestContext;
+use Kerisy\Coroutine\Base\CoroutineScheduler;
+use Kerisy\Coroutine\Base\CoroutineTask;
+use Kerisy\Coroutine\Event;
+use Kerisy\Foundation\Bootstrap\Session;
 use Kerisy\Http\Request;
 use Kerisy\Http\Response;
+use Kerisy\Mvc\Route\Base;
+use Kerisy\Mvc\Route\Base\Generator\UrlGenerator;
+use Kerisy\Mvc\Route\Base\Matcher\UrlMatcher;
+use Kerisy\Mvc\Route\Base\RequestContext;
+use Kerisy\Mvc\Route\Base\RouteCollection as BaseRouteCollection;
 use Kerisy\Mvc\Route\Exception\PageNotFoundException;
 use Kerisy\Support\Arr;
-use Kerisy\Support\Log;
-use Kerisy\Coroutine\Event;
-use Kerisy\Mvc\Route\Base;
-use Kerisy\Foundation\Bootstrap\Session;
 
 class RouteMatch
 {
@@ -37,8 +38,8 @@ class RouteMatch
     protected static $allRoute = [];
 
     protected static $collectionInstance = null;
-    
-    protected static $middlewareConfig=[];
+
+    protected static $middlewareConfig = [];
 
     /**
      *  instance
@@ -111,18 +112,18 @@ class RouteMatch
      */
     public function url($routeName, $params = [])
     {
-        $sysCacheKey = md5($routeName.serialize($params));
+        $sysCacheKey = md5($routeName . serialize($params));
 
         $url = syscache()->get($sysCacheKey);
 
-        if($url) return $url;
+        if ($url) return $url;
 
         $rootCollection = $this->getRootCollection();
         $context = new RequestContext();
         $context->fromRequest(Request::createFromGlobals());
         $generator = new UrlGenerator($rootCollection, $context);
         $url = $generator->generate($routeName, $params);
-        
+
         syscache()->set($sysCacheKey, $url, 3600);
 
         return $url;
@@ -137,16 +138,13 @@ class RouteMatch
      */
     public function run($url, Request $request, Response $response)
     {
-        Event::fire("controller.call.before", [$url]);
-        Event::fire("http.controller.call.before", [$url, $request, $response]);
-  
         $this->sessionStart($request, $response);
 
-        $sysCacheKey = md5(__CLASS__.$url);
+        $sysCacheKey = md5(__CLASS__ . $url);
 
         $parameters = syscache()->get($sysCacheKey);
 
-        if(!$parameters){
+        if (!$parameters) {
             $parameters = $this->match($url);
             syscache()->set($sysCacheKey, $parameters, 3600);
         }
@@ -158,9 +156,9 @@ class RouteMatch
                     $secondReq[$k] = $v;
                 }
             }
-          
+
             $request->overrideGlobals();
-    
+
             $require = [$request, $response, $secondReq];
 
             return $this->runBase($require, $parameters);
@@ -178,28 +176,24 @@ class RouteMatch
         $session = new Session();
         $session->start($request, $response);
     }
-    
-    
+
 
     /**
-     * rpc 执行匹配
+     * socket 执行匹配
      *
      * @param $url
      * @param array $requestData
+     * @param server
      * @return string
      * @throws PageNotFoundException
      */
-    public function runRpc($url, $requestData = [])
+    public function runSocket($url, $requestData = [], $serv, $fd)
     {
-        Event::fire("controller.call.before", [$url]);
-        Event::fire("rpc.controller.call.before", [$url, $requestData]);
-
-
         $sysCacheKey = md5($url);
 
         $parameters = syscache()->get($sysCacheKey);
 
-        if(!$parameters){
+        if (!$parameters) {
             $parameters = $this->match($url);
             syscache()->set($sysCacheKey, $parameters, 3600);
         }
@@ -214,7 +208,7 @@ class RouteMatch
 
             if ($requestData) $require = Arr::merge($require, $requestData);
 
-            return $this->runBase($require, $parameters);
+            return $this->runBase($require, $parameters, [$serv, $fd]);
         }
         return "";
     }
@@ -227,7 +221,7 @@ class RouteMatch
      * @return mixed
      * @throws PageNotFoundException
      */
-    private function runBase($require, $parameters)
+    private function runBase($require, $parameters, $otherData = null)
     {
 
         if ($parameters) {
@@ -236,35 +230,46 @@ class RouteMatch
                 $middleware = isset($parameters['_middleware']) ? $parameters['_middleware'] : null;
                 if ($middleware) {
                     $midd = self::$middlewareConfig;
-                    if($midd){
-                        foreach ($middleware as $v){
-                            if(isset($midd[$v])){
+                    if ($midd) {
+                        foreach ($middleware as $v) {
+                            if (isset($midd[$v])) {
                                 $class = $midd[$v];
                                 $obj = new $class();
                                 $rs = call_user_func_array([$obj, "perform"], $require);
-                                if(!$rs) return ;
+                                if (!$rs) return;
                             }
                         }
                     }
                 }
                 if ($controller instanceof \Closure) {
-                    return call_user_func($controller, $require);
+                    $generator = call_user_func($controller, $require);
+                    if ($generator instanceof \Generator) {
+                        $task = new CoroutineTask($generator);
+                        $task->work($task->getRoutine());
+                        unset($task);
+                    }
                 } elseif (is_string($controller)) {
                     if (stristr($controller, "@")) {
                         list($controller, $action) = explode("@", $controller);
                         //如果是http服务器
-                     
-                        if(isset($require[0]) && ($require[0] instanceof Request)){
-                            $obj = new $controller($require[0],$require[1]);
+                        if (isset($require[0]) && ($require[0] instanceof Request)) {
+                            $obj = new $controller($require[0], $require[1]);
                             $content = call_user_func_array([$obj, $action], $require[2]);
-                        }else{
-                            $obj = new $controller();
+                        } else {
+                            //tcp
+                            list($serv, $fd) = $otherData;
+                            $obj = new $controller($serv, $fd);
                             $content = call_user_func_array([$obj, $action], $require);
                         }
-           
-                        Event::fire("controller.call.after", [$content]);
+                        if ($content instanceof \Generator) {
+//                            $scheduler = new CoroutineScheduler();
+//                            $scheduler->newTask($content);
+//                            $scheduler->run();
+                            $task = new CoroutineTask($content);
+                            $task->work($task->getRoutine());
+                            unset($task);
+                        }
                         Event::fire("clear");
-                        return $content;
                     } else {
                         throw new PageNotFoundException("page not found!");
                     }

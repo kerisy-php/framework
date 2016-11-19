@@ -4,6 +4,7 @@ namespace Kerisy\Mvc\View\Engine\Blade\Compilers;
 
 use Kerisy\Mvc\View\Engine\Blade\Support\Arr;
 use Kerisy\Mvc\View\Engine\Blade\Support\Str;
+use Kerisy\Support\Lang;
 
 class BladeCompiler extends Compiler implements CompilerInterface
 {
@@ -1089,6 +1090,10 @@ class BladeCompiler extends Compiler implements CompilerInterface
 
     protected function compileFurl($expression) {
         return "\$__fis->uri{$expression}";
+    }
+
+    protected function compileL($expression) {
+        return "\Kerisy\Support\Lang::get{$expression}";
     }
 
     protected function compileWidget($expression, $match) {

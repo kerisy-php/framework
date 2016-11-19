@@ -33,6 +33,11 @@ class Context
         }
     }
 
+    public function hasSet($key)
+    {
+        return isset(self::$map[$key][0]);
+    }
+
     public function getAll()
     {
         return self::$map;

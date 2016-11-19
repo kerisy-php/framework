@@ -12,6 +12,7 @@
  */
 namespace Kerisy\Support;
 
+use Kerisy\Server\Facade\Context as FContent;
 
 class Log
 {
@@ -54,8 +55,23 @@ class Log
         $result[] = date('Y-m-d H:i:s');
         $result[] = posix_getpid();
         $result[] = current($ip);
+        $result[] = self::getOlineIp();
         $result[] = $elapsedTime;
+
         return $result;
+    }
+
+    protected static function getOlineIp()
+    {
+        if(FContent::hasSet("request")){
+            $ip = FContent::request()->server->get("HTTP_X_FORWARDED_FOR");
+            if(!$ip){
+                $ip = FContent::request()->server->get("REMOTE_ADDR");
+            }
+            return $ip;
+        }else{
+            return "127.0.0.1";
+        }
     }
 
 
@@ -100,12 +116,16 @@ class Log
     {
         $msg = isset($arguments[0])?$arguments[0]:"";
         if(!is_string($arguments[0])){
-            $msg = print_r($arguments[0],true);
+            ob_start();
+            var_dump($arguments[0]);
+            $msg = ob_get_clean();
+            $msg = explode("\n",$msg);
+            array_shift($msg);
+            $msg = implode("\n",$msg);
         }
 
         $data = self::preData();
         $data[]=$msg;
         self::outPut($name,$data);
     }
-
 }

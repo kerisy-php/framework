@@ -32,6 +32,9 @@ class AliasConfig
             "Job" => \Kerisy\Foundation\Bootstrap\Facade\Job::class,
             "Log" => \Kerisy\Foundation\Bootstrap\Facade\Log::class,
             "Session" => \Kerisy\Foundation\Bootstrap\Facade\Session::class,
+            "Controller"=>\Kerisy\Foundation\Controller::class,
+            "RpcController"=>\Kerisy\Rpc\Controller::class,
+            "Lang"=>\Kerisy\Support\Lang::class,
         ];
     }
 

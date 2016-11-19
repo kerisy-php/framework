@@ -21,6 +21,7 @@ use Kerisy\Server\Reload;
 use Kerisy\Support\Exception;
 use Kerisy\Support\Log;
 use Kerisy\Support\Exception\RuntimeExitException;
+use Kerisy\Coroutine\Base\CoroutineTask;
 
 class Job
 {
@@ -86,7 +87,12 @@ class Job
                     if(!is_object($jobObj)){
                         continue;
                     }
-                    $jobObj->perform();
+                    $result = $jobObj->perform();
+                    if ($result instanceof \Generator) {
+                        $task = new CoroutineTask($result);
+                        $task->work($task->getRoutine());
+                        unset($task);
+                    }
                     $this->storage->zrem($key, $v);
                     if ($schedule) {
                         $cron = CronExpression::factory($schedule);

@@ -60,7 +60,7 @@ class HttpdBase
             Log::sysinfo("httpd.server.port config not config");
             exit(0);
         }
-        
+
         $adapter = new Application($root);
         self::doOperate($cmd, $config, $adapter, $root, $appName);
     }
@@ -115,7 +115,8 @@ class HttpdBase
         if(!is_dir($viewCachePath)){
             mkdir($viewCachePath, "0777", true);
         }
-
+        
+        
         $serverName = $appName . "-httpd-master";
         exec("ps axu|grep " . $serverName . "$|awk '{print $2}'", $masterPidArr);
         $masterPid = $masterPidArr ? current($masterPidArr) : null;

@@ -13,42 +13,43 @@
 namespace Kerisy\Foundation\Storage;
 
 use Config;
-use Kerisy\Foundation\Storage\Adapter\SQlAbstract as SQlAdapter;
+use Kerisy\Coroutine\Db\PdoDirect;
+use Kerisy\Coroutine\Db\DbCoroutine;
 use Kerisy\Coroutine\Event;
+use Kerisy\Foundation\Storage\Adapter\SQlAbstract as SQlAdapter;
 
 class Pdo extends SQlAdapter
 {
-    const CONN_MASTER = 0;//写服务器
-    const CONN_SLAVE = 1;//读服务器
-
-    private static $conn = [];
+    private static $coroutine = null;
     
-    public function __construct()
-    {
-        $this->initializeDefault();
-        parent::__construct();
-    }
+    private static $conn = [];
 
-    protected function initializeDefault()
+    public function __construct($config=null)
     {
-        $this->prefix = Config::get("storage.pdo.prefix");
-    }
-
-
-    protected function setConn($dnType = self::CONN_MASTER)
-    {
-        if (self::$conn && isset(self::$conn[$dnType])) {
-            return self::$conn[$dnType];
+        if(!self::$coroutine){
+            if(!$config){
+                $config = Config::get("storage.server.pdo");
+            }
+            self::$prefix = $config['prefix'];
+            parent::__construct();
+            $clients = $this->initConn($config);
+            $pdoPool = new PdoDirect($clients);
+            self::$coroutine = new DbCoroutine($pdoPool);
         }
+    }
 
+    protected function initConn($config)
+    {
+        if(self::$conn) return self::$conn;
         try {
-            $config = Config::get("storage.pdo");
             if (isset($config['master']) && !isset(self::$conn[self::CONN_MASTER])) {
                 $masterConfig = $config['master'];
                 $dbh = new \PDO($config['type'] . ':host=' . $masterConfig['host'] . ';port=' . $masterConfig['port'] . ';dbname=' . $masterConfig['db_name'] . '',
                     $masterConfig['user'], $masterConfig['password'],
                     array(\PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES \'UTF8\'',\PDO::ATTR_TIMEOUT=>$masterConfig['timeout']));
                 self::$conn[self::CONN_MASTER] = $dbh;
+                self::$conn[self::CONN_MASTER]->setAttribute(\PDO::ATTR_DEFAULT_FETCH_MODE, \PDO::FETCH_ASSOC);
+                self::$conn[self::CONN_MASTER]->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
             }
             if (isset($config['slave']) && !isset(self::$conn[self::CONN_MASTER])) {
                 $slaveConfig = $config['slave'];
@@ -56,6 +57,8 @@ class Pdo extends SQlAdapter
                     $slaveConfig['user'], $slaveConfig['password'],
                     array(\PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES \'UTF8\'',\PDO::ATTR_TIMEOUT=>$slaveConfig['timeout']));
                 self::$conn[self::CONN_SLAVE] = $slaveDBH;
+                self::$conn[self::CONN_SLAVE]->setAttribute(\PDO::ATTR_DEFAULT_FETCH_MODE, \PDO::FETCH_ASSOC);
+                self::$conn[self::CONN_SLAVE]->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
             }
 
         } catch (\PDOException $e) {
@@ -70,10 +73,7 @@ class Pdo extends SQlAdapter
             self::$conn[self::CONN_SLAVE] = self::$conn[self::CONN_MASTER];
         }
 
-        self::$conn[$dnType]->setAttribute(\PDO::ATTR_DEFAULT_FETCH_MODE, \PDO::FETCH_ASSOC);
-        self::$conn[$dnType]->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
-
-        return self::$conn[$dnType];
+        return self::$conn;
     }
 
     /**
@@ -99,14 +99,9 @@ class Pdo extends SQlAdapter
             throw new \Exception("only run on select , show");
         }
 
-        self::$_sql[] = $sql;
-        $conn = $this->setConn($connType);
-        $conn->exec($sql);
-        if($isInsert){
-            return $conn->lastInsertId();
-        }else{
-            return true;
-        }
+        self::$_sql['sql'] = $sql;
+        $func = $isInsert?"lastInsertId":"";
+        yield self::$coroutine->set($sql, $connType, $func);
     }
 
 
@@ -115,11 +110,10 @@ class Pdo extends SQlAdapter
         if (empty($sql)) {
             return false;
         }
-        self::$_sql[] = $sql;
 
-        $conn = $this->setConn($connType);
-        $query = $conn->query($sql);
-        return $query->fetchAll();
+        self::$_sql['sql'] = $sql;
+        $func = "fetchAll";
+        yield self::$coroutine->set($sql, $connType, $func);
     }
 
 
@@ -128,13 +122,11 @@ class Pdo extends SQlAdapter
         if (empty($sql)) {
             return false;
         }
-        self::$_sql[] = $sql;
 
-        $conn = $this->setConn($connType);
-        $query = $conn->query($sql);
-        return $query->fetch();
+        self::$_sql['sql'] = $sql;
+        $func = "fetch";
+        yield self::$coroutine->set($sql, $connType, $func);
     }
-
 
     public function __destruct()
     {
@@ -142,4 +134,5 @@ class Pdo extends SQlAdapter
             self::clearStaticData();
         });
     }
+
 }

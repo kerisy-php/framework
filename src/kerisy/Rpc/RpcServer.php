@@ -18,6 +18,8 @@ use Kerisy\Server\SocketInterface;
 use Kerisy\Server\SocketServer;
 use Kerisy\Coroutine\Event;
 use Kerisy\Support\ElapsedTime;
+use Kerisy\Rpc\Exception\InvalidArgumentException;
+use Kerisy\Mvc\Route\RouteMatch;
 
 class RpcServer implements SocketInterface
 {
@@ -55,8 +57,11 @@ class RpcServer implements SocketInterface
 
     public function perform($data, $serv, $fd, $from_id)
     {
-        $result = $this->serialize->matchAndRun($data);
-        $serv->send($fd, $result);
-        $serv->close($fd);
+        $result = $this->serialize->xformat($data);
+        if (!$result) {
+            throw new InvalidArgumentException(" received body parse fail");
+        }
+        list($url, $params) = $result;
+        RouteMatch::getInstance()->runSocket($url, $params, $serv,$fd);
     }
 }

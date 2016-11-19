@@ -19,7 +19,7 @@ use swoole_http_response as SwooleHttpResponse;
 use swoole_http_server as SwooleServer;
 use Kerisy\Http\Request;
 use Kerisy\Http\Response;
-use Kerisy\Server\Facade\Context;
+use Kerisy\Server\Facade\Context as FContext;
 use Kerisy\Server\Facade\Task as FacadeTask;
 use Kerisy\Coroutine\Event;
 use Kerisy\Support\Facade;
@@ -85,7 +85,7 @@ class HttpServer
     {
         swoole_set_process_name($this->serverName . "-manage");
         Log::sysinfo($this->serverName . " manage start ......");
-        
+
         $memRebootRate = isset($this->config['mem_reboot_rate'])?$this->config['mem_reboot_rate']:0;
 
         Reload::load($this->serverName , $memRebootRate, $this->config);
@@ -103,21 +103,13 @@ class HttpServer
      */
     public function onTask(SwooleServer $serv, $task_id, $from_id, $data)
     {
-        $workerId = posix_getpid();
         try {
-            $result = FacadeTask::start($data);
-            Event::fire("request.end",$workerId);
-            return $result;
-        } catch (RuntimeExitException $e){
-            Event::fire("request.end",$workerId);
-            Log::syslog("RuntimeExitException:".$e->getMessage());
-        }catch (\Exception $e) {
-            Event::fire("request.end",$workerId);
+            return FacadeTask::start($data);
+        } catch (\Exception $e) {
             $exception = SupportException::formatException($e);
             Log::error($exception);
             return [false, $data, $exception];
         } catch (\Error $e) {
-            Event::fire("request.end",$workerId);
             $exception = SupportException::formatException($e);
             Log::error($exception);
             return [false, $data, $exception];
@@ -156,16 +148,24 @@ class HttpServer
         if (function_exists("apcu_clear_cache")) {
             apcu_clear_cache();
         }
-        
+
         if (function_exists("opcache_reset")) {
             opcache_reset();
         }
-        
+
         Task::setConfig($this->config);
 
         if ($workerId >= $this->config["worker_num"]) {
-            swoole_set_process_name($this->serverName . "-task-worker");
-            Log::sysinfo($this->serverName . " task worker start ..... ");
+            $poolNumber = isset($this->config['pool']["pool_worker_number"])?$this->config['pool']["pool_worker_number"]:0;
+            $taskNumber = $this->config["task_worker_num"]-$poolNumber;
+            $taskNumber = $taskNumber+$this->config["worker_num"];
+            if($workerId >=$taskNumber){
+                swoole_set_process_name($this->serverName . "-task-worker");
+                Log::sysinfo($this->serverName . " task worker start ..... ");
+            }else{
+                swoole_set_process_name($this->serverName . "-pool-worker");
+                Log::sysinfo($this->serverName . " pool worker start ..... ");
+            }
         } else {
             swoole_set_process_name($this->serverName . "-worker");
             Log::sysinfo($this->serverName . " worker start ..... ");
@@ -173,7 +173,7 @@ class HttpServer
         $this->adapter->httpBoostrap();
 
         if (Facade::getFacadeApplication()) {
-            Context::set("server", $swooleServer, true, true);
+            FContext::set("server", $swooleServer, true, true);
         }
     }
 
@@ -187,7 +187,6 @@ class HttpServer
         Log::sysinfo($this->serverName . " worker error ..... ");
         Log::sysinfo("======================");
         Log::error(socket_strerror($exitCode) . "");
-        Event::fire("httpd.worker.error", [$exitCode, date('Y-m-d H:i:s')]);
     }
 
     /**
@@ -201,33 +200,28 @@ class HttpServer
     public function onRequest(SwooleHttpRequest $swooleHttpRequest, SwooleHttpResponse $swooleHttpResponse)
     {
         ElapsedTime::setStartTime("sys_elapsed_time");
-
-      
+        
         $request = new Request($swooleHttpRequest);
-       
         $response = new Response($swooleHttpResponse);
-
-    
+        
         if (Facade::getFacadeApplication()) {
-            Context::clear();
-            Context::set("response", $response);
-            Context::set("request", $request);
-            $request = Context::request();
-            $response = Context::response();
+            FContext::clear();
+            FContext::set("response", $response);
+            FContext::set("request", $request);
+            $request = FContext::request();
+            $response = FContext::response();
         }
-      
+
         $httpSendFile = new HttpSendFile($request, $response);
         $httpSendFile->setConfig($this->config);
         list($isFile,,,,) = $httpSendFile->analyse();
-        
+
         if ($isFile) {
             $httpSendFile->sendFile();
         } else {
-     
             $this->response($request, $response);
-
             if (Facade::getFacadeApplication()) {
-                Context::clear();
+                FContext::clear();
             }
             Event::fire("clear");
         }
@@ -237,9 +231,8 @@ class HttpServer
     {
         $workerId = posix_getpid();
         try {
-            $content = $this->requestHtmlHandle($request, $response);
+            $this->requestHtmlHandle($request, $response);
             Event::fire("request.end",$workerId);
-            $response->end($content);
         }catch (Page404Exception $e){
             Event::fire("request.end",$workerId);
             Event::fire("404",[$e,"Page404Exception",$response]);
@@ -275,7 +268,7 @@ class HttpServer
         if ($gzip) {
             $response->gzip($gzip);
         }
-       
+
         $response->header("Content-Type", "text/html;charset=utf-8");
         return $this->adapter->start($request, $response);
     }

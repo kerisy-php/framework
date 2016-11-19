@@ -22,6 +22,15 @@ class Controller
     const RESPONSE_CODE = 200;
     const RESPONSE_NORMAL_ERROR_CODE = 500;
 
+    private $server = null;
+    private $fd = null;
+
+    public function __construct($server, $fd)
+    {
+        $this->server = $server;
+        $this->fd = $fd;
+    }
+
     /**
      * 数据返回
      * 
@@ -30,7 +39,7 @@ class Controller
      * @param string $errodMsg
      * @return array
      */
-    public function response($data, $errorCode = self::RESPONSE_CODE, $errodMsg = '')
+    public function render($data, $errorCode = self::RESPONSE_CODE, $errodMsg = '')
     {
         $elapsedTime = ElapsedTime::runtime("rpc_sys_elapsed_time");
         $result = [];
@@ -39,5 +48,17 @@ class Controller
         $result['errodMsg'] = $errodMsg;
         $result['elapsedTime'] = $elapsedTime;
         return $result;
+    }
+
+    /**
+     * @param $data
+     * @param int $errorCode
+     * @param string $errodMsg
+     */
+    public function response($data, $errorCode = self::RESPONSE_CODE, $errodMsg = '')
+    {
+        $data = $this->render($data, $errorCode, $errodMsg);
+        $this->server->send($this->fd, $data);
+        $this->server->close($this->fd);
     }
 }

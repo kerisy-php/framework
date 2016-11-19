@@ -96,13 +96,35 @@ if (!function_exists('syscache')) {
 
 if (!function_exists('dump')) {
     /**
-     * 缓存对象
-     * @return \Kerisy\Support\Log;
+     * 输出
+     * @return string;
      */
-    function dump($str)
+    function dump($str, $isReturn=false)
     {
-        $str = print_r($str, true);
-        return \Kerisy\Support\Log::debug($str);
+        if(!$isReturn){
+            return \Kerisy\Support\Log::show($str);
+        }
+        ob_start();
+        \Kerisy\Support\Log::show($str);
+        $msg = ob_get_clean();
+        return $msg;
+    }
+}
+
+if (!function_exists('debug')) {
+    /**
+     * 输出
+     * @return string;
+     */
+    function debug($str, $isReturn=false)
+    {
+        if(!$isReturn){
+            return \Kerisy\Support\Log::debug($str);
+        }
+        ob_start();
+        \Kerisy\Support\Log::debug($str);
+        $msg = ob_get_clean();
+        return $msg;
     }
 }
 
@@ -118,12 +140,22 @@ if (!function_exists('page404')) {
 
 if (!function_exists('throwExit')) {
     /**
-     * 404错误
+     * 断点
      */
     function throwExit($str=null)
     {
         $str && dump($str);
         throw new \Kerisy\Support\Exception\RuntimeExitException("exit");
+    }
+}
+
+if (!function_exists('l')) {
+    /**
+     * 多语言
+     */
+    function l($str, $params=[])
+    {
+        return \Kerisy\Support\Lang::get($str, $params);
     }
 }
 

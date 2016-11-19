@@ -59,6 +59,7 @@ class RpcBase
             Log::sysinfo("rpc.server.port config not config");
             exit(0);
         }
+        
 
         self::doOperate($cmd, $config, $root, $appName, $output);
     }
@@ -95,7 +96,7 @@ class RpcBase
             mkdir(dirname($config['server']['log_file']), "0777", true);
         }
         
-//        $config['server']["open_length_check"] = 0;
+        
         $serverName = $appName . "-rpc-master";
         exec("ps axu|grep " . $serverName . "$|awk '{print $2}'", $masterPidArr);
         $masterPid = $masterPidArr ? current($masterPidArr) : null;

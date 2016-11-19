@@ -78,8 +78,18 @@ class Controller
         $assign = Arr::merge($assign, $this->view->getAssignData());
 
         $content = Template::render($viewPath, $assign);
-        
         return $content;
+    }
+
+    /**
+     * 显示模板
+     * @param $viewPath
+     * @param array $assign
+     */
+    public function display($viewPath, $assign = [])
+    {
+        $content = $this->render($viewPath, $assign);
+        $this->response->end($content);
     }
     
 }

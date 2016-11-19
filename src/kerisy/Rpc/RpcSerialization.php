@@ -1,7 +1,7 @@
 <?php
 /**
  *  数据序列化处理以及route 匹配
- * 
+ *
  * Kerisy Framework
  *
  * PHP Version 7
@@ -14,8 +14,6 @@
 
 namespace Kerisy\Rpc;
 
-use Kerisy\Mvc\Route\RouteMatch;
-use Kerisy\Rpc\Exception\InvalidArgumentException;
 use Kerisy\Support\Serialization\Serialization;
 
 class RpcSerialization
@@ -29,16 +27,13 @@ class RpcSerialization
         $this->serializeObj->setBodyOffset($bodyOffset);
     }
 
-    public function matchAndRun($data)
+    public function xformat($data)
     {
-        $result = $this->serializeObj->xformat($data);
-        if (!$result) {
-            throw new InvalidArgumentException(" received body parse fail");
-        }
-
-        list($url, $params) = $result;
-        $content = RouteMatch::getInstance()->runRpc($url, $params);
-        return $this->serializeObj->format($content);
+        return $this->serializeObj->xformat($data);
     }
 
+    public function format($data)
+    {
+        $this->serializeObj->format($data);
+    }
 }

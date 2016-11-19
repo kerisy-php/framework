@@ -62,7 +62,6 @@ class Application
         RouteBootstrap::getInstance();
     }
 
-
     /**
      * https server 路由开始匹配
      *
@@ -82,7 +81,6 @@ class Application
         $routeObj->setMiddlewareConfig($middlewareConfig);
        
         $resut = $routeObj->run($url, $request, $response);
-        
         return $resut;
     }
 

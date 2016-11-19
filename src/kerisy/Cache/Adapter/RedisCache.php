@@ -1,5 +1,7 @@
 <?php
 /**
+ * redis k/v 缓存
+ *
  * Kerisy Framework
  *
  * PHP Version 7

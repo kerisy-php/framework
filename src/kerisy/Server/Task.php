@@ -18,6 +18,7 @@ use Kerisy\Server\Exception\InvalidArgumentException;
 use Kerisy\Server\Facade\Context as FacedeContext;
 use Kerisy\Coroutine\Event;
 use Kerisy\Support\ElapsedTime;
+use Kerisy\Coroutine\Base\CoroutineTask;
 
 class Task
 {
@@ -116,17 +117,23 @@ class Task
                 throw new InvalidArgumentException(" task method perform not config ");
             }
             $result = call_user_func_array([$obj, "perform"], $params);
+
+            if ($result instanceof \Generator) {
+                $task = new CoroutineTask($result);
+                $task->work($task->getRoutine());
+                unset($task);
+            }
             return [true, $result, ''];
         }
         return [true, "", ''];
     }
+
 
     public function __call($name, $arguments)
     {
         $dstWorkerId = $this->getDstWorkerId();
         $this->send($name, $arguments, $this->retryCount,$dstWorkerId);
     }
-
 
     /**
      * 获取进程对应关系
@@ -142,7 +149,7 @@ class Task
             $numbers = range($start, $end);
             //按照顺序执行,保证每个连接池子数固定
             self::$numbersTmp = $numbers;
-           return array_pop(self::$numbersTmp);
+            return array_pop(self::$numbersTmp);
         }
     }
 

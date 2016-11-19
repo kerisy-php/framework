@@ -13,6 +13,7 @@
 
 namespace Kerisy\Job;
 
+use Kerisy\Foundation\Application;
 use Kerisy\Foundation\Storage\Redis;
 use Kerisy\Server\ProcessServer;
 use Kerisy\Support\Log;

@@ -20,9 +20,6 @@ use Kerisy\Support\Exception as SupportException;
 
 class Redis
 {
-    protected static $client = null;
-    protected static $lock = 0;
-
     protected static $conn = null;
 
     public function __construct()
@@ -33,9 +30,9 @@ class Redis
     protected function initializeDefault()
     {
         if(self::$conn) return ;
-        $config = Config::get("storage.redis");
+        $config = Config::get("storage.server.redis");
         $servers = $config['servers'];
-        if(!$servers) throw new ConfigNotFoundException("storage.redis.servers not config");
+        if(!$servers) throw new ConfigNotFoundException("storage.server.redis.servers not config");
         $options = $config['options'];
         try {
             self::$conn = new Client($servers, $options);
@@ -54,6 +51,11 @@ class Redis
             } else {
                 $result = self::$conn->$name();
             }
+            if($result instanceof \Predis\Response\Status){
+                $result =  $result->getPayload();
+                $result = $result=='OK'?true:false;
+            }
+            
             return $result;
         } catch (\Exception $e) {
             Log::error(SupportException::formatException($e));
@@ -61,8 +63,5 @@ class Redis
             Log::error(SupportException::formatException($e));
         }
     }
-
-    public function __destruct()
-    {
-    }
+    
 }
