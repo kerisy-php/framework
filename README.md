@@ -18,15 +18,14 @@
 
 sudo composer create-project --prefer-dist kerisy/app kerisy3
 
-cd boilerplate
-
-sudo composer install
+cd kerisy3
 
 sudo chmod 0777 kerisy
 
 sudo chmod -R 0777 storage
 
 sudo ./kerisy server:restart
+
 ```
 
 * 在浏览器打开地址
