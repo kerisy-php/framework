@@ -103,7 +103,7 @@ class HttpdBase
 
         $config['server'] = Arr::merge($defaultConfig, $config['server']);
 
-        if(isset($config['server']['log_file']) && !is_file($config['server']['log_file'])){
+        if(isset($config['server']['log_file']) && !is_dir(dirname($config['server']['log_file']))){
             mkdir(dirname($config['server']['log_file']), "0777", true);
         }
 
