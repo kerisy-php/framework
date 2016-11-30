@@ -17,7 +17,7 @@ namespace Kerisy\Server;
 use swoole_server as SwooleServer;
 use Kerisy\Coroutine\Event;
 use Kerisy\Mvc\Route\Base\Exception\ResourceNotFoundException;
-use Kerisy\Server\Facade\Context;
+use Kerisy\Server\Facade\Context as FContext;
 use Kerisy\Server\Facade\Task as FacadeTask;
 use Kerisy\Support\ElapsedTime;
 use Kerisy\Support\Exception as ExceptionFormat;
@@ -174,7 +174,7 @@ class SocketServer
         }
         $this->adapter->bootstrap();
         if (Facade::getFacadeApplication()) {
-            Context::set("server", $swooleServer, true, true);
+            FContext::set("server", $swooleServer, true, true);
         }
     }
 

@@ -159,3 +159,13 @@ if (!function_exists('l')) {
     }
 }
 
+if (!function_exists('array_isset')) {
+    /**
+     * isset 
+     */
+    function array_isset($arr, $key, $default=null)
+    {
+        return isset($arr[$key]) ? $arr[$key]:$default;
+    }
+}
+

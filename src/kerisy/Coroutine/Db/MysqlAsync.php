@@ -53,7 +53,10 @@ class MysqlAsync extends CoroutinePool
                 } else {
                     if($func == 'lastInsertId'){
                         $data['result'] = $client->insert_id;
-                    }else{
+                    }if($func == 'fetch'){
+                        $data['result'] = $result?current($result):null;
+                    }
+                    else{
                         $data['result'] = $result;
                     }
 //                    $data['result']['client_id'] = $client->client_id;

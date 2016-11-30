@@ -42,9 +42,10 @@ class CoroutineTask{
                     throw new \Exception($this->exception);
                 }
                 if (!$routine) {
-                    return;
+                    return false;
                 }
                 $value = $routine->current();
+                dump(1);
                 //嵌套的协程
                 if ($value instanceof \Generator) {
                     $this->stack->push($routine);
@@ -57,6 +58,7 @@ class CoroutineTask{
                     $value->send([$this, 'callback']);
                     return;
                 }
+
                 if ($value instanceof \Swoole\Coroutine\RetVal) {
                     // end yeild
                     Log::syslog(__METHOD__ . " yield end words == " . print_r($value, true), __CLASS__);
@@ -78,7 +80,7 @@ class CoroutineTask{
                         continue;
                     } else {
                         if (!$this->routine->valid()) {
-                            return;
+                            return false;
                         } else {
                             $this->routine->next();
                             continue;
@@ -86,8 +88,8 @@ class CoroutineTask{
                     }
                 }else{
                     $this->routine->send($value);
+                    return false;
                 }
-
             } catch (\Exception $e) {
                 while(!$this->stack->isEmpty()) {
                     $routine = $this->stack->pop();
