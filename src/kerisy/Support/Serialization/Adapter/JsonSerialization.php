@@ -41,4 +41,25 @@ class JsonSerialization extends SerializationAbstract
         $result = json_decode($body, true);
         return $result;
     }
+
+    /**
+     * 常规序列化
+     * @param $data
+     * @return mixed
+     */
+    public function trans($data)
+    {
+        return json_encode($data);
+    }
+
+    /**
+     * 常规反序列化
+     * @param $data
+     * @return mixed
+     */
+    public function xtrans($data)
+    {
+        return json_decode($data);
+    }
+    
 }

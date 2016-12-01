@@ -15,6 +15,7 @@
 namespace Kerisy\Http;
 
 use Kerisy\Support\Log;
+use Kerisy\Support\Serialization\Serialization;
 
 class Session
 {
@@ -81,7 +82,9 @@ class Session
      */
     public function get($key)
     {
-        return $this->server->hget(self::$sid, $key);
+        $result = $this->server->hget(self::$sid, $key);
+        if(!$result) return $result;
+        return Serialization::get()->xtrans($result);
     }
 
     /**
@@ -91,6 +94,7 @@ class Session
      */
     public function set($key, $value)
     {
+        $value = Serialization::get()->trans($value);
         $this->server->hset(self::$sid, $key, $value);
     }
 

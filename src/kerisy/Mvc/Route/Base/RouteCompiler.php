@@ -55,7 +55,7 @@ class RouteCompiler implements RouteCompilerInterface
         $path = $route->getPath();
 
         $result = self::compilePattern($route, $path, false);
-
+  
         $staticPrefix = $result['staticPrefix'];
 
         $pathVariables = $result['variables'];

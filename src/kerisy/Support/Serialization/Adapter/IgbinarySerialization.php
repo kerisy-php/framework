@@ -50,4 +50,24 @@ class IgbinarySerialization extends SerializationAbstract
         $result = igbinary_unserialize($body);
         return $result;
     }
+
+    /**
+     * 常规序列化
+     * @param $data
+     * @return mixed
+     */
+    public function trans($data)
+    {
+        return igbinary_serialize($data);
+    }
+
+    /**
+     * 常规反序列化
+     * @param $data
+     * @return mixed
+     */
+    public function xtrans($data)
+    {
+        return igbinary_unserialize($data);
+    }
 }

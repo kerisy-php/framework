@@ -50,4 +50,24 @@ class HproseSerialization extends SerializationAbstract
         $result = hprose_unserialize($body);
         return $result;
     }
+
+    /**
+     * 常规序列化
+     * @param $data
+     * @return mixed
+     */
+    public function trans($data)
+    {
+        return hprose_serialize($data);
+    }
+
+    /**
+     * 常规反序列化
+     * @param $data
+     * @return mixed
+     */
+    public function xtrans($data)
+    {
+        return hprose_unserialize($data);
+    }
 }

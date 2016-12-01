@@ -146,8 +146,8 @@ class HttpSendFile
             }
             $notFound = 1;
         }
-
-        $this->analyse = [$isFile, $filePath, $extension, $mime[$extension], $notFound];
+        $mimeMap = array_isset($mime,$extension);
+        $this->analyse = [$isFile, $filePath, $extension, $mimeMap, $notFound];
 
         syscache()->set($sysCacheKey, $this->analyse, 3600);
 

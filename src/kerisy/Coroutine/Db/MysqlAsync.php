@@ -96,7 +96,7 @@ class MysqlAsync extends CoroutinePool
             'password' => $serverConfig['password'],
             'database' => $serverConfig['db_name'],
         );
-
+        
         $nowConnectNo = self::$maxCount;
         $client->connect($set, function ($client, $result) use ($tmpClient, $nowConnectNo, $data) {
             try {

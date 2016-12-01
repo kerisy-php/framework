@@ -127,7 +127,6 @@ class UrlMatcher implements UrlMatcherInterface, RequestMatcherInterface
     {
         foreach ($routes as $name => $route) {
             $compiledRoute = $route->compile();
-
             // check the static prefix of the URL first. Only use the more expensive preg_match when it matches
             if ('' !== $compiledRoute->getStaticPrefix() && 0 !== strpos($pathinfo, $compiledRoute->getStaticPrefix())) {
                 continue;

@@ -13,8 +13,13 @@
 
 namespace Kerisy\Coroutine\Base;
 
+use Kerisy\Server\Facade\Context;
 use Kerisy\Support\Exception;
 use Kerisy\Support\Log;
+use Kerisy\Support\Exception\RuntimeExitException;
+use Kerisy\Mvc\Route\Base\Exception\ResourceNotFoundException;
+use Kerisy\Support\Exception\Page404Exception;
+use Kerisy\Coroutine\Event;
 
 class CoroutineTask{
     protected $callbackData;
@@ -45,7 +50,8 @@ class CoroutineTask{
                     return false;
                 }
                 $value = $routine->current();
-                dump(1);
+                
+//                dump("Coroutine run ...");
                 //嵌套的协程
                 if ($value instanceof \Generator) {
                     $this->stack->push($routine);
@@ -90,7 +96,31 @@ class CoroutineTask{
                     $this->routine->send($value);
                     return false;
                 }
-            } catch (\Exception $e) {
+            } catch (Page404Exception $e){
+                while(!$this->stack->isEmpty()) {
+                    $routine = $this->stack->pop();
+                }
+                Event::fire("404",[$e,"Page404Exception",Context::response()]);
+                break;
+            }catch (ResourceNotFoundException $e){
+                while(!$this->stack->isEmpty()) {
+                    $routine = $this->stack->pop();
+                }
+                Event::fire("404",[$e,"ResourceNotFoundException",Context::response()]);
+                break;
+            }catch (RuntimeExitException $e){
+                while(!$this->stack->isEmpty()) {
+                    $routine = $this->stack->pop();
+                }
+                Log::sysinfo("RuntimeExitException:".$e->getMessage());
+                break;
+            }catch (\Exception $e) {
+                while(!$this->stack->isEmpty()) {
+                    $routine = $this->stack->pop();
+                }
+                Log::error(Exception::formatException($e));
+                break;
+            }catch (\Error $e) {
                 while(!$this->stack->isEmpty()) {
                     $routine = $this->stack->pop();
                 }

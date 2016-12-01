@@ -50,4 +50,25 @@ class MsgPackSerialization extends SerializationAbstract
         $result = msgpack_unpack($body);
         return $result;
     }
+
+    /**
+     * 常规序列化
+     * @param $data
+     * @return mixed
+     */
+    public function trans($data)
+    {
+        return msgpack_pack($data);
+    }
+
+    /**
+     * 常规反序列化
+     * @param $data
+     * @return mixed
+     */
+    public function xtrans($data)
+    {
+        return msgpack_unpack($data);
+    }
+    
 }

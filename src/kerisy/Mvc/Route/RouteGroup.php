@@ -26,7 +26,13 @@ class RouteGroup
     protected $methods = [];
     protected static $result = [];
     protected static $groupHash = null;
+    protected static $groupPrefixs = null;
 
+    public static function getGroupPrefixs()
+    {
+        return self::$groupPrefixs;
+    }
+    
     public function setName($name)
     {
         $this->name = $name;
@@ -87,6 +93,8 @@ class RouteGroup
             $name = $this->name . $k;
             $subCollection->add($name, $v);
         }
+
+        self::$groupPrefixs[] = $this->prefix;
 
         $subCollection->addPrefix($this->prefix);
         $subCollection->addDefaults($this->defaults);

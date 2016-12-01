@@ -27,22 +27,34 @@ class Serialization
      * @param $type
      * @return DefaultSerialization|HproseSerialization|IgbinarySerialization|JsonSerialization|MsgPackSerialization
      */
-    public static function get($type)
+    public static function get($type=0)
     {
         $type = intval($type);
-        switch ($type) {
-            case 1:
-                return new DefaultSerialization();
-            case 2:
+        if($type){
+            switch ($type) {
+                case 1:
+                    return new DefaultSerialization();
+                case 2:
+                    return new MsgPackSerialization();
+                case 3:
+                    return new IgbinarySerialization();
+                case 4:
+                    return new JsonSerialization();
+                case 5:
+                    return new HproseSerialization();
+                default:
+                    return new DefaultSerialization();
+            }
+        }else{
+            if (function_exists("msgpack_pack")){
                 return new MsgPackSerialization();
-            case 3:
+            }elseif(function_exists("igbinary_serialize")){
                 return new IgbinarySerialization();
-            case 4:
-                return new JsonSerialization();
-            case 5:
+            }elseif(function_exists("hprose_serialize")){
                 return new HproseSerialization();
-            default:
+            }else{
                 return new DefaultSerialization();
+            }
         }
     }
 

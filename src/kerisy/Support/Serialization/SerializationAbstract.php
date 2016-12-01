@@ -20,6 +20,10 @@ abstract class SerializationAbstract
     public abstract function format($data);
 
     public abstract function xformat($data);
+    
+    public abstract function trans($data);
+    
+    public abstract function xtrans($data);
 
     public static function setBodyOffset($bodyOffset)
     {

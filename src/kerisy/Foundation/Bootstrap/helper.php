@@ -169,3 +169,23 @@ if (!function_exists('array_isset')) {
     }
 }
 
+if (!function_exists('trans')) {
+    /**
+     * isset
+     */
+    function trans($arr)
+    {
+        return  \Kerisy\Support\Serialization\Serialization::get()->trans($arr);
+    }
+}
+
+if (!function_exists('xtrans')) {
+    /**
+     * isset
+     */
+    function xtrans($arr)
+    {
+        return  \Kerisy\Support\Serialization\Serialization::get()->xtrans($arr);
+    }
+}
+

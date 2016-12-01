@@ -88,6 +88,23 @@ class RouteMatch
     }
 
     /**
+     * 修复首页匹配问题
+     * @param $url
+     * @return mixed
+     */
+    protected function groupFilter($url)
+    {
+        $groupPrefixs = RouteGroup::getGroupPrefixs();
+        if(!$groupPrefixs) return $url;
+        $urlTmp = ltrim($url,"/");
+        if(in_array($urlTmp,$groupPrefixs))
+        {
+            return $url."/";
+        }
+        return $url;
+    }
+
+    /**
      * 获取匹配数据
      * @param $url
      * @return array
@@ -98,6 +115,7 @@ class RouteMatch
         $context = new RequestContext();
         $context->fromRequest(Request::createFromGlobals());
         $matcher = new UrlMatcher($rootCollection, $context);
+        $url = $this->groupFilter($url);
         $parameters = $matcher->match($url);
         return $parameters;
     }
@@ -143,7 +161,7 @@ class RouteMatch
         $sysCacheKey = md5(__CLASS__ . $url);
 
         $parameters = syscache()->get($sysCacheKey);
-
+        
         if (!$parameters) {
             $parameters = $this->match($url);
             syscache()->set($sysCacheKey, $parameters, 3600);

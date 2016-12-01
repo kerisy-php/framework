@@ -16,6 +16,7 @@ namespace Kerisy\Cache\Adapter;
 
 use Kerisy\Cache\CacheInterface;
 use Kerisy\Foundation\Storage\Redis;
+use Kerisy\Support\Serialization\Serialization;
 
 class RedisCache implements CacheInterface
 {
@@ -32,6 +33,7 @@ class RedisCache implements CacheInterface
         $obj = new Redis();
         $result = $obj->get($key);
         if (!$result) return $default;
+        $result = Serialization::get()->xtrans($result);
         return $result;
     }
 
@@ -46,6 +48,9 @@ class RedisCache implements CacheInterface
     public function set($key, $value, $expire = -1)
     {
         $obj = new Redis();
+        
+        $value = Serialization::get()->trans($value);
+        
         if ($expire > 0) {
             $result = $obj->setex($key, $expire, $value);
         } else {
