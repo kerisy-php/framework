@@ -13,9 +13,9 @@
 
 namespace Kerisy\Foundation\Command\Server;
 
-use Kerisy\Console\Command\Command;
 use Kerisy\Console\Input\InputInterface;
 use Kerisy\Console\Input\InputOption;
+use Kerisy\Console\Input\InputArgument;
 use Kerisy\Console\Output\OutputInterface;
 use Kerisy\Foundation\Command\Base;
 
@@ -27,10 +27,11 @@ class Restart extends Base
             ->setName('server:restart')
             ->setDescription('restart the all server');
         $this->addOption('--daemonize', '-d', InputOption::VALUE_NONE, 'Is daemonize ?');
+        $this->addOption('--option', '-o', InputOption::VALUE_OPTIONAL, 'diy server option ?');
     }
 
     protected function execute(InputInterface $input,OutputInterface $output)
     {
-        ServerBase::operate("restart", $output, $input);
+        ServerBase::operate("restart", $this, $input);
     }
 }

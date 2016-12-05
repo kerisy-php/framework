@@ -13,20 +13,25 @@
 namespace Kerisy\Foundation\Command\Server;
 
 use Kerisy\Config\Config;
-use Kerisy\Support\Dir;
-use Kerisy\Support\PhpExecutableFinder;
 use Kerisy\Support\Log;
+use Kerisy\Support\PhpExecutableFinder;
 
 
 class ServerBase
 {
-    public static function operate($cmd, $output, $input)
+    protected static $cmdHelp = null;
+
+    public static function operate($cmd, $cmdObj, $input)
     {
-        $root = Dir::formatPath(ROOT_PATH);
-        $daemonizeStr = "";
+        $options = [];
         if (($cmd == 'start' || $cmd == 'restart') && $input->hasOption("daemonize")) {
             $daemonize = $input->getOption('daemonize');
-            $daemonizeStr = $daemonize == 0 ? "" : "-d";
+            if ($daemonize) $options["daemonize"] = "-d";
+        }
+
+        if ($input->hasOption("option")) {
+            $option = $input->getOption('option');
+            if ($option) $options["option"] = $option;
         }
 
         $config = Config::get("server");
@@ -35,7 +40,7 @@ class ServerBase
             return;
         }
 
-        $str ='
+        $str = '
 ██╗  ██╗███████╗██████╗ ██╗███████╗██╗   ██╗
 ██║ ██╔╝██╔════╝██╔══██╗██║██╔════╝╚██╗ ██╔╝
 █████╔╝ █████╗  ██████╔╝██║███████╗ ╚████╔╝ 
@@ -44,15 +49,16 @@ class ServerBase
 ╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝╚═╝╚══════╝   ╚═╝                                                    
         ';
         Log::show($str);
-        self::doOperate($cmd, $daemonizeStr, $config);
+        self::doOperate($cmd, $options, $config, $cmdObj);
         sleep(1);
         exit(0);
     }
 
 
-    public static function doOperate($command, $daemonizeStr, array $config)
+    public static function doOperate($command, $options, array $config, $cmdObj)
     {
-        self::runCmd($command, $config, $daemonizeStr);
+        self::runCmd($command, $config, $options, $cmdObj);
+        $daemonizeStr = array_isset($options, "daemonize");
         if ($daemonizeStr) {
             \swoole_process::wait(false);
         } else {
@@ -61,8 +67,10 @@ class ServerBase
 
     }
 
-    protected static function runCmd($type, $config, $daemonizeStr)
+    protected static function runCmd($type, $config, $options, $cmdObj)
     {
+        $daemonizeStr = array_isset($options, "daemonize");
+        $option = array_isset($options, "option");
         $runFileName = $_SERVER['SCRIPT_FILENAME'];
         $phpbin = self::getPhpBinary();
         $servers = $config['servers'];
@@ -70,7 +78,13 @@ class ServerBase
             foreach ($servers as $v) {
                 $params = [$runFileName, $v . ":" . $type];
                 if ($daemonizeStr) array_push($params, $daemonizeStr);
-                self::process($phpbin, $params);
+                if ($option) {
+                    $optionTmp = explode(",", $option);
+                    foreach ($optionTmp as $v) {
+                        array_push($params, $v);
+                    }
+                }
+                self::process($phpbin, $params, $cmdObj);
                 self::check($config);
             }
         }
@@ -97,12 +111,44 @@ class ServerBase
         }
     }
 
-    protected static function process($phpbin, $param)
+    protected static function process($phpbin, $param, $cmdObj)
     {
-        $process = new \swoole_process(function (\swoole_process $worker) use ($phpbin, $param) {
+        $process = new \swoole_process(function (\swoole_process $worker) use ($phpbin, $param, $cmdObj) {
+            $param = self::getCmdHelp($param, $cmdObj);
             $worker->exec($phpbin, $param);
         }, false);
         $process->start();
+    }
+
+    protected static function getCmdHelp($param, $cmdObj)
+    {
+        $paramTmp = $param;
+        $cmdName = array_isset($param, 1);
+        if (!$cmdName) return;
+        $obj = $cmdObj->getCmdDefinition($cmdName);
+        $op = array_slice($param, 2);
+        $tmp = [];
+        foreach ($op as $v) {
+            $shortName = substr(ltrim($v, "-"), 0, 1);
+//            dump($shortName);
+            $check = $obj->hasShortcut($shortName);
+            if ($check) {
+                $tmp[] = $v;
+                continue;
+            }
+
+            $shortName = current(explode("=", ltrim($v, "-")));
+//            dump($shortName);
+            $check = $obj->hasOption($shortName);
+            if ($check) {
+                $tmp[] = $v;
+            }
+        }
+        $newParam = array_slice($paramTmp, 0, 2);
+
+        if ($tmp) $newParam = array_merge($newParam, $tmp);
+//        dump($newParam);
+        return $newParam;
     }
 
     protected static function getPhpBinary()

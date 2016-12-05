@@ -48,6 +48,7 @@ class CompilerEngine extends PhpEngine
         $env->decrementRender();
         $doneRendering = $env->doneRendering();
         $env->incrementRender();
+        if(!Di::has("fis")) return $result;
         $fis = Di::get("fis");
         $doneRendering && ($result = $fis->filter($result));
         return $result;

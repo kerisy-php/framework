@@ -42,7 +42,7 @@ class Application
     
     public function httpBoostrap()
     {
-        $this->initRelease();
+//        $this->initRelease();
         RouteBootstrap::getInstance();
     }
 

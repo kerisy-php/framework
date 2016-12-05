@@ -22,4 +22,14 @@ class Base extends Command
       parent::__construct();
       Bootstrap::getInstance(ROOT_PATH);
   }
+
+    /**
+     * @param $cmdName
+     * @return \Kerisy\Console\Input\InputDefinition
+     */
+    public function getCmdDefinition($cmdName)
+    {
+        $result = $this->getApplication()->find($cmdName);
+        return $result->getDefinition();
+    }
 }

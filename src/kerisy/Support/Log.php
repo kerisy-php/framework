@@ -12,6 +12,7 @@
  */
 namespace Kerisy\Support;
 
+use Kerisy\Server\Context as Content;
 use Kerisy\Server\Facade\Context as FContent;
 
 class Log
@@ -63,7 +64,7 @@ class Log
 
     protected static function getOlineIp()
     {
-        if(FContent::hasSet("request")){
+        if(Content::hasSet("request")){
             $ip = FContent::request()->server->get("HTTP_X_FORWARDED_FOR");
             if(!$ip){
                 $ip = FContent::request()->server->get("REMOTE_ADDR");

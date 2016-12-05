@@ -25,10 +25,11 @@ class Start extends Base
         $this->setName('server:start')
             ->setDescription('start all servers');
         $this->addOption('--daemonize', '-d', InputOption::VALUE_NONE, 'Is daemonize ?');
+        $this->addOption('--option', '-o', InputOption::VALUE_OPTIONAL, 'diy server option ?');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        ServerBase::operate("start", $output, $input);
+        ServerBase::operate("start", $this, $input);
     }
 }

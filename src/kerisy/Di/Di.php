@@ -139,6 +139,18 @@ class Di implements DiInterface
     }
 
     /**
+     * 是否存在
+     *
+     * @param $name
+     * @return bool
+     */
+    public static function has($name)
+    {
+        $service = self::$containerInstance->has($name);
+        return $service?true:false;
+    }
+
+    /**
      * set a no share service
      *
      * @param $name

@@ -360,6 +360,10 @@ class InputDefinition
         return $this->shortcuts[$shortcut];
     }
 
+    public function getShortcuts(){
+        return $this->shortcuts;
+    }
+
     /**
      * Gets the synopsis.
      *

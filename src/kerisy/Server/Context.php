@@ -33,7 +33,7 @@ class Context
         }
     }
 
-    public function hasSet($key)
+    public static function hasSet($key)
     {
         return isset(self::$map[$key][0]);
     }

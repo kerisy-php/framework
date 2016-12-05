@@ -114,14 +114,15 @@ class Factory
     {
         $this->finder = $finder;
         $this->engines = $engines;
-
-        Di::set("fis", ["class"=>\Kerisy\Mvc\View\Engine\Blade\FisResource::class]);
-
-        $fis = Di::get("fis");
-        $fis->setPath($fisConfig);
         
+        if($fisConfig){
+            Di::set("fis", ["class"=>\Kerisy\Mvc\View\Engine\Blade\FisResource::class]);
+            $fis = Di::get("fis");
+            $fis->setPath($fisConfig);
+            $this->share('__fis', $fis);
+        }
+
         $this->share('__env', $this);
-        $this->share('__fis', $fis);
     }
 
     /**

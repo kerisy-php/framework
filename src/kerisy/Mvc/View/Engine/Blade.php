@@ -84,6 +84,7 @@ class Blade implements ViewInterface
 
         $fisConfig = "";
         $fisPath = Config::get("_release.path");
+        
         if($fisPath){
             $fisConfig = Dir::formatPath($fisPath).Config::get("app.view.fis.map_path");
         }

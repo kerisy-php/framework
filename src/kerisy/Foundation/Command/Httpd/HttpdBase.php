@@ -14,6 +14,7 @@ namespace Kerisy\Foundation\Command\Httpd;
 
 use Kerisy\Config\Config;
 use Kerisy\Foundation\Application;
+use Kerisy\Mvc\View\Engine\Blade\Compilers\BladeCompiler;
 use Kerisy\Server\HttpServer;
 use Kerisy\Support\Arr;
 use Kerisy\Support\Dir;
@@ -25,7 +26,7 @@ class HttpdBase
     public static function operate($cmd, $output, $input)
     {
         ElapsedTime::setStartTime(ElapsedTime::SYS_START);
-
+        
         $root = Dir::formatPath(ROOT_PATH);
 
         $config = Config::get("server.httpd");
@@ -46,11 +47,24 @@ class HttpdBase
             exit(0);
         }
 
+        $config['server']['usefis'] = 0;
+        $config['server']['releasefis'] = 0;
+
         if ($input->hasOption("daemonize")) {
             $daemonize = $input->getOption('daemonize');
             $config['server']['daemonize'] = $daemonize == 0 ? 0 : 1;
         }
 
+        if ($input->hasOption("usefis")) {
+            $usefis = $input->getOption('usefis');
+            $config['server']['usefis'] = $usefis == 0 ? 0 : 1;
+        }
+
+        if ($input->hasOption("releasefis")) {
+            $releasefis = $input->getOption('releasefis');
+            $config['server']['releasefis'] = $releasefis?$releasefis:null;
+        }
+        
         if (!isset($config['server']['host'])) {
             Log::sysinfo("httpd.server.host config not config");
             exit(0);
@@ -68,7 +82,7 @@ class HttpdBase
     protected static function setRelease()
     {
         $release = Config::get("app.view.fis.compile_path");
-        if(is_dir($release)){
+        if (is_dir($release)) {
             Config::set("_release.path", $release);
         }
     }
@@ -103,20 +117,20 @@ class HttpdBase
 
         $config['server'] = Arr::merge($defaultConfig, $config['server']);
 
-        if(isset($config['server']['log_file']) && !is_dir(dirname($config['server']['log_file']))){
+        if (isset($config['server']['log_file']) && !is_dir(dirname($config['server']['log_file']))) {
             mkdir(dirname($config['server']['log_file']), "0777", true);
         }
 
-        if(isset($config['server']['static_path']) && !is_dir($config['server']['static_path'])){
+        if (isset($config['server']['static_path']) && !is_dir($config['server']['static_path'])) {
             mkdir($config['server']['static_path'], "0777", true);
         }
 
         $viewCachePath = Config::get("app.view.compile_path");
-        if(!is_dir($viewCachePath)){
+        if (!is_dir($viewCachePath)) {
             mkdir($viewCachePath, "0777", true);
         }
-        
-        
+
+
         $serverName = $appName . "-httpd-master";
         exec("ps axu|grep " . $serverName . "$|awk '{print $2}'", $masterPidArr);
         $masterPid = $masterPidArr ? current($masterPidArr) : null;
@@ -126,15 +140,20 @@ class HttpdBase
             return;
         }
 
-        if($command == "start"||$command=='restart'){
-            self::addRelease($config['server']['daemonize']);
+        self::BladeCompileInit();
+
+        if($config['server']['usefis']){
+            self::setRelease();
+            $fisPath = Config::get("_release.path");
+            if ($fisPath) {
+                $config['server']['_release.path'] = $fisPath;
+            }
+            self::useFis();
         }
 
-        self::setRelease();
-
-        $fisPath = Config::get("_release.path");
-        if ($fisPath) {
-            $config['server']['_release.path'] = $fisPath;
+        $releasePath = Config::get("app.view.fis.compile_path");
+        if (($config['server']['releasefis']!=null) && $releasePath && ($command == "start" || $command == 'restart')) {
+            self::addRelease($config['server']['releasefis']);
         }
 
         if ($command !== 'start' && $command !== 'restart' && !$masterPid) {
@@ -165,6 +184,21 @@ class HttpdBase
         }
     }
 
+    protected static function BladeCompileInit()
+    {
+        $viewStaticPath = Config::get("server.httpd.server.static_path");
+        $viewStaticPath = Dir::formatPath($viewStaticPath);
+        $rootPath = Dir::formatPath(ROOT_PATH);
+        $staticPath = "/" . str_replace($rootPath, "", $viewStaticPath);
+        BladeCompiler::setStaticPath($staticPath);
+    }
+
+    protected static function useFis()
+    {
+        BladeCompiler::setIsFis(true);
+    }
+
+
     protected static function stop($appName)
     {
         $killStr = $appName . "-httpd";
@@ -178,7 +212,7 @@ class HttpdBase
         $obj->start();
     }
 
-    protected static function addRelease($daemonize=0)
+    protected static function addRelease($releasefis = null)
     {
         $file = [
             "fis-conf.js", "package.json"
@@ -195,40 +229,42 @@ class HttpdBase
 
         $nodeModulesPath = ROOT_PATH . "/node_modules";
         if (!is_dir($nodeModulesPath)) {
-            if(!self::checkCmd("npm")) return ;
-            Log::sysinfo("dir 'node_modules' not found , please run 'npm install' ");
+            if (!self::checkCmd("npm")) return;
+            Log::error("dir 'node_modules' not found , please run 'npm install' ");
             self::removeRelease();
-            return ;
+            return;
         }
 
-        if(!self::checkCmd("fis3")) return ;
+        if (!self::checkCmd("fis3")) return;
 
         $fisPath = Config::get("app.view.fis.compile_path");
-        if($daemonize){
-            $cmdStr = "fis3 release prod -d ".$fisPath;
-        }else{
-            $cmdStr = "fis3 release -d ".$fisPath;
+        if ($releasefis !=null) {
+            $cmdStr = "fis3 release {$releasefis} -d " . $fisPath;
+        } else {
+            $cmdStr = "fis3 release -d " . $fisPath;
         }
+//        dump($cmdStr);
         exec($cmdStr);
     }
 
     protected static function removeRelease()
     {
         $release = Config::get("app.view.fis.compile_path");
-        if(is_dir($release)){
+        if (is_dir($release)) {
             self::deldir($release);
-            return ;
+            return;
         }
     }
 
 
-    protected static function deldir($dir) {
+    protected static function deldir($dir)
+    {
         //先删除目录下的文件：
-        $dh=opendir($dir);
-        while ($file=readdir($dh)) {
-            if($file!="." && $file!="..") {
-                $fullpath=$dir."/".$file;
-                if(!is_dir($fullpath)) {
+        $dh = opendir($dir);
+        while ($file = readdir($dh)) {
+            if ($file != "." && $file != "..") {
+                $fullpath = $dir . "/" . $file;
+                if (!is_dir($fullpath)) {
                     @unlink($fullpath);
                 } else {
                     self::deldir($fullpath);
@@ -238,7 +274,7 @@ class HttpdBase
 
         closedir($dh);
         //删除当前文件夹：
-        if(rmdir($dir)) {
+        if (rmdir($dir)) {
             return true;
         } else {
             return false;
@@ -247,12 +283,12 @@ class HttpdBase
 
     protected static function checkCmd($cmd)
     {
-        $cmdStr = "command -v ".$cmd;
+        $cmdStr = "command -v " . $cmd;
         exec($cmdStr, $check);
-        if(!$check){
+        if (!$check) {
             Log::error("command {$cmd} Not Found");
             return "";
-        }else{
+        } else {
             return current($check);
         }
     }

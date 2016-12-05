@@ -25,6 +25,8 @@ class Start extends Base
         $this->setName('httpd:start')
             ->setDescription('start the http server ');
         $this->addOption('--daemonize', '-d', InputOption::VALUE_NONE, 'Is daemonize ?');
+        $this->addOption('--usefis', '-u', InputOption::VALUE_NONE, 'use fis ?');
+        $this->addOption('--releasefis', '-r', InputOption::VALUE_OPTIONAL, 'release fis ?');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)

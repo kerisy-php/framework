@@ -16,6 +16,7 @@ namespace Kerisy\Foundation\Command\Server;
 use Kerisy\Console\Input\InputInterface;
 use Kerisy\Console\Output\OutputInterface;
 use Kerisy\Foundation\Command\Base;
+use Kerisy\Console\Input\InputOption;
 
 class Status extends Base
 {
@@ -24,10 +25,11 @@ class Status extends Base
         $this
             ->setName('server:status')
             ->setDescription('show all server status');
+            $this->addOption('--option', '-o', InputOption::VALUE_OPTIONAL, 'diy server option ?');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        ServerBase::operate("status", $output, $input);
+        ServerBase::operate("status", $this, $input);
     }
 }

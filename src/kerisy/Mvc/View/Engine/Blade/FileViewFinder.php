@@ -81,6 +81,7 @@ class FileViewFinder implements ViewFinderInterface
         if ($this->hasHintInformation($name = trim($name))) {
             return $this->views[$name] = $this->findNamedPathView($name);
         }
+ 
         $this->views[$name] = $this->findInPaths($name, $this->paths);
 
         if(function_exists("syscache")){

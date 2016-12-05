@@ -16,6 +16,7 @@ namespace Kerisy\Foundation\Command\Server;
 use Kerisy\Console\Input\InputInterface;
 use Kerisy\Console\Output\OutputInterface;
 use Kerisy\Foundation\Command\Base;
+use Kerisy\Console\Input\InputOption;
 
 class Stop extends Base
 {
@@ -24,10 +25,11 @@ class Stop extends Base
         $this
             ->setName('server:stop')
             ->setDescription('stop all server');
+        $this->addOption('--option', '-o', InputOption::VALUE_OPTIONAL, 'diy server option ?');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        ServerBase::operate("stop", $output, $input);
+        ServerBase::operate("stop", $this, $input);
     }
 }
