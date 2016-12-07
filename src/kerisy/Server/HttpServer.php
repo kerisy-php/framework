@@ -233,7 +233,7 @@ class HttpServer
             Event::fire("404",[$e,"ResourceNotFoundException",$response]);
         }catch (RuntimeExitException $e){
             Event::fire("request.end",$workerId);
-            Log::syslog("RuntimeExitException:".$e->getMessage());
+            Log::sysinfo("RuntimeExitException:".$e->getMessage());
         }catch (\Exception $e) {
             Event::fire("request.end",$workerId);
             Log::error(Exception::formatException($e));

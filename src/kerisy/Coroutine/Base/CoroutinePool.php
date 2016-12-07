@@ -15,7 +15,6 @@
 
 namespace Kerisy\Coroutine\Base;
 
-
 abstract class CoroutinePool
 {
     const MAX_TOKEN = 1000;
@@ -61,7 +60,7 @@ abstract class CoroutinePool
     {
         $callback = self::$callBacks[$data['token']];
         unset(self::$callBacks[$data['token']]);
-        if ($callback != null) {
+        if ($callback !== null) {
             call_user_func_array($callback, ['data' => $data['result']]);
         }
     }

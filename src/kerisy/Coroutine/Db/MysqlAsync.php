@@ -51,9 +51,11 @@ class MysqlAsync extends CoroutinePool
                         throw new \Exception("[mysql_client Error]:" . $client->error . "[sql]:" . $data['sql']);
                     }
                 } else {
+
                     if($func == 'lastInsertId'){
                         $data['result'] = $client->insert_id;
-                    }elseif($func == 'fetch'){
+                    }
+                    elseif($func == 'fetch'){
                         $data['result'] = $result?current($result):null;
                     }
                     else{

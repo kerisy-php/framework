@@ -190,11 +190,8 @@ class Mysql extends SQlAdapter
             }
             return $result;
         } else {
-            $rs = $this->fetch($sql, self::CONN_SLAVE);
-            if ($rs instanceof \Generator) {
-                $rs = yield $rs;
-            }
-            $result = $rs ? $rs[$field] : "";
+            $rs = yield $this->fetch($sql, self::CONN_SLAVE);
+            $result = $rs ? $rs[$field]: null;
             return $result;
         }
     }

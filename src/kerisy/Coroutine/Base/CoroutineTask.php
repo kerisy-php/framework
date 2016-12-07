@@ -13,15 +13,16 @@
 
 namespace Kerisy\Coroutine\Base;
 
+use Kerisy\Coroutine\Event;
+use Kerisy\Mvc\Route\Base\Exception\ResourceNotFoundException;
 use Kerisy\Server\Facade\Context;
 use Kerisy\Support\Exception;
-use Kerisy\Support\Log;
-use Kerisy\Support\Exception\RuntimeExitException;
-use Kerisy\Mvc\Route\Base\Exception\ResourceNotFoundException;
 use Kerisy\Support\Exception\Page404Exception;
-use Kerisy\Coroutine\Event;
+use Kerisy\Support\Exception\RuntimeExitException;
+use Kerisy\Support\Log;
 
-class CoroutineTask{
+class CoroutineTask
+{
     protected $callbackData;
     protected $stack;
     protected $callData;
@@ -40,18 +41,19 @@ class CoroutineTask{
      * 协程调度器
      * @param \Generator $routine
      */
-    public function work(\Generator $routine){
+    public function work(\Generator $routine)
+    {
         while (true) {
             try {
-                if(!empty($this->exception)){
+                if (!empty($this->exception)) {
                     throw new \Exception($this->exception);
                 }
-                if (!$routine) {
+                if (empty($routine)) {
                     return false;
                 }
+
                 $value = $routine->current();
-                
-//                dump("Coroutine run ...");
+//                dump("Coroutine run ..." . rand(0, 999));
                 //嵌套的协程
                 if ($value instanceof \Generator) {
                     $this->stack->push($routine);
@@ -59,7 +61,7 @@ class CoroutineTask{
                     continue;
                 }
                 //异步IO的父类
-                if(is_subclass_of($value, 'Kerisy\Coroutine\Base\CoroutineBase')){
+                if (is_subclass_of($value, 'Kerisy\Coroutine\Base\CoroutineBase')) {
                     $this->stack->push($routine);
                     $value->send([$this, 'callback']);
                     return;
@@ -67,17 +69,17 @@ class CoroutineTask{
 
                 if ($value instanceof \Swoole\Coroutine\RetVal) {
                     // end yeild
-                    Log::syslog(__METHOD__ . " yield end words == " . print_r($value, true), __CLASS__);
+                    Log::sysinfo(__METHOD__ . " yield end words == " . print_r($value, true), __CLASS__);
                     return false;
                 }
-
-                if($value===null) {
+//                Log::info($value);
+                if ($value === null) {
                     try {
                         $return = $routine->getReturn();
-                    }catch(\Exception $e){
+                    } catch (\Exception $e) {
                         $return = null;
                     }
-                    if(!empty($return)){
+                    if (!empty($return)) {
                         $this->callbackData = $return;
                     }
                     if (!$this->stack->isEmpty()) {
@@ -92,36 +94,36 @@ class CoroutineTask{
                             continue;
                         }
                     }
-                }else{
+                } else {
                     $this->routine->send($value);
                     return false;
                 }
-            } catch (Page404Exception $e){
-                while(!$this->stack->isEmpty()) {
+            } catch (Page404Exception $e) {
+                while (!$this->stack->isEmpty()) {
                     $routine = $this->stack->pop();
                 }
-                Event::fire("404",[$e,"Page404Exception",Context::response()]);
+                Event::fire("404", [$e, "Page404Exception", Context::response()]);
                 break;
-            }catch (ResourceNotFoundException $e){
-                while(!$this->stack->isEmpty()) {
+            } catch (ResourceNotFoundException $e) {
+                while (!$this->stack->isEmpty()) {
                     $routine = $this->stack->pop();
                 }
-                Event::fire("404",[$e,"ResourceNotFoundException",Context::response()]);
+                Event::fire("404", [$e, "ResourceNotFoundException", Context::response()]);
                 break;
-            }catch (RuntimeExitException $e){
-                while(!$this->stack->isEmpty()) {
+            } catch (RuntimeExitException $e) {
+                while (!$this->stack->isEmpty()) {
                     $routine = $this->stack->pop();
                 }
-                Log::sysinfo("RuntimeExitException:".$e->getMessage());
+                Log::sysinfo("RuntimeExitException:" . $e->getMessage());
                 break;
-            }catch (\Exception $e) {
-                while(!$this->stack->isEmpty()) {
+            } catch (\Exception $e) {
+                while (!$this->stack->isEmpty()) {
                     $routine = $this->stack->pop();
                 }
                 Log::error(Exception::formatException($e));
                 break;
-            }catch (\Error $e) {
-                while(!$this->stack->isEmpty()) {
+            } catch (\Error $e) {
+                while (!$this->stack->isEmpty()) {
                     $routine = $this->stack->pop();
                 }
                 Log::error(Exception::formatException($e));
@@ -129,6 +131,7 @@ class CoroutineTask{
             }
         }
     }
+
     /**
      * [callback description]
      * @param  [type]   $r        [description]
@@ -143,12 +146,12 @@ class CoroutineTask{
             继续work的函数实现 ，栈结构得到保存
          */
 //        Log::log('callback:'.__METHOD__.print_r($data, true));
-        if(!empty($data['exception'])){
+        if (!empty($data['exception'])) {
             Log::error($data['exception']);
-        }else {
+        } else {
             $gen = $this->stack->pop();
             $this->callbackData = $data;
-            $value = $gen->send($this->callbackData);
+            $gen->send($this->callbackData);
             $this->work($gen);
         }
 

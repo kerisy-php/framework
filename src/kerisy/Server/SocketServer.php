@@ -96,7 +96,7 @@ class SocketServer
             Event::fire("404", [$e, "ResourceNotFoundException", [$serv, $fd, $this->adapter]]);
         } catch (RuntimeExitException $e) {
             Event::fire("request.end",$workerId);
-            Log::syslog("RuntimeExitException:" . $e->getMessage());
+            Log::sysinfo("RuntimeExitException:" . $e->getMessage());
         } catch (\Exception $e) {
             Event::fire("request.end",$workerId);
             Log::error(ExceptionFormat::formatException($e));
@@ -113,7 +113,7 @@ class SocketServer
             $result = FacadeTask::start($data);
             return [true, $result, ''];
         } catch (RuntimeExitException $e) {
-            Log::syslog("RuntimeExitException:" . $e->getMessage());
+            Log::sysinfo("RuntimeExitException:" . $e->getMessage());
         } catch (\Exception $e) {
             $exception = ExceptionFormat::formatException($e);
             Log::error($exception);

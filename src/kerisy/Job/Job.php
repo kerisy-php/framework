@@ -105,7 +105,7 @@ class Job
             $sleep = $pv['sleep'] ? $pv['sleep'] : 1;
             sleep($sleep);
         } catch (RuntimeExitException $e){
-            Log::syslog("RuntimeExitException:".$e->getMessage());
+            Log::sysinfo("RuntimeExitException:".$e->getMessage());
         }catch (\Exception $e) {
             Log::error("Job ERROR : \n" . Exception::formatException($e));
         } catch (\Error $e) {
