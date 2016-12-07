@@ -12,18 +12,20 @@
 
 namespace Kerisy\Foundation;
 
-use Kerisy\Di\Di;
-use Kerisy\Support\Arr;
-use Kerisy\Support\Dir;
 use Kerisy\Config\Config;
-use Kerisy\Http\Response;
 use Kerisy\Http\Request;
+use Kerisy\Http\Response;
 use Kerisy\Mvc\AssignData;
 use Kerisy\Mvc\Template;
-use Kerisy\Support\Log;
+use Kerisy\Support\Arr;
+use Kerisy\Support\Dir;
+use Kerisy\Support\ElapsedTime;
 
 class Controller
 {
+
+    const RESPONSE_CODE = 200;
+    const RESPONSE_NORMAL_ERROR_CODE = 500;
 
     /**
      * @var \Kerisy\Http\View;
@@ -41,7 +43,7 @@ class Controller
     protected $response = null;
 
 
-    public function __construct(Request $request=null, Response $response=null)
+    public function __construct(Request $request = null, Response $response = null)
     {
         $this->request = $request;
         $this->response = $response;
@@ -60,15 +62,15 @@ class Controller
     {
 
         $fisPath = Config::get("_release.path");
-        if($fisPath){
+        if ($fisPath) {
             $fis = Config::get("app.view.fis.view_path");
-            $viewRoot = Dir::formatPath($fisPath).$fis;
-        }else{
+            $viewRoot = Dir::formatPath($fisPath) . $fis;
+        } else {
             $viewRoot = Config::get("app.view.path");
         }
 
         $theme = Config::get("app.view.theme");
-        $realViewRoot = Dir::formatPath($viewRoot).$theme;
+        $realViewRoot = Dir::formatPath($viewRoot) . $theme;
         Template::setViewRoot($realViewRoot);
 
         $viewCachePath = Config::get("app.view.compile_path");
@@ -91,5 +93,24 @@ class Controller
         $content = $this->render($viewPath, $assign);
         $this->response->end($content);
     }
-    
+
+
+    /**
+     * @param $data
+     * @param int $errorCode
+     * @param string $errodMsg
+     */
+    public function response($data, $errorCode = self::RESPONSE_CODE, $errodMsg = '')
+    {
+        $elapsedTime = ElapsedTime::runtime("sys_elapsed_time");
+        $result = [];
+        $result['result'] = $data;
+        $result['errorCode'] = $errorCode;
+        $result['errodMsg'] = $errodMsg;
+        $result['elapsedTime'] = $elapsedTime;
+        $this->response->header("Content-type", "application/json");
+        $content = json_encode($result, JSON_UNESCAPED_UNICODE);
+        $this->response->end($content);
+    }
+
 }

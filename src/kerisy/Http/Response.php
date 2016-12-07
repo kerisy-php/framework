@@ -24,18 +24,12 @@ class Response
     protected $headerStack = [];
 
     /**
-     * @var \Kerisy\Http\View;
-     */
-    public $view;
-
-    /**
      * 初始化
      * Response constructor.
      * @param SwooleHttpResponse $response
      */
     public function __construct(SwooleHttpResponse $response)
     {
-        $this->view = new View();
         $this->response = $response;
     }
 

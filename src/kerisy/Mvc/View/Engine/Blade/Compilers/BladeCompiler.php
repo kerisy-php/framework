@@ -1112,6 +1112,7 @@ class BladeCompiler extends Compiler implements CompilerInterface
             self::$staticPath = trim(self::$staticPath,"/");
             $path = str_replace(self::$staticPath,"",$params[0]);
             $path = trim($path, "/");
+            $path = "/".$path;
             $pathArr = pathinfo($path);
             $extension = array_isset($pathArr, "extension");
             if (strtolower($extension) == 'js') {

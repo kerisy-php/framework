@@ -31,7 +31,7 @@ class Exception
         $message .= "Stack trace\n";
 
         $trace = explode("\n", $e->getTraceAsString());
-        $trace = array_slice($trace,0,7);
+//        $trace = array_slice($trace,0,7);
         $message .= implode("\n", $trace);
         return $message;
     }

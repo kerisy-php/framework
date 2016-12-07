@@ -26,4 +26,9 @@ class AssignData
     {
         $this->assignData[$name] = $value;
     }
+    
+    public function __get($name)
+    {
+        return isset($this->assignData[$name])?$this->assignData[$name]:null;
+    }
 }

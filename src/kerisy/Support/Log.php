@@ -117,12 +117,7 @@ class Log
     {
         $msg = isset($arguments[0])?$arguments[0]:"";
         if(!is_string($arguments[0])){
-            ob_start();
-            var_dump($arguments[0]);
-            $msg = ob_get_clean();
-            $msg = explode("\n",$msg);
-            array_shift($msg);
-            $msg = implode("\n",$msg);
+            $msg = print_r($arguments[0], true);
         }
 
         $data = self::preData();

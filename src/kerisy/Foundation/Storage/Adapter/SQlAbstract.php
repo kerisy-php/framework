@@ -266,13 +266,7 @@ abstract class SQlAbstract
         if ($returnCount) {
             $sqlCount = 'SELECT FOUND_ROWS() as cnt';
             $rsCount = $this->fetch($sqlCount, self::CONN_SLAVE);
-            if ($rsCount instanceof \Generator) {
-                $rsCount = yield $rsCount;
-            }
             $this->_total = $rsCount['cnt'];
-        }
-        if ($rs instanceof \Generator) {
-            $rs = yield $rs;
         }
         return $rs;
     }
@@ -422,14 +416,7 @@ abstract class SQlAbstract
         if ($returnCount) {
             $sqlCount = "SELECT count(*) as cnt FROM  `{$tableName}` " . $whereSql;
             $rsCount = $this->fetch($sqlCount, self::CONN_SLAVE);
-            if ($rsCount instanceof \Generator) {
-                $rsCount = yield $rsCount;
-            }
             $this->_total = $rsCount['cnt'];
-        }
-
-        if ($rs instanceof \Generator) {
-            $rs = yield $rs;
         }
         
         return $rs;
@@ -471,9 +458,6 @@ abstract class SQlAbstract
 
         if ($isMore) {
             $rs = $this->fetchAll($sql, self::CONN_SLAVE);
-            if ($rs instanceof \Generator) {
-                $rs = yield $rs;
-            }
             if (!$rs) {
                 return array();
             }
@@ -489,9 +473,6 @@ abstract class SQlAbstract
             return $result;
         } else {
             $rs = $this->fetch($sql, self::CONN_SLAVE);
-            if ($rs instanceof \Generator) {
-                $rs = yield $rs;
-            }
             $result = $rs ? $rs[$field] : "";
             return $result;
         }
@@ -536,9 +517,6 @@ abstract class SQlAbstract
         $page = $page?$page:1;
         $limit = ($page-1)*$pageSize;
         $list = $this->gets($where,$orderBy,$pageSize,$limit,$groupBy,true);
-        if ($list instanceof \Generator) {
-            $list = yield $list;
-        }
         $count = $this->getTotal();
         $totalPage = $count==0?0:ceil($count/$pageSize);
         return array($list,$count, $totalPage);
@@ -557,9 +535,6 @@ abstract class SQlAbstract
         $limit = ($page-1)*$pageSize;
         $sql .= " LIMIT ".$limit.", ".$pageSize;
         $list = $this->selectAll($sql,array(),true);
-        if ($list instanceof \Generator) {
-            $list = yield $list;
-        }
         $count = $this->getTotal();
         $totalPage = $count==0?0:ceil($count/$pageSize);
         return array($list,$count, $totalPage);
@@ -582,9 +557,6 @@ abstract class SQlAbstract
         }
         $sql = "SELECT count(*) as cnt FROM `{$tableName}` " . $whereSql . $groupBySql;
         $return = $this->fetch($sql, self::CONN_SLAVE);
-        if ($return instanceof \Generator) {
-            $return = yield $return;
-        }
         return $return['cnt'];
     }
 
