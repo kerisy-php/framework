@@ -88,13 +88,14 @@ class RouteGroup
         $result = RouteBase::getResult($key);
 
         if (!$result) return [];
-
+        
         foreach ($result as $k => $v) {
-            $name = $this->name . $k;
+//            $name = $this->name . $k;// todo
+            $name = $k;
             $subCollection->add($name, $v);
         }
-
-        self::$groupPrefixs[] = $this->prefix;
+        
+        if($this->prefix) self::$groupPrefixs[] = $this->prefix;
 
         $subCollection->addPrefix($this->prefix);
         $subCollection->addDefaults($this->defaults);

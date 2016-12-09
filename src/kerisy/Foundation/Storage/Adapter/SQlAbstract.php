@@ -497,7 +497,6 @@ abstract class SQlAbstract
         if ($orderBy) {
             $sql .= " ORDER BY " . $orderBy;
         }
-
         $this->field = null;
         
         return $this->fetch($sql, self::CONN_SLAVE);

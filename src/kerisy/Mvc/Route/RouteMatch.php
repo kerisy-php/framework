@@ -97,6 +97,7 @@ class RouteMatch
         $groupPrefixs = RouteGroup::getGroupPrefixs();
         if(!$groupPrefixs) return $url;
         $urlTmp = ltrim($url,"/");
+
         if(in_array($urlTmp,$groupPrefixs))
         {
             return $url."/";
@@ -241,21 +242,28 @@ class RouteMatch
      */
     private function runBase($require, $parameters, $otherData = null)
     {
-
         if ($parameters) {
             $controller = isset($parameters['_controller']) ? $parameters['_controller'] : null;
             if ($controller) {
                 $middleware = isset($parameters['_middleware']) ? $parameters['_middleware'] : null;
+
                 if ($middleware) {
                     $midd = self::$middlewareConfig;
                     if ($midd) {
-                        foreach ($middleware as $v) {
-                            if (isset($midd[$v])) {
-                                $class = $midd[$v];
-                                $obj = new $class();
-                                $rs = call_user_func_array([$obj, "perform"], $require);
-                                if (!$rs) return;
+                        if(is_array($middleware)){
+                            foreach ($middleware as $v) {
+                                if (isset($midd[$v])) {
+                                    $class = $midd[$v];
+                                    $obj = new $class();
+                                    $rs = call_user_func_array([$obj, "perform"], $require);
+                                    if (!$rs) return;
+                                }
                             }
+                        }elseif(is_string($middleware)){
+                            $class = $midd[$middleware];
+                            $obj = new $class();
+                            $rs = call_user_func_array([$obj, "perform"], $require);
+                            if (!$rs) return;
                         }
                     }
                 }

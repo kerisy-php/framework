@@ -48,6 +48,7 @@ class CoroutineTask
                 if (!empty($this->exception)) {
                     throw new \Exception($this->exception);
                 }
+
                 if (empty($routine)) {
                     return false;
                 }
@@ -72,8 +73,8 @@ class CoroutineTask
                     Log::sysinfo(__METHOD__ . " yield end words == " . print_r($value, true), __CLASS__);
                     return false;
                 }
-//                Log::info($value);
-                if ($value === null) {
+
+                if ($value === null && $value != '_null_') {
                     try {
                         $return = $routine->getReturn();
                     } catch (\Exception $e) {
@@ -95,6 +96,7 @@ class CoroutineTask
                         }
                     }
                 } else {
+                    if($value == '_null_') $value= null;
                     $this->routine->send($value);
                     return false;
                 }
@@ -145,7 +147,6 @@ class CoroutineTask
         /*
             继续work的函数实现 ，栈结构得到保存
          */
-//        Log::log('callback:'.__METHOD__.print_r($data, true));
         if (!empty($data['exception'])) {
             Log::error($data['exception']);
         } else {

@@ -190,9 +190,9 @@ class Mysql extends SQlAdapter
             }
             return $result;
         } else {
-            $rs = yield $this->fetch($sql, self::CONN_SLAVE);
-            $result = $rs ? $rs[$field]: null;
-            return $result;
+            $rs =  yield $this->fetch($sql, self::CONN_SLAVE);
+//            yield array_isset(yield $rs, $field);
+            return $rs ? $rs[$field]: null;
         }
     }
 

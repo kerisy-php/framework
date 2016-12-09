@@ -83,8 +83,20 @@ class RouteBootstrap
      */
     private function loadOneRouteConfig($config)
     {
-        $isGroup = isset($config['name']) && $config['name'] &&
-            isset($config['prefix']) && $config['prefix'];
+        $isGroup = false;
+
+        if((isset($config['name']) && $config['name']) ||
+            (isset($config['prefix']) && $config['prefix']) ||
+            (isset($config['domain']) && $config['domain']) ||
+            (isset($config['middleware']) && $config['middleware']) ||
+            (isset($config['methods']) && $config['methods'])
+        ){
+            $isGroup = true;
+            if(!isset($config['name']) || !$config['name']){
+                $config['name'] = md5(serialize($config));
+            }
+        }
+
         if($isGroup){
             Route::group($config,function() use($config){
                 $this->loadSingle($config);
