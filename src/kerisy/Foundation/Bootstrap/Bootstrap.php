@@ -177,7 +177,7 @@ class Bootstrap
     protected function initConfig($path)
     {
         $path = Dir::formatPath($path);
-        Config::setConfigPath($path . "config");
+        Config::setConfigPath($path . "application/config");
     }
 
     /**
