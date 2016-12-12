@@ -47,9 +47,9 @@ class Mysql extends SQlAdapter
             return false;
         }
 
-        if (!(strtolower(substr($sql, 0, 6)) == 'insert' || strtolower(substr($sql, 0, 4)) == 'update'
-            || strtolower(substr($sql, 0, 4)) == 'drop' || strtolower(substr($sql, 0, 4)) == 'delete'
-            || strtolower(substr($sql, 0, 4)) == 'create'
+        if (!(strtolower(substr($sql, 0, 6)) == 'insert' || strtolower(substr($sql, 0, 6)) == 'update'
+            || strtolower(substr($sql, 0, 4)) == 'drop' || strtolower(substr($sql, 0, 6)) == 'delete'
+            || strtolower(substr($sql, 0, 6)) == 'create'
             || strtolower(substr($sql, 0, 5)) == 'begin'
             || strtolower(substr($sql, 0, 6)) == 'commit'
             || strtolower(substr($sql, 0, 8)) == 'rollback'
