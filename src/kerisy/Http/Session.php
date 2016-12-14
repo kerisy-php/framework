@@ -14,30 +14,31 @@
 
 namespace Kerisy\Http;
 
+use Kerisy\Server\Facade\Context;
 use Kerisy\Support\Log;
 use Kerisy\Support\Serialization\Serialization;
 
 class Session
 {
-    protected static $sid = null;
+    protected $sid = null;
 
     /**
      * @var \Kerisy\Cache\Adapter\RedisCache
      */
     private $server = null;
     private $config = [];
+    private $request = null;
 
 
     public function __construct($config=[], $server=null)
     {
         $this->config = $config;
         $this->server = $server;
+        $this->request = Context::request();
     }
     
     public function start($request, $response)
     {
-        if (self::$sid) return self::$sid;
-        
         if(!$this->config||!$this->server) return ;
         
         $config = $this->config;
@@ -69,7 +70,7 @@ class Session
             $sid = sha1($request->headers->get('user-agent') . $request->server->get('remote_addr') . uniqid(posix_getpid(), true));
         }
         $response->rawcookie($sessionName, $sid, $lifetime, $path, $domain, $secure, $httponly);
-        self::$sid = $sid;
+        $this->sid = $sid;
         $this->set("trendy_heart", 1);
         $this->server->expire($sid, $expire);
     }
@@ -82,7 +83,8 @@ class Session
      */
     public function get($key)
     {
-        $result = $this->server->hget(self::$sid, $key);
+        $sid = $this->getSid();
+        $result = $this->server->hget($sid, $key);
         if(!$result) return $result;
         return Serialization::get()->xtrans($result);
     }
@@ -94,8 +96,9 @@ class Session
      */
     public function set($key, $value)
     {
+        $sid = $this->getSid();
         $value = Serialization::get()->trans($value);
-        $this->server->hset(self::$sid, $key, $value);
+        $this->server->hset($sid, $key, $value);
     }
 
     /**
@@ -104,7 +107,19 @@ class Session
      */
     public function getSid()
     {
-        return self::$sid;
+        $request = $this->request;
+        $config = $this->config;
+        $sessionName = empty($config['name']) ? 'TSESSIONID' : $config['name'];
+        if ($request->query->get($sessionName)) {
+            $sid = $request->query->get($sessionName);
+        } elseif ($request->request->get($sessionName)) {
+            $sid = $request->request->get($sessionName);
+        } elseif ($request->cookies->get($sessionName)) {
+            $sid = $request->cookies->get($sessionName);
+        } else {
+            $sid = sha1($request->headers->get('user-agent') . $request->server->get('remote_addr') . uniqid(posix_getpid(), true));
+        }
+        return $sid;
     }
 
     /**
@@ -114,7 +129,8 @@ class Session
      */
     public function del($key)
     {
-        return $this->server->hdel(self::$sid, $key);
+        $sid = $this->getSid();
+        return $this->server->hdel($sid, $key);
     }
 
     /**
@@ -123,6 +139,7 @@ class Session
      */
     public function clear()
     {
-        return $this->server->del(self::$sid);
+        $sid = $this->getSid();
+        return $this->server->del($sid);
     }
 }
