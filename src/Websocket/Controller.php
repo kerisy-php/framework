@@ -34,7 +34,11 @@ class Controller
         $result['errodMsg'] = $errodMsg;
         $jsonResult = json_encode($result);
         return $this->server->push($this->fd, $jsonResult);
-//        $this->server->close($this->fd);
+    }
+
+    public function close()
+    {
+        $this->server->close($this->fd);
     }
 
 }
