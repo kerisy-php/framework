@@ -15,6 +15,7 @@
 namespace Kerisy\Server;
 
 use Kerisy\Core\Hook;
+use Kerisy\WebSocket\Application;
 
 /**
  * A Swoole based server implementation.
@@ -53,19 +54,22 @@ class Swoole extends Base
      */
     public $logFile;
 
+    //所有连接
+    public static $allWebSocketFd = [];
+
 
     private function normalizedConfig()
     {
-        $config = [ ];
+        $config = [];
 
         $config['max_request'] = $this->maxRequests;
         $config['daemonize'] = $this->asDaemon;
 
-        if ( $this->numWorkers ) {
+        if ($this->numWorkers) {
             $config['worker_num'] = $this->numWorkers;
         }
 
-        if ( $this->logFile ) {
+        if ($this->logFile) {
             $config['log_file'] = $this->logFile;
         }
 
@@ -74,37 +78,37 @@ class Swoole extends Base
 
     private function createServer()
     {
-        $server = new \swoole_http_server($this->host , $this->port);
+        $server = new \swoole_websocket_server($this->host, $this->port);
 
-        $server->on('start' , [ $this , 'onServerStart' ]);
-        $server->on('shutdown' , [ $this , 'onServerStop' ]);
+        $server->on('start', [$this, 'onServerStart']);
+        $server->on('shutdown', [$this, 'onServerStop']);
 
-        $server->on('managerStart' , [ $this , 'onManagerStart' ]);
+        $server->on('managerStart', [$this, 'onManagerStart']);
 
-        $server->on('workerStart' , [ $this , 'onWorkerStart' ]);
-        $server->on('workerStop' , [ $this , 'onWorkerStop' ]);
+        $server->on('workerStart', [$this, 'onWorkerStart']);
+        $server->on('workerStop', [$this, 'onWorkerStop']);
 
-        $server->on('request' , [ $this , 'onRequest' ]);
+        $server->on('request', [$this, 'onRequest']);
 
-        if ( method_exists($this , 'onOpen') ) {
-            $server->on('open' , [ $this , 'onOpen' ]);
+        if (method_exists($this, 'onOpen')) {
+            $server->on('open', [$this, 'onOpen']);
         }
-        if ( method_exists($this , 'onClose') ) {
-            $server->on('close' , [ $this , 'onClose' ]);
-        }
-
-        if ( method_exists($this , 'onWsHandshake') ) {
-            $server->on('handshake' , [ $this , 'onWsHandshake' ]);
-        }
-        if ( method_exists($this , 'onWsMessage') ) {
-            $server->on('message' , [ $this , 'onWsMessage' ]);
+        if (method_exists($this, 'onClose')) {
+            $server->on('close', [$this, 'onClose']);
         }
 
-        if ( method_exists($this , 'onTask') ) {
-            $server->on('task' , [ $this , 'onTask' ]);
+        if (method_exists($this, 'onWsHandshake')) {
+            $server->on('handshake', [$this, 'onWsHandshake']);
         }
-        if ( method_exists($this , 'onFinish') ) {
-            $server->on('finish' , [ $this , 'onFinish' ]);
+        if (method_exists($this, 'onWsMessage')) {
+            $server->on('message', [$this, 'onWsMessage']);
+        }
+
+        if (method_exists($this, 'onTask')) {
+            $server->on('task', [$this, 'onTask']);
+        }
+        if (method_exists($this, 'onFinish')) {
+            $server->on('finish', [$this, 'onFinish']);
         }
 
         $server->set($this->normalizedConfig());
@@ -112,12 +116,29 @@ class Swoole extends Base
         return $server;
     }
 
+    public function onWsMessage(\swoole_server $server, \swoole_websocket_frame $frame)
+    {
+
+        if ($frame->data) {
+            $objWSSApplication = new Application();
+            $objWSSApplication->start($frame->data, $server, $frame->fd);
+        } else {
+            $result = [];
+            $result['result'] = "";
+            $result['errorCode'] = 500;
+            $result['errodMsg'] = "接收到的数据为空";
+            $jsonResult = json_encode($result);
+            $server->push($frame->fd, $jsonResult);
+        }
+
+    }
+
 
     public function onServerStart($server)
     {
         cli_set_process_title($this->name . ': master');
-        if ( $this->pidFile ) {
-            file_put_contents($this->pidFile , $server->master_pid);
+        if ($this->pidFile) {
+            file_put_contents($this->pidFile, $server->master_pid);
         }
     }
 
@@ -128,7 +149,7 @@ class Swoole extends Base
 
     public function onServerStop()
     {
-        if ( $this->pidFile ) {
+        if ($this->pidFile) {
             unlink($this->pidFile);
         }
     }
@@ -157,62 +178,62 @@ class Swoole extends Base
     protected function prepareRequest($request)
     {
         $port = 80;
-        $hosts = explode(':' , $request->header['host']);
+        $hosts = explode(':', $request->header['host']);
 
-        if ( count($hosts) > 1 ) {
+        if (count($hosts) > 1) {
             $port = $hosts[1];
         }
         $host = $hosts[0];
         $params = [];
         if ($request->server['request_method'] === 'POST') {
-           isset($request->post) && $params = $request->post;
-       }
-       isset($request->get) && $params += $request->get;
+            isset($request->post) && $params = $request->post;
+        }
+        isset($request->get) && $params += $request->get;
         $config = [
-            'protocol' => $request->server['server_protocol'] ,
-            'host'     => $host ,
-            'port'     => $port ,
-            'method'   => $request->server['request_method'] ,
-            'path'     => $request->server['request_uri'] ,
-            'headers'  => $request->header ,
-            'params'   => isset( $request->get ) ? $request->get : ( isset( $request->post ) ? $request->post : [ ] ) ,
-            'content'  => $request->rawcontent() ,
-            'server'   => $request->server
+            'protocol' => $request->server['server_protocol'],
+            'host' => $host,
+            'port' => $port,
+            'method' => $request->server['request_method'],
+            'path' => $request->server['request_uri'],
+            'headers' => $request->header,
+            'params' => isset($request->get) ? $request->get : (isset($request->post) ? $request->post : []),
+            'content' => $request->rawcontent(),
+            'server' => $request->server
         ];
-        if ( isset( $request->files ) && is_array($request->files) ) {
+        if (isset($request->files) && is_array($request->files)) {
             $config['files'] = $request->files;
         }
-        if ( isset( $request->cookie ) && is_array($request->cookie) ) {
+        if (isset($request->cookie) && is_array($request->cookie)) {
             $config['cookie'] = $request->cookie;
         }
 
         return app()->makeRequest($config);
     }
 
-    public function onRequest($request , $response)
+    public function onRequest($request, $response)
     {
         Hook::fire("server_start");
-        
+
         $res = $this->handleRequest($this->prepareRequest($request));
 
         $content = $res->content();
 
-        foreach ( $res->headers->all() as $name => $values ) {
-            $name = str_replace(' ' , '-' , ucwords(str_replace('-' , ' ' , $name)));
-            foreach ( $values as $value ) {
-                $response->header($name , $value);
+        foreach ($res->headers->all() as $name => $values) {
+            $name = str_replace(' ', '-', ucwords(str_replace('-', ' ', $name)));
+            foreach ($values as $value) {
+                $response->header($name, $value);
             }
         }
-        $response->header('Content-Length' , strlen($content));
-        if ( $res->getCookies() ) {
-            foreach ( $res->getCookies() as list( $key , $value , $ttl,$path,$domain,$secure,$httponly ) ) {
-                $response->cookie($key , $value , $ttl,  $path = '/',  $domain,  $secure ,  $httponly);
+        $response->header('Content-Length', strlen($content));
+        if ($res->getCookies()) {
+            foreach ($res->getCookies() as list($key, $value, $ttl, $path, $domain, $secure, $httponly)) {
+                $response->cookie($key, $value, $ttl, $path = '/', $domain, $secure, $httponly);
             }
         }
         $response->status($res->statusCode);
-        
-        Hook::fire("server_end",[$request,$response]);
-        
+
+        Hook::fire("server_end", [$request, $response]);
+
         $response->end($content);
     }
 
@@ -221,8 +242,9 @@ class Swoole extends Base
         $server = $this->createServer();
         $server->start();
     }
+
     public function setAliasName($alias_name = '')
     {
-        $this->name .= ' '.$alias_name ?: 'server';
+        $this->name .= ' ' . $alias_name ?: 'server';
     }
 }
