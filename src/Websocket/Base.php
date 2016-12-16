@@ -1,15 +1,8 @@
 <?php
 /**
- * Kerisy Framework
- *
- * PHP Version 7
- *
- * @author          Jiaqing Zou <zoujiaqing@gmail.com>
- * @copyright      (c) 2015 putao.com, Inc.
- * @package         kerisy/framework
- * @subpackage      Server
- * @since           2015/11/11
- * @version         2.0.0
+ * User: Peter Wang
+ * Date: 16/12/16
+ * Time: 下午1:51
  */
 
 namespace Kerisy\WebSocket;

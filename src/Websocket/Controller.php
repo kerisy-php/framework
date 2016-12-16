@@ -24,8 +24,7 @@ class Controller
         $this->server = $server;
         $this->fd = $fd;
     }
-
-
+    
     public function send($data, $errorCode = self::RESPONSE_CODE, $errodMsg = '')
     {
         $result = [];

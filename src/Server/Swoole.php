@@ -116,6 +116,11 @@ class Swoole extends Base
         return $server;
     }
 
+    /**
+     * websocket 专用
+     * @param \swoole_server $server
+     * @param \swoole_websocket_frame $frame
+     */
     public function onWsMessage(\swoole_server $server, \swoole_websocket_frame $frame)
     {
 
