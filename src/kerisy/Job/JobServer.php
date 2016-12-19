@@ -13,7 +13,7 @@
 
 namespace Kerisy\Job;
 
-use Kerisy\Foundation\Application;
+use Kerisy\Foundation\Bootstrap\Facade\Job as FJob;
 use Kerisy\Foundation\Storage\Redis;
 use Kerisy\Server\ProcessServer;
 use Kerisy\Support\Log;
@@ -30,12 +30,15 @@ class JobServer
     /**
      * 清空所有job
      */
-    public function clear()
+    public function clear($isInit=0)
     {
         $perform = $this->config['perform'];
         $storage = new Redis();
         foreach ($perform as $queueName => $v) {
             $key = Job::JOB_KEY_PRE . ":" . $queueName;
+            if($isInit){
+                $key = "INIT_".$key;
+            }
             $storage->del($key);
         }
     }
@@ -46,7 +49,7 @@ class JobServer
     public function start()
     {
         $name = isset($this->config['server']['name']) ? $this->config['server']['name'] : "kerisy";
-        $preName = $name."-job";
+        $preName = $name . "-job";
         $serverName = $preName . "-master";
         swoole_set_process_name($serverName);
 //        Log::sysinfo("[$serverName] start ...");
@@ -55,14 +58,28 @@ class JobServer
         $job = new Job($this->config);
         $perform = $this->config['perform'];
 
-        $processServer = new ProcessServer($this->config['server'],true);
+        $processServer = new ProcessServer($this->config['server'], false);
         $name = $preName . "-worker";
 
+        //载入初始化job
+        $this->clear(1);
+        $jobs = isset($this->config['jobs']) ? $this->config['jobs'] : null;
+        if ($jobs) {
+            Log::sysinfo("loading init jobs ...");
+            foreach ($jobs as $k => $v) {
+                $obj = array_isset($v, 0);
+                $startTime = array_isset($v, 1);
+                $cronStr = array_isset($v, 2);
+                $tagName = array_isset($v, 3);
+                $tagName = $tagName?$tagName:$k;
+                FJob::add($k, $obj, $startTime, $cronStr, 1);
+            }
+        }
         foreach ($perform as $key => $v) {
             $processServer->add(
                 function (\swoole_process $worker) use ($key, $job, $name) {
                     $worker->name($name);
-                    Log::sysinfo("[$name] start ...");
+                    Log::sysinfo("$name start ...");
                     $job->start($key);
                 }
             );

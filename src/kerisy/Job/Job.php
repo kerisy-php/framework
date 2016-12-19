@@ -69,6 +69,14 @@ class Job
             $key = self::JOB_KEY_PRE . ":" . $queueName;
             $now = time();
             $data = $this->storage->zrangebyscore($key, 0, $now);
+            $initKey ="INIT_".$key;
+            $initData = $this->storage->zrangebyscore($initKey, 0, $now);
+            if($data && is_array($data)){
+                $data = array_merge($data, (array) $initData);
+            }else{
+                $data = $initData;
+            }
+
             //原子操作避免重复处理
             $checkKey = self::JOB_KEY_PRE . "CHECK";
             $check = $this->storage->setnx($checkKey, 1);
@@ -78,12 +86,12 @@ class Job
             }
             if ($data && is_array($data)) {
                 foreach ($data as $v) {
-                    list(, $value) = explode("@", $v);
+                    $value = $v;
                     $valueArr = unserialize($value);
                     $queueName = isset($valueArr[0]) ? $valueArr[0] : "";
                     $jobObj = isset($valueArr[1]) ? $valueArr[1] : "";
                     $schedule = isset($valueArr[3]) ? $valueArr[3] : "";
-                    $tag = isset($valueArr[4]) ? $valueArr[4] : "";
+                    $isInit = isset($valueArr[4]) ? $valueArr[4] : "";
                     if(!is_object($jobObj)){
                         continue;
                     }
@@ -93,17 +101,20 @@ class Job
                         $task->work($task->getRoutine());
                         unset($task);
                     }
-                    $this->storage->zrem($key, $v);
+                    if($isInit){
+                        $this->storage->zrem($initKey, $v);
+                    }else{
+                        $this->storage->zrem($key, $v);
+                    }
+
                     if ($schedule) {
                         $cron = CronExpression::factory($schedule);
                         $runTime = $cron->getNextRunDate()->format('Y-m-d H:i:s');
-                        $this->add($queueName, $jobObj, $runTime, $schedule, $tag);
+                        $this->add($queueName, $jobObj, $runTime, $schedule, $isInit);
                     }
                 }
             }
             $this->storage->del($checkKey);
-            $sleep = $pv['sleep'] ? $pv['sleep'] : 1;
-            sleep($sleep);
         } catch (RuntimeExitException $e){
             Log::sysinfo("RuntimeExitException:".$e->getMessage());
         }catch (\Exception $e) {
@@ -123,10 +134,12 @@ class Job
      * @param string $tag
      * @throws InvalidArgumentException
      */
-    public function add($queueName, $jobObj, $runTime = "", $schedule = "", $tag = "")
+    public function add($queueName, $jobObj, $runTime = "", $schedule = "", $isInit=0)
     {
         if (!isset($this->config['perform'][$queueName])) return;
         $key = self::JOB_KEY_PRE . ":" . $queueName;
+
+        if($isInit) $key = "INIT_".$key;
 
         $config = $this->config['perform'][$queueName];
 
@@ -135,15 +148,6 @@ class Job
 //            dump("--------------------job.total-------------------------");
 //            dump($data);
             if ($data) return;
-        }
-
-        $value = func_get_args();
-        if (!$tag) {
-            $tag = md5(serialize($value));
-        } else {
-            if (stristr('@', $tag)) {
-                throw new InvalidArgumentException("tag can not include '@'");
-            }
         }
 
         if (!$runTime && !$schedule) {
@@ -162,9 +166,9 @@ class Job
         $value[1] = $jobObj;
         $value[2] = $runTime;
         $value[3] = $schedule;
-        $value[4] = $tag;
+        $value[4] = $isInit;
 
-        $saveVale = $tag . "@" . serialize($value);
+        $saveVale = serialize($value);
 
         $this->storage->zadd($key, $runTime, $saveVale);
     }

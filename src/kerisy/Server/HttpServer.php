@@ -67,6 +67,20 @@ class HttpServer
 
         $this->swooleServer->on('request', [$this, 'onRequest']);
 
+        if ( method_exists($this , 'onOpen') ) {
+            $this->swooleServer->on('open' , [ $this , 'onOpen' ]);
+        }
+        if ( method_exists($this , 'onClose') ) {
+            $this->swooleServer->on('close' , [ $this , 'onClose' ]);
+        }
+
+        if ( method_exists($this , 'onWsHandshake') ) {
+            $this->swooleServer->on('handshake' , [ $this , 'onWsHandshake' ]);
+        }
+        if ( method_exists($this , 'onWsMessage') ) {
+            $this->swooleServer->on('message' , [ $this , 'onWsMessage' ]);
+        }
+        
         //开启任务
         if (isset($this->config['task_worker_num']) && ($this->config['task_worker_num'] > 0)) {
             $this->swooleServer->on('Task', array($this, 'onTask'));

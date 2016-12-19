@@ -71,7 +71,7 @@ class Session
         }
         $response->rawcookie($sessionName, $sid, $lifetime, $path, $domain, $secure, $httponly);
         $this->sid = $sid;
-        $this->set("trendy_heart", 1);
+        $this->set("kerisy_heart", 1);
         $this->server->expire($sid, $expire);
     }
 
@@ -109,7 +109,7 @@ class Session
     {
         $request = $this->request;
         $config = $this->config;
-        $sessionName = empty($config['name']) ? 'TSESSIONID' : $config['name'];
+        $sessionName = empty($config['name']) ? 'KSESSIONID' : $config['name'];
         if ($request->query->get($sessionName)) {
             $sid = $request->query->get($sessionName);
         } elseif ($request->request->get($sessionName)) {

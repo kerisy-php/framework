@@ -16,6 +16,7 @@ use Kerisy\Config\Config;
 use Kerisy\Foundation\Application;
 use Kerisy\Mvc\View\Engine\Blade\Compilers\BladeCompiler;
 use Kerisy\Server\HttpServer;
+use Kerisy\Server\WebSocket\WSServer;
 use Kerisy\Support\Arr;
 use Kerisy\Support\Dir;
 use Kerisy\Support\ElapsedTime;
@@ -110,7 +111,7 @@ class HttpdBase
             'package_length_type' => 'N',
             'package_length_offset' => 0,
             'package_body_offset' => 4,
-            'package_max_length' => 2000000,
+            'package_max_length' => 8*1024*1024,//默认8M
             "pid_file" => "/tmp/pid",
             'open_tcp_nodelay' => 1,
         ];
@@ -207,8 +208,8 @@ class HttpdBase
 
     protected static function start($config, $adapter, $appName)
     {
-        $swooleServer = new \swoole_http_server($config['server']['host'], $config['server']['port']);
-        $obj = new HttpServer($swooleServer, $config['server'], $adapter, $appName);
+        $swooleServer = new \swoole_websocket_server($config['server']['host'], $config['server']['port']);
+        $obj = new WSServer($swooleServer, $config['server'], $adapter, $appName);
         $obj->start();
     }
 
