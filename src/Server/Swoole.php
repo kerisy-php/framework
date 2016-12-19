@@ -16,6 +16,7 @@ namespace Kerisy\Server;
 
 use Kerisy\Core\Hook;
 use Kerisy\WebSocket\Application;
+use swoole_http_server as SwooleServer;
 
 /**
  * A Swoole based server implementation.
@@ -47,6 +48,11 @@ class Swoole extends Base
      */
     public $asDaemon = FALSE;
 
+    public $taskRetryCount = null;
+    public $taskFailLog = null;
+    public $taskTimeout = null;
+    public $taskWorkerNum = 5;
+
     /**
      * Specifies the path where logs should be stored in.
      *
@@ -56,6 +62,8 @@ class Swoole extends Base
 
     //所有连接
     public static $allWebSocketFd = [];
+    
+    public static $swooleServer = null;
 
 
     private function normalizedConfig()
@@ -71,6 +79,10 @@ class Swoole extends Base
 
         if ($this->logFile) {
             $config['log_file'] = $this->logFile;
+        }
+
+        if($this->taskWorkerNum){
+            $config['task_worker_num'] = $this->taskWorkerNum;
         }
 
         return $config;
@@ -116,12 +128,28 @@ class Swoole extends Base
         return $server;
     }
 
-    /**
-     * websocket 专用
-     * @param \swoole_server $server
-     * @param \swoole_websocket_frame $frame
-     */
-    public function onWsMessage(\swoole_server $server, \swoole_websocket_frame $frame)
+
+    public function onTask(SwooleServer $serv, $task_id, $from_id, $data)
+    {
+        try {
+            $obj = new Task();
+            return $obj->start($data);
+        } catch (\Exception $e) {
+            $exception = $e->getMessage();
+            return [false, $data, $exception];
+        } catch (\Error $e) {
+            $exception = $e->getMessage();
+            return [false, $data, $exception];
+        }
+    }
+
+    public function onFinish(SwooleServer $serv, $task_id, $data)
+    {
+        $obj = new Task();
+        $obj->finish($data);
+    }
+
+    public function onWsMessage(swoole_server $server, \swoole_websocket_frame $frame)
     {
 
         if ($frame->data) {
@@ -159,9 +187,44 @@ class Swoole extends Base
         }
     }
 
-    public function onWorkerStart()
+    public function onWorkerStart(SwooleServer $swooleServer, $workerId)
     {
-        cli_set_process_title($this->name . ': worker');
+        if (function_exists("apc_clear_cache")) {
+            apc_clear_cache();
+        }
+
+        if (function_exists("apcu_clear_cache")) {
+            apcu_clear_cache();
+        }
+
+        if (function_exists("opcache_reset")) {
+            opcache_reset();
+        }
+
+        self::$swooleServer = $swooleServer;
+        
+        if ($workerId >= $this->taskWorkerNum) {
+            cli_set_process_title($this->name . ': task-worker');
+            echo $this->name . ": task-worker start\n";
+        } else {
+            cli_set_process_title($this->name . ': worker');
+            echo $this->name . ": worker start\n";
+        }
+        
+        $taskCOnfig = [];
+        $taskCOnfig['task_retry_count'] = $this->taskRetryCount;
+        $taskCOnfig['task_fail_log'] = $this->taskFailLog;
+        $taskCOnfig['task_timeout'] = $this->taskTimeout;
+        $taskCOnfig['task_worker_num'] = $this->taskWorkerNum;
+
+        Task::setConfig($taskCOnfig);
+        $config = config('config')->all();
+        $taskConfig = isset($config['task'])?$config['task']:null;
+
+        if($taskConfig){
+            Task::setTaskConfig($taskConfig);
+        }
+
         $this->startApp();
     }
 
@@ -169,17 +232,8 @@ class Swoole extends Base
     {
         $this->stopApp();
     }
-
-    public function onTask()
-    {
-
-    }
-
-    public function onFinish()
-    {
-
-    }
-
+    
+    
     protected function prepareRequest($request)
     {
         $port = 80;
