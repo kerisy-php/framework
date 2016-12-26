@@ -315,18 +315,18 @@ abstract class SQlAbstract
                     }
                     $more = 1;
                 } else {
-                    list($sign, $vl) = $v;
+                    list($sign) = $v;
 
                     if (isset($v[2]) && $v[2]) {
                         $andOR = $v[2];
                     }
-                    if ($vl !== '') {
+                    if (isset($v[1])) {
                         $param = $k . " " . $sign . " ? ";
                         $sign = strtolower($sign);
                         if ($sign == 'in') {
                             $param = $k . " " . $sign . " (?) ";
                         }
-                        $v = $vl;
+                        $v = $v[1];
                     } else {
                         $param = $k . " " . $sign . " ";
                     }

@@ -78,6 +78,7 @@ class Controller
         Template::setViewCacheRoot($viewCachePath);
         Template::setEngine(Config::get("app.view.engine"));
         $assign = Arr::merge($assign, $this->view->getAssignData());
+        $assign = Arr::merge($assign, $this->response->view->getAssignData());
 
         $content = Template::render($viewPath, $assign);
         return $content;

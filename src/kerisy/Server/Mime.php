@@ -95,6 +95,8 @@ class Mime
         "video/x-ms-asf" => "asx asf",
         "video/x-ms-wmv" => "wmv",
         "video/x-msvideo" => "avi",
+
+        "application/x-font-woff" => "woff woff2",
     ];
 
     /**

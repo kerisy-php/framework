@@ -88,7 +88,7 @@ class Log
             return call_user_func(self::$callback, $closureParam);
         }else{
             $msg = array_pop($data);
-            if($type) $data[] = $type;
+            if($type) array_unshift($data, $type);
             if($type == 'show'){
                 $string = $msg;
             }else{

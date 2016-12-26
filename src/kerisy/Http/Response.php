@@ -20,6 +20,7 @@ use Kerisy\Support\Log;
 class Response
 {
     public $response;
+    public $view;
     private $hasEnd = 0;
     protected $headerStack = [];
 
@@ -31,6 +32,7 @@ class Response
     public function __construct(SwooleHttpResponse $response)
     {
         $this->response = $response;
+        $this->view = new AssignData();
     }
 
     public function setHasEnd($hasEnd)
