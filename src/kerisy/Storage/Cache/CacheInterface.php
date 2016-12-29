@@ -10,7 +10,7 @@
  * @version         3.0.0
  */
 
-namespace Kerisy\Cache;
+namespace Kerisy\Storage\Cache;
 
 
 interface CacheInterface

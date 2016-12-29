@@ -10,9 +10,9 @@
  * @version         3.0.0
  */
 
-namespace Kerisy\Cache\Adapter;
+namespace Kerisy\Storage\Cache\Adapter;
 
-use Kerisy\Cache\CacheInterface;
+use Kerisy\Storage\Cache\CacheInterface;
 
 class ApcCache implements CacheInterface
 {

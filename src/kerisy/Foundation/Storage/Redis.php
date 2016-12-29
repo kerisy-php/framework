@@ -46,22 +46,47 @@ class Redis
     public function __call($name, $arguments)
     {
         try {
-            if ($arguments) {
-                $result = self::$conn->$name(...$arguments);
-            } else {
-                $result = self::$conn->$name();
-            }
-            if($result instanceof \Predis\Response\Status){
-                $result =  $result->getPayload();
-                $result = $result=='OK'?true:false;
-            }
-            
+            $result = $this->run($name ,$arguments);
             return $result;
         } catch (\Exception $e) {
-            Log::error(SupportException::formatException($e));
+            $this->reConn($e);
+            if(self::$conn){
+                return $this->run($name ,$arguments);
+            }else{
+                Log::error(SupportException::formatException($e));
+            }
         }catch (\Error $e) {
-            Log::error(SupportException::formatException($e));
+            $this->reConn($e);
+            if(self::$conn){
+                return $this->run($name ,$arguments);
+            }else{
+                Log::error(SupportException::formatException($e));
+            }
         }
+    }
+
+    protected function run($name ,$arguments)
+    {
+        if ($arguments) {
+            $result = self::$conn->$name(...$arguments);
+        } else {
+            $result = self::$conn->$name();
+        }
+        if($result instanceof \Predis\Response\Status){
+            $result =  $result->getPayload();
+            $result = $result=='OK'?true:false;
+        }
+
+        return $result;
+    }
+
+    protected function reConn($e){
+        if($e->getCode() != 0 || !stristr($e->getMessage(), 'No connections available in the pool')) {
+            throw new \Exception($e->getMessage());
+        }
+        //重新连接
+        self::$conn = [];
+        $this->initializeDefault();
     }
     
 }
