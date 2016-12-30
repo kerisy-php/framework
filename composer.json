@@ -5,7 +5,7 @@
     "license": "MIT",
     "authors": [
         {
-            "name": "Wang Wang",
+            "name": "Peter Wang",
             "email": "hpuwang@gmail.com"
         }
     ],
@@ -13,7 +13,8 @@
         "php": ">=5.4.30",
         "ext-swoole" : "1.8.*",
         "ext-mbstring": "*",
-        "ext-posix":"*"
+        "ext-posix":"*",
+        "predis/predis": "^1.1"
     },
     "replace":{
 
@@ -26,20 +27,14 @@
     "autoload": {
         "psr-4": {
             "Kerisy\\": "src/kerisy"
-        },
-        "files":[
-            "src/kerisy/Support/Predis.php"
-        ]
+        }
     },
     "suggest": {
         "ext-msgpack": "data serialize tool",
+        "ext-igbinary":"data serialize tool",
+        "ext-hprose":"data serialize tool",
         "ext-apc":"php opcode cache , not support7",
         "ext-apcu":"php7 support "
-    },
-    "autoload-dev": {
-        "psr-4": {
-            "Kerisy\\Test\\": "tests/application/src"
-        }
     },
     "minimum-stability": "stable",
     "repositories": {
