@@ -36,11 +36,5 @@
         "ext-apc":"php opcode cache , not support7",
         "ext-apcu":"php7 support "
     },
-    "minimum-stability": "stable",
-    "repositories": {
-        "packagist": {
-            "type": "composer",
-            "url": "https://packagist.phpcomposer.com"
-        }
-    }
+    "minimum-stability": "stable"
 }
