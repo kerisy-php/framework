@@ -11,7 +11,7 @@
     ],
     "require": {
         "php": ">=5.4.30",
-        "ext-swoole" : ">1.8.*",
+        "ext-swoole" : ">=1.8.0",
         "ext-mbstring": "*",
         "ext-posix":"*",
         "predis/predis": "^1.1"
