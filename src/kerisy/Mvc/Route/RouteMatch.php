@@ -131,6 +131,8 @@ class RouteMatch
      */
     public function url($routeName, $params = [])
     {
+        if(!$routeName) return "";
+
         $sysCacheKey = md5($routeName . serialize($params));
 
         $url = syscache()->get($sysCacheKey);
@@ -307,7 +309,6 @@ class RouteMatch
         }else{
             $runMidd = 1;
         }
-
         if($runMidd){
             $check = $this->runMiddleware($middleware, $require);
             if(!$check) return false;

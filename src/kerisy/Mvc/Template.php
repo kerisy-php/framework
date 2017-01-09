@@ -24,7 +24,12 @@ class Template
     protected static $viewRoot = null;
     protected static $viewCacheRoot = null;
     protected static $engine = View::DEFAULT_ENGINE;
+    protected static $config=null;
 
+    public static function setConfig($config)
+    {
+        self::$config = $config;
+    }
 
     public static function setViewRoot($viewRoot)
     {
@@ -97,6 +102,7 @@ class Template
 
         $tpl->setViewRootPath($rootPath);
         $tpl->setCachePath($cacheRootPath);
+        $tpl->setConfig(self::$config);
         return $tpl->render($viewPath, $assign);
     }
 

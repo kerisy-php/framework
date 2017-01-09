@@ -33,6 +33,9 @@ class Blade implements ViewInterface
      */
     protected $engineResolver;
 
+    protected $config = null;
+
+
     /**
      * Constructor.
      *
@@ -63,6 +66,11 @@ class Blade implements ViewInterface
         return $this->engineResolver->resolve('blade');
     }
 
+
+    public function setConfig($config)
+    {
+        $this->config = $config;
+    }
 
 
     /**
@@ -119,9 +127,17 @@ class Blade implements ViewInterface
         $resolver->register('blade', function () {
             $cachePath =  $this->cachePath;
             $compiler = new BladeCompiler($cachePath);
-            $compiler->directive('datetime', function($timestamp) {
-                return preg_replace('/(\(\d+\))/', '<?php echo date("Y-m-d H:i:s", $1); ?>', $timestamp);
-            });
+
+            $bladeEx= $this->config;
+
+            if($bladeEx){
+                foreach ($bladeEx as $k=>$class){
+                    $compiler->directive($k, function($param) use ($class){
+                        $obj = new $class();
+                        return $obj->perform($param);
+                    });
+                }
+            }
             $engine = new CompilerEngine($compiler);
             return $engine;
         });

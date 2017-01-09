@@ -842,4 +842,5 @@ class Factory
     {
         return $this->names;
     }
+    
 }

@@ -1140,6 +1140,12 @@ class BladeCompiler extends Compiler implements CompilerInterface
         }
     }
 
+
+    protected function compileChoose($expression)
+    {
+        return "<?php echo \$__fis->choose{$expression}; ?>";
+    }
+
     protected function compileFuri($expression)
     {
         if (self::$isFis) {

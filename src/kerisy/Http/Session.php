@@ -23,7 +23,7 @@ class Session
     protected $sid = null;
 
     /**
-     * @var \Kerisy\Cache\Adapter\RedisCache
+     * @var \Kerisy\Storage\Cache\Adapter\RedisCache
      */
     private $server = null;
     private $config = [];

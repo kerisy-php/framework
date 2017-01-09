@@ -35,6 +35,7 @@ class AliasConfig
             "Controller"=>\Kerisy\Foundation\Controller::class,
             "RpcController"=>\Kerisy\Rpc\Controller::class,
             "Lang"=>\Kerisy\Support\Lang::class,
+            "Flash"=>\Kerisy\Support\Flash::class,
         ];
     }
 
