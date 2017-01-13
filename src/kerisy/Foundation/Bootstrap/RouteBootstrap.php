@@ -71,21 +71,33 @@ class RouteBootstrap
                     $path = array_isset($v, 1);
                     $uses = array_isset($v, 2);
                     $middleware = array_isset($v, 3);
+                    $defaults = array_isset($v, 4);
                     $tmp = [];
                     $tmp['method'] = $method;
+
                     $where = [];
                     if (stristr($path, "<")) {
                         preg_match_all("/\<(.*?)\:([^\>]+)\>/", $path, $matches, PREG_SET_ORDER);
+                        $hasDefault = 0;
                         if ($matches) {
                             foreach ($matches as $match) {
                                 $key = array_isset($match, 1);
+                                if(stristr($key, "=")){
+                                    list($key,$_v) = explode("=", $key);
+                                    $defaults[$key] = $_v;
+                                    $hasDefault = 1;
+                                }
                                 $value = array_isset($match, 2);
                                 if ($key && $value) {
                                     $where[$key] = $value;
                                 }
                             }
                         }
-                        $path = preg_replace("/\<(.*?)\:([^\>]+)\>/", '{$1}', $path);
+                        if($hasDefault){
+                            $path = preg_replace("/\<([^\=]+)\=(.*?)\:([^\>]+)\>/", '{$1}', $path);
+                        }else{
+                            $path = preg_replace("/\<(.*?)\:([^\>]+)\>/", '{$1}', $path);
+                        }
                     }
 
                     list($modules, $controller, $action) = explode("/", $uses);
@@ -97,6 +109,7 @@ class RouteBootstrap
                     $tmp['name'] = $uses;
                     $tmp['middleware'] = $middleware;
                     $tmp['where'] = $where;
+                    $tmp['defaults'] = $defaults;
                     $newRoutes[] = $tmp;
                 }
                 $config['routes'] = $newRoutes;
@@ -142,19 +155,10 @@ class RouteBootstrap
         $routes = isset($config['routes']) ? $config['routes'] : [];
         if ($routes) {
             foreach ($routes as $v) {
-                if (!isset($v['path']) && !isset($v['method'])) {
-                    list($path, $method, $uses, $name, $where, $domain, $middleware) = $v;
-                    $v['method'] = $method;
-                    $v['path'] = $path;
-                    $v['uses'] = $uses;
-                    $v['name'] = $name;
-                    $v['where'] = $where;
-                    $v['domain'] = $domain;
-                    $v['middleware'] = $middleware;
-                }
                 $method = isset($v['method']) ? $v['method'] : [];
                 $_method = $method == "*" ? "any" : $method;
                 $_method = $_method ? $_method : "any";
+                $v['method'] = $_method;
                 Route::bind($_method, [$v['path'], $v]);
             }
         }

@@ -414,7 +414,9 @@ class BladeCompiler extends Compiler implements CompilerInterface
      */
     public function compileEchoDefaults($value)
     {
-        return preg_replace('/^(?=\$)(.+?)(?:\s+or\s+)(.+?)$/s', 'isset($1) ? $1 : $2', $value);
+        $value = preg_replace('/^(?=\$)(.+?)(?:\s+or\s+)(.+?)$/s', 'isset($1) ? $1 : $2', $value);
+        $value = preg_replace('/^(?=\$)(.+?)(?:\s+empty\s+)(.+?)$/s', 'isset($1) && !empty($1) ? $1 : $2', $value);
+        return $value;
     }
 
     /**
@@ -1138,12 +1140,6 @@ class BladeCompiler extends Compiler implements CompilerInterface
             $expression = join(",", $params);
             return $this->_compileInclude($expression);
         }
-    }
-
-
-    protected function compileChoose($expression)
-    {
-        return "<?php echo \$__fis->choose{$expression}; ?>";
     }
 
     protected function compileFuri($expression)

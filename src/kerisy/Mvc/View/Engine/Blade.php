@@ -127,7 +127,6 @@ class Blade implements ViewInterface
         $resolver->register('blade', function () {
             $cachePath =  $this->cachePath;
             $compiler = new BladeCompiler($cachePath);
-
             $bladeEx= $this->config;
 
             if($bladeEx){
