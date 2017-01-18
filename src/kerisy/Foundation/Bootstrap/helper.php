@@ -191,3 +191,13 @@ if (!function_exists('xtrans')) {
     }
 }
 
+if (!function_exists('responseEnd')) {
+    /**
+     * isset
+     */
+    function responseEnd($callback)
+    {
+        \Kerisy\Coroutine\Event::bind("request.end",$callback);
+    }
+}
+

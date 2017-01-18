@@ -78,14 +78,12 @@ class RouteBootstrap
                     $where = [];
                     if (stristr($path, "<")) {
                         preg_match_all("/\<(.*?)\:([^\>]+)\>/", $path, $matches, PREG_SET_ORDER);
-                        $hasDefault = 0;
                         if ($matches) {
                             foreach ($matches as $match) {
                                 $key = array_isset($match, 1);
                                 if(stristr($key, "=")){
                                     list($key,$_v) = explode("=", $key);
                                     $defaults[$key] = $_v;
-                                    $hasDefault = 1;
                                 }
                                 $value = array_isset($match, 2);
                                 if ($key && $value) {
@@ -93,11 +91,13 @@ class RouteBootstrap
                                 }
                             }
                         }
-                        if($hasDefault){
-                            $path = preg_replace("/\<([^\=]+)\=(.*?)\:([^\>]+)\>/", '{$1}', $path);
-                        }else{
-                            $path = preg_replace("/\<(.*?)\:([^\>]+)\>/", '{$1}', $path);
-                        }
+                        $path = preg_replace_callback("/\<(.*?)\:([^\>]+)\>/", function($match){
+                            $key = array_isset($match, 1);
+                            if(stristr($key, "=")){
+                                list($key,$_v) = explode("=", $key);
+                            }
+                            return "{".$key."}";
+                        },$path);
                     }
 
                     list($modules, $controller, $action) = explode("/", $uses);

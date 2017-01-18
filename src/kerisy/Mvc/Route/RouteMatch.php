@@ -14,7 +14,6 @@
 
 namespace Kerisy\Mvc\Route;
 
-use Kerisy\Coroutine\Base\CoroutineScheduler;
 use Kerisy\Coroutine\Base\CoroutineTask;
 use Kerisy\Coroutine\Event;
 use Kerisy\Foundation\Bootstrap\Session;
@@ -95,12 +94,11 @@ class RouteMatch
     protected function groupFilter($url)
     {
         $groupPrefixs = RouteGroup::getGroupPrefixs();
-        if(!$groupPrefixs) return $url;
-        $urlTmp = ltrim($url,"/");
+        if (!$groupPrefixs) return $url;
+        $urlTmp = ltrim($url, "/");
 
-        if(in_array($urlTmp,$groupPrefixs))
-        {
-            return $url."/";
+        if (in_array($urlTmp, $groupPrefixs)) {
+            return $url . "/";
         }
         return $url;
     }
@@ -131,7 +129,7 @@ class RouteMatch
      */
     public function url($routeName, $params = [])
     {
-        if(!$routeName) return "";
+        if (!$routeName) return "";
 
         $sysCacheKey = md5($routeName . serialize($params));
 
@@ -164,7 +162,7 @@ class RouteMatch
         $sysCacheKey = md5(__CLASS__ . $url);
 
         $parameters = syscache()->get($sysCacheKey);
-        
+
         if (!$parameters) {
             $parameters = $this->match($url);
             syscache()->set($sysCacheKey, $parameters, 3600);
@@ -263,21 +261,20 @@ class RouteMatch
                         if (isset($require[0]) && ($require[0] instanceof Request)) {
                             $obj = new $controller($require[0], $require[1]);
                             $check = $this->todoMiddleWare($obj, $action, $middleware, $require);
-                            if(!$check) return ;
-                            $content = call_user_func_array([$obj, $action], $require[2]);
+                            if (!$check) return;
+                            $realParams = $this->callUserFuncArrayRealParams($controller, $action, $require[2]);
+                            $content = call_user_func_array([$obj, $action], $realParams);
                         } else {
                             //tcp
                             list($serv, $fd) = $otherData;
                             $obj = new $controller($serv, $fd);
-                            $postData = $otherData+$require;
+                            $postData = $otherData + $require;
                             $check = $this->todoMiddleWare($obj, $action, $middleware, $postData);
-                            if(!$check) return ;
-                            $content = call_user_func_array([$obj, $action], $require);
+                            if (!$check) return;
+                            $realParams = $this->callUserFuncArrayRealParams($controller, $action, $require);
+                            $content = call_user_func_array([$obj, $action], $realParams);
                         }
                         if ($content instanceof \Generator) {
-//                            $scheduler = new CoroutineScheduler();
-//                            $scheduler->newTask($content);
-//                            $scheduler->run();
                             $task = new CoroutineTask($content);
                             $task->work($task->getRoutine());
                             unset($task);
@@ -295,24 +292,35 @@ class RouteMatch
         }
     }
 
+    protected function callUserFuncArrayRealParams($class, $function, $params)
+    {
+        $reflect = new \ReflectionMethod($class, $function);
+        $real_params = array();
+        foreach ($reflect->getParameters() as $i => $param)
+        {
+            $pname = $param->getName();
+            if (array_key_exists($pname, $params))
+            {
+                $real_params[] = $params[$pname];
+            }
+        }
+
+        return $real_params;
+    }
+
     protected function todoMiddleWare($obj, $action, $middleware, $require)
     {
         $whiteAction = [];
-        if(method_exists($obj, "whiteActions")){
+        if (method_exists($obj, "whiteActions")) {
             $whiteAction = $obj->whiteActions();
         }
-        $runMidd = 0;
-        if($whiteAction){
-            if(!in_array($action, $whiteAction)){
-                $runMidd=1;
-            }
-        }else{
-            $runMidd = 1;
+
+        if (isset($whiteAction["*"])) {
+            if (in_array($action, $whiteAction["*"])) return true;
         }
-        if($runMidd){
-            $check = $this->runMiddleware($middleware, $require);
-            if(!$check) return false;
-        }
+
+        $check = $this->runMiddleware($middleware, $require, $action, $whiteAction);
+        if (!$check) return false;
         return true;
     }
 
@@ -322,25 +330,27 @@ class RouteMatch
      * @param $require
      * @return bool
      */
-    protected function runMiddleware($middleware, $require)
+    protected function runMiddleware($middleware, $require, $action, $whiteAction)
     {
         if ($middleware) {
+            $middleware = is_string($middleware) ? [$middleware] : $middleware;
             $midd = self::$middlewareConfig;
             if ($midd) {
-                if(is_array($middleware)){
-                    foreach ($middleware as $v) {
-                        if (isset($midd[$v])) {
-                            $class = $midd[$v];
-                            $obj = new $class();
-                            $rs = call_user_func_array([$obj, "perform"], $require);
-                            if (!$rs) return false;
+                foreach ($middleware as $v) {
+                    if($whiteAction){
+                        if (isset($whiteAction[$v])) {
+                            if (in_array($action, $whiteAction[$v])) continue;
+                        }else{
+                            if (in_array($action, $whiteAction)) continue;
                         }
                     }
-                }elseif(is_string($middleware)){
-                    $class = $midd[$middleware];
-                    $obj = new $class();
-                    $rs = call_user_func_array([$obj, "perform"], $require);
-                    if (!$rs) return false;
+                    
+                    if (isset($midd[$v])) {
+                        $class = $midd[$v];
+                        $obj = new $class();
+                        $rs = call_user_func_array([$obj, "perform"], $require);
+                        if (!$rs) return false;
+                    }
                 }
             }
         }
