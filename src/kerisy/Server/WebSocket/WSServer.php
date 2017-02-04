@@ -51,13 +51,13 @@ class WSServer extends HttpServer
         unset(self::$allFd[$fd]);
     }
 
-    protected function render($data='', $errorCode = self::RESPONSE_CODE, $errodMsg = '')
+    protected function render($data='', $errorCode = self::RESPONSE_CODE, $errorMsg = '')
     {
         $elapsedTime = ElapsedTime::runtime("sys_elapsed_time");
         $result = [];
         $result['result'] = $data;
         $result['errorCode'] = $errorCode;
-        $result['errodMsg'] = $errodMsg;
+        $result['errorMsg'] = $errorMsg;
         $result['elapsedTime'] = $elapsedTime;
         return json_encode($result);
     }

@@ -124,7 +124,11 @@ class Application
         ];
         $config = CConfig::get("app.command");
         if ($config) {
-            $commands = Arr::merge($commands, $config);
+            $commandsTmp = [];
+            foreach ($config as $cv){
+                $commandsTmp[] = new $cv;
+            }
+            $commands = Arr::merge($commands, $commandsTmp);
         }
         $application = new CmdApplication();
         foreach ($commands as $v) {

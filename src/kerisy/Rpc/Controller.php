@@ -39,13 +39,13 @@ class Controller
      * @param string $errodMsg
      * @return array
      */
-    public function render($data, $errorCode = self::RESPONSE_CODE, $errodMsg = '')
+    public function render($data, $errorCode = self::RESPONSE_CODE, $errorMsg = '')
     {
         $elapsedTime = ElapsedTime::runtime("rpc_sys_elapsed_time");
         $result = [];
         $result['result'] = $data;
         $result['errorCode'] = $errorCode;
-        $result['errodMsg'] = $errodMsg;
+        $result['errorMsg'] = $errorMsg;
         $result['elapsedTime'] = $elapsedTime;
         return $result;
     }
@@ -55,10 +55,10 @@ class Controller
      * @param int $errorCode
      * @param string $errodMsg
      */
-    public function response($data, $errorCode = self::RESPONSE_CODE, $errodMsg = '')
+    public function response($data, $errorCode = self::RESPONSE_CODE, $errorMsg = '')
     {
-        $data = $this->render($data, $errorCode, $errodMsg);
+        $data = $this->render($data, $errorCode, $errorMsg);
         $this->server->send($this->fd, $data);
-        $this->server->close($this->fd);
+//        $this->server->close($this->fd);
     }
 }

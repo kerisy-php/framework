@@ -103,13 +103,13 @@ class Controller
      * @param int $errorCode
      * @param string $errodMsg
      */
-    public function response($data, $errorCode = self::RESPONSE_CODE, $errodMsg = '')
+    public function response($data, $errorCode = self::RESPONSE_CODE, $errorMsg = '')
     {
         $elapsedTime = ElapsedTime::runtime("sys_elapsed_time");
         $result = [];
         $result['result'] = $data;
         $result['errorCode'] = $errorCode;
-        $result['errodMsg'] = $errodMsg;
+        $result['errorMsg'] = $errorMsg;
         $result['elapsedTime'] = $elapsedTime;
         $this->response->header("Content-type", "application/json");
         $content = json_encode($result, JSON_UNESCAPED_UNICODE);
