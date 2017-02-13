@@ -112,7 +112,7 @@ class Controller
         $result['errorMsg'] = $errorMsg;
         $result['elapsedTime'] = $elapsedTime;
         $this->response->header("Content-type", "application/json");
-        $content = json_encode($result, JSON_UNESCAPED_UNICODE);
+        $content = Arr::my_json_encode($result);
         $this->response->end($content);
     }
 

@@ -12,6 +12,7 @@
 
 namespace Kerisy\Support\Serialization\Adapter;
 
+use Kerisy\Support\Arr;
 use Kerisy\Support\Serialization\SerializationAbstract;
 
 class JsonSerialization extends SerializationAbstract
@@ -49,7 +50,7 @@ class JsonSerialization extends SerializationAbstract
      */
     public function trans($data)
     {
-        return json_encode($data);
+        return Arr::my_json_encode($data);
     }
 
     /**

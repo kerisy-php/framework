@@ -17,6 +17,7 @@ namespace Kerisy\Server;
 use Kerisy\Server\Exception\InvalidArgumentException;
 use Kerisy\Server\Facade\Context as FacedeContext;
 use Kerisy\Coroutine\Event;
+use Kerisy\Support\Arr;
 use Kerisy\Support\ElapsedTime;
 use Kerisy\Coroutine\Base\CoroutineTask;
 
@@ -91,7 +92,7 @@ class Task
     private function log($exception, $returnData)
     {
         //超过次数,记录日志
-        $msg = date('Y-m-d H:i:s') . " " . json_encode($returnData);
+        $msg = date('Y-m-d H:i:s') . " " . Arr::my_json_encode($returnData);
         if ($exception) {
             $msg .= "\n================================================\n" .
                 $exception .

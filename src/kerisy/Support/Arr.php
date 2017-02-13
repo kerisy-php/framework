@@ -318,4 +318,22 @@ class Arr
     }
 
 
+    public static function my_json_encode($json)
+    {
+        array_walk_recursive($json, function (&$value, $key)
+        {
+            if(is_string($value) && is_numeric($value))
+            {
+                // check if value doesn't starts with 0 or +
+                if(!preg_match('/^(\+|0)/', $value))
+                {
+                    // cast $value to int or float
+                    $value   += 0;
+                }
+            }
+        });
+
+        return json_encode($json, JSON_UNESCAPED_UNICODE);
+    }
+
 }

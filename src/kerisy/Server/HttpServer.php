@@ -37,9 +37,9 @@ class HttpServer
      * @var swooleServer
      */
     public $swooleServer = null;
-    private $adapter = null;
-    private $serverName = '';
-    private $config = [];
+    protected $adapter = null;
+    protected $serverName = '';
+    protected $config = [];
 
     public function __construct(SwooleServer $swooleServer, array $config, $adapter, $serverName = "kerisy")
     {
@@ -206,9 +206,11 @@ class HttpServer
     public function onRequest(SwooleHttpRequest $swooleHttpRequest, SwooleHttpResponse $swooleHttpResponse)
     {
         ElapsedTime::setStartTime("sys_elapsed_time");
-        
+
+        $gzip = isset($this->config["gzip"]) ? $this->config["gzip"] : 0;
+
         $request = new Request($swooleHttpRequest);
-        $response = new Response($swooleHttpResponse);
+        $response = new Response($swooleHttpResponse, $gzip);
         
         if (Facade::getFacadeApplication()) {
             FContext::clear();
@@ -233,7 +235,7 @@ class HttpServer
         }
     }
 
-    private function response(Request $request, Response $response)
+    protected function response(Request $request, Response $response)
     {
         $workerId = posix_getpid();
         try {
@@ -270,11 +272,6 @@ class HttpServer
      */
     protected function requestHtmlHandle(Request $request, Response $response)
     {
-        $gzip = isset($this->config["gzip"]) ? $this->config["gzip"] : 0;
-        if ($gzip) {
-            $response->gzip($gzip);
-        }
-
         $response->header("Content-Type", "text/html;charset=utf-8");
         return $this->adapter->start($request, $response);
     }

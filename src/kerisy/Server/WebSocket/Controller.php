@@ -12,6 +12,7 @@
 
 namespace Kerisy\Server\WebSocket;
 
+use Kerisy\Support\Arr;
 use Kerisy\Support\ElapsedTime;
 
 class Controller
@@ -45,7 +46,7 @@ class Controller
         $result['errorCode'] = $errorCode;
         $result['errorMsg'] = $errorMsg;
         $result['elapsedTime'] = $elapsedTime;
-        return json_encode($result);
+        return Arr::my_json_encode($result);
     }
 
     /**

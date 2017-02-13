@@ -17,9 +17,9 @@ namespace Kerisy\Server;
 
 class ProcessServer
 {
-    private $config = [];
-    private $redirectStdout = null;
-    private static $workers = [];
+    protected $config = [];
+    protected $redirectStdout = null;
+    protected static $workers = [];
 
     function __construct(array $config, $redirectStdout = false)
     {

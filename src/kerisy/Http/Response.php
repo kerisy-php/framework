@@ -23,16 +23,18 @@ class Response
     public $view;
     private $hasEnd = 0;
     protected $headerStack = [];
+    public $gzip = 0;
 
     /**
      * 初始化
      * Response constructor.
      * @param SwooleHttpResponse $response
      */
-    public function __construct(SwooleHttpResponse $response)
+    public function __construct(SwooleHttpResponse $response, $gzip=0)
     {
         $this->response = $response;
         $this->view = new AssignData();
+        $this->gzip = $gzip;
     }
 
     public function setHasEnd($hasEnd)
@@ -88,7 +90,7 @@ class Response
      * @param int $level
      * @return mixed
      */
-    public function gzip($level = 1)
+    public function gzip($level = 0)
     {
         return $this->response->gzip($level);
     }
@@ -120,7 +122,7 @@ class Response
      * @return mixed
      * @throws ContextErrorException
      */
-    public function end($html = '')
+    public function end($html = '', $useZip=0)
     {
         if ($this->hasEnd) {
             return Log::sysinfo("http has send");
@@ -132,6 +134,11 @@ class Response
                 $this->response->header($k, $v);
             }
         }
+
+        if($useZip){
+            $this->gzip($this->gzip);
+        }
+        
         $data = $this->response->end($html);
         
         return $data;

@@ -146,6 +146,11 @@ if (!function_exists('throwExit')) {
      */
     function throwExit($str=null)
     {
+        if(!$str){
+            list($line, $func) = debug_backtrace(2, 2);
+            \Kerisy\Support\Log::show("{$func['function']}(): {$line['file']} . (line:{$line['line']})");
+        }
+        
         $str && dump($str);
         throw new \Kerisy\Support\Exception\RuntimeExitException("exit");
     }
@@ -198,6 +203,18 @@ if (!function_exists('responseEnd')) {
     function responseEnd($callback)
     {
         \Kerisy\Coroutine\Event::bind("request.end",$callback);
+    }
+}
+
+
+//non-blocking
+if (!function_exists('nonBlock')) {
+    /**
+     * 非阻塞程序处理
+     */
+    function nonBlock($callback,$interval=1)
+    {
+        \Kerisy\Support\Timer::after($interval,$callback);
     }
 }
 

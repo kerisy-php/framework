@@ -32,9 +32,9 @@ class SocketServer
      * @var swooleServer
      */
     public $swooleServer;
-    private $adapter;
-    private $serverName;
-    private $config = [];
+    protected $adapter;
+    protected $serverName;
+    protected $config = [];
 
     public function __construct(SwooleServer $swooleServer, array $config, $adapter, $socketName, $serverName)
     {
