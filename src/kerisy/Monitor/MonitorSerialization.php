@@ -1,6 +1,6 @@
 <?php
 /**
- *  数据序列化处理以及route 匹配
+ * 序列化
  *
  * Kerisy Framework
  *
@@ -12,11 +12,11 @@
  * @version         3.0.0
  */
 
-namespace Kerisy\Rpc;
+namespace Kerisy\Monitor;
 
 use Kerisy\Support\Serialization\Serialization;
 
-class RpcSerialization
+class MonitorSerialization
 {
 
     private $serializeObj = null;

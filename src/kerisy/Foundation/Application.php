@@ -121,6 +121,10 @@ class Application
             new Command\Server\Stop(),
             new Command\Artisan\Optimize(),
             new Command\Artisan\Clean(),
+            new Command\Monitor\Start(),
+            new Command\Monitor\Restart(),
+            new Command\Monitor\Status(),
+            new Command\Monitor\Stop(),
         ];
         $config = CConfig::get("app.command");
         if ($config) {
