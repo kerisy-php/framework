@@ -15,21 +15,39 @@
 namespace Kerisy\Server;
 
 
-class ProcessServer
+abstract class ProcessServer
 {
     protected $config = [];
     protected $redirectStdout = null;
     protected static $workers = [];
 
-    function __construct(array $config, $redirectStdout = false)
+    public function __construct($daemonize, $redirectStdout = false)
     {
-        $this->config = $config;
         $this->redirectStdout = $redirectStdout;
-        $this->init();
+        $this->init($daemonize);
+    }
+
+
+    abstract function sigchld();
+
+
+    public static function getWorkers()
+    {
+        return self::$workers;
+    }
+
+
+    public function unsetWorker($pid)
+    {
+        if (isset(self::$workers[$pid])) {
+            self::$workers[$pid]->close();
+            \swoole_process::kill($pid, SIGTERM);
+            unset(self::$workers[$pid]);
+        }
     }
 
     /**
-     * 添加子进程 
+     * 添加子进程
      *
      * @param $callBack
      */
@@ -38,32 +56,24 @@ class ProcessServer
         $process = new \swoole_process($callBack, $this->redirectStdout);
         $pid = $process->start();
         self::$workers[$pid] = $process;
+        return $pid;
     }
 
-    protected function init()
+    protected function init($asDaemon)
     {
-        $asDaemon = isset($this->config['daemonize']) ? $this->config['daemonize'] : 0;
         if ($asDaemon) {
             \swoole_process::daemon();
         }
 
-        \swoole_process::signal(SIGTERM, function () {
+        \swoole_process::signal(SIGTERM, function () {var_dump(1);
             exit(0);
         });
 
-        \swoole_process::signal(SIGINT, function () {
+        \swoole_process::signal(SIGINT, function () {var_dump(2);
             exit(0);
         });
 
-        \swoole_process::signal(SIGCHLD, function () {
-            if ($ret = \swoole_process::wait(false)) {
-                $pid = $ret['pid'];
-                if (isset(self::$workers[$pid])) {
-                    self::$workers[$pid]->close();
-                    \swoole_process::kill($pid, SIGTERM);
-                }
-            }
-        });
+        $this->sigchld();
 
     }
 }

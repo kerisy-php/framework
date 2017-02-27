@@ -18,13 +18,19 @@ use Kerisy\Foundation\Storage\Redis;
 use Kerisy\Server\ProcessServer;
 use Kerisy\Support\Log;
 
-class JobServer
+class JobServer extends ProcessServer
 {
-    private $config = [];
+    protected static $workerMap = [];
+    protected static $baseName = "";
 
     public function __construct(array $config, $root)
     {
         $this->config = $config;
+        $name = isset($this->config['server']['name']) ? $this->config['server']['name'] : "trensy";
+        $this->config['server_name'] = $name;
+        $asDaemon = isset($this->config['daemonize']) ? $this->config['daemonize'] : 0;
+        parent::__construct($asDaemon, false);
+        self::$baseName = $name."-job";
     }
 
     /**
@@ -48,18 +54,10 @@ class JobServer
      */
     public function start()
     {
-        $name = isset($this->config['server']['name']) ? $this->config['server']['name'] : "kerisy";
-        $preName = $name . "-job";
-        $serverName = $preName . "-master";
+        $serverName = self::$baseName . "-master";
         swoole_set_process_name($serverName);
-//        Log::sysinfo("[$serverName] start ...");
-        //start job run
-        $this->config['server_name'] = $name;
-        $job = new Job($this->config);
-        $perform = $this->config['perform'];
 
-        $processServer = new ProcessServer($this->config['server'], false);
-        $name = $preName . "-worker";
+        $perform = $this->config['perform'];
 
         //载入初始化job
         $this->clear(1);
@@ -70,19 +68,57 @@ class JobServer
                 $obj = array_isset($v, 0);
                 $startTime = array_isset($v, 1);
                 $cronStr = array_isset($v, 2);
-                $tagName = array_isset($v, 3);
-                $tagName = $tagName?$tagName:$k;
                 FJob::add($k, $obj, $startTime, $cronStr, 1);
             }
         }
+
+        $job = new Job($this->config);
+        $name = self::$baseName . "-worker";
+
         foreach ($perform as $key => $v) {
-            $processServer->add(
-                function (\swoole_process $worker) use ($key, $job, $name) {
-                    $worker->name($name);
-                    Log::sysinfo("$name start ...");
-                    $job->start($key);
-                }
-            );
+            $this->createProcess($key, $name, $job);
         }
+    }
+
+    /**
+     * 创建新的进程
+     *
+     * @param $key
+     * @param $job
+     * @param $name
+     */
+    public function createProcess($key, $name, $job)
+    {
+        $pid = $this->add(
+            function (\swoole_process $worker) use ($key, $job, $name) {
+                $tmpName = $name."-".$key;
+                $worker->name($tmpName);
+                Log::sysinfo("$tmpName start ...");
+                $job->start($key);
+            }
+        );
+        self::$workerMap[$key] = $pid;
+    }
+
+    /**
+     * 收到进程异常信号,重新创建进程
+     *
+     */
+    public function sigchld()
+    {
+        \swoole_process::signal(SIGCHLD, function () {
+            $job = new Job($this->config);
+            $name = self::$baseName . "-worker";
+
+            if($ret = \swoole_process::wait(false)) {
+                $pid = $ret['pid'];
+                $this->unsetWorker($pid);
+                $neworkerMap = array_flip(self::$workerMap);
+                if(isset($neworkerMap[$pid])){
+                    $key = $neworkerMap[$pid];
+                    $this->createProcess($key, $name, $job);
+                }
+            }
+        });
     }
 }
