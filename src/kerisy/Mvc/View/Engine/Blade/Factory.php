@@ -9,6 +9,7 @@ use Kerisy\Mvc\View\Engine\Blade\Engines\EngineResolver;
 use Kerisy\Mvc\View\Engine\Blade\Support\Arr;
 use Kerisy\Mvc\View\Engine\Blade\Support\Str;
 use Kerisy\Di\Di;
+use Kerisy\Support\RunMode;
 
 class Factory
 {
@@ -103,6 +104,8 @@ class Factory
      */
     protected $renderCount = 0;
 
+    protected $config = [];
+
     /**
      * Create a new view factory instance.
      *
@@ -110,19 +113,33 @@ class Factory
      * @param  \Kerisy\Mvc\View\Engine\Blade\ViewFinderInterface $finder
      * @return void
      */
-    public function __construct(EngineResolver $engines, ViewFinderInterface $finder, $fisConfig="")
+    public function __construct(EngineResolver $engines, ViewFinderInterface $finder, $config)
     {
         $this->finder = $finder;
         $this->engines = $engines;
-        
-        if($fisConfig){
-            Di::set("fis", ["class"=>\Kerisy\Mvc\View\Engine\Blade\FisResource::class]);
-            $fis = Di::get("fis");
-            $fis->setPath($fisConfig);
-            $this->share('__fis', $fis);
-        }
+
+        $this->config = $config;
 
         $this->share('__env', $this);
+    }
+
+    public function requireStatic($path)
+    {
+        
+        list($version, $bladexEx, $runMode) = $this->config;
+        if($runMode == RunMode::RUN_MODE_TEST) {
+            $version = time();
+        }
+        $ext = pathinfo($path, PATHINFO_EXTENSION);
+        if($ext == 'js'){
+            return "<script src=\"" . $path . "?".$version."\"></script>" . PHP_EOL;
+        }
+        if($ext == 'css'){
+            return "<link rel=\"stylesheet\" href=\"" . $path . "?".$version."\">" . PHP_EOL;
+        }
+        if($ext == 'ico'){
+            return "<link rel=\"shortcut icon\" href=\"" . $path . "?".$version."\" />" . PHP_EOL;
+        }
     }
 
     /**

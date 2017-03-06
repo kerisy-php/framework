@@ -228,7 +228,7 @@ abstract class SQlAbstract
             return false;
         }
         if (!(strtolower(substr($sql, 0, 6)) == 'select' || strtolower(substr($sql, 0, 4)) == 'show')) {
-            throw new \Exception("coan not run on insert ,update ,delete");
+            throw new \Exception("can not run on insert ,update ,delete");
         }
         if ($data) {
             foreach ($data as $k => $v) {

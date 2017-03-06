@@ -47,23 +47,11 @@ class HttpdBase
             Log::sysinfo("httpd.server config not config");
             exit(0);
         }
-
-        $config['server']['usefis'] = 0;
-        $config['server']['releasefis'] = 0;
+        
 
         if ($input->hasOption("daemonize")) {
             $daemonize = $input->getOption('daemonize');
             $config['server']['daemonize'] = $daemonize == 0 ? 0 : 1;
-        }
-
-        if ($input->hasOption("usefis")) {
-            $usefis = $input->getOption('usefis');
-            $config['server']['usefis'] = $usefis == 0 ? 0 : 1;
-        }
-
-        if ($input->hasOption("releasefis")) {
-            $releasefis = $input->getOption('releasefis');
-            $config['server']['releasefis'] = $releasefis?$releasefis:null;
         }
         
         if (!isset($config['server']['host'])) {
@@ -79,14 +67,7 @@ class HttpdBase
         $adapter = new Application($root);
         self::doOperate($cmd, $config, $adapter, $root, $appName);
     }
-
-    protected static function setRelease()
-    {
-        $release = Config::get("app.view.fis.compile_path");
-        if (is_dir($release)) {
-            Config::set("_release.path", $release);
-        }
-    }
+    
 
 
     public static function doOperate($command, array $config, $adapter, $root, $appName)
@@ -142,20 +123,7 @@ class HttpdBase
         }
 
         self::BladeCompileInit();
-
-        if($config['server']['usefis']){
-            self::setRelease();
-            $fisPath = Config::get("_release.path");
-            if ($fisPath) {
-                $config['server']['_release.path'] = $fisPath;
-            }
-            self::useFis();
-        }
-
-        $releasePath = Config::get("app.view.fis.compile_path");
-        if (($config['server']['releasefis']!=null) && $releasePath && ($command == "start" || $command == 'restart')) {
-            self::addRelease($config['server']['releasefis']);
-        }
+        
 
         if ($command !== 'start' && $command !== 'restart' && !$masterPid) {
             Log::sysinfo("[$serverName] not run");
@@ -194,11 +162,6 @@ class HttpdBase
         BladeCompiler::setStaticPath($staticPath);
     }
 
-    protected static function useFis()
-    {
-        BladeCompiler::setIsFis(true);
-    }
-
 
     protected static function stop($appName)
     {
@@ -212,50 +175,8 @@ class HttpdBase
         $obj = new WSServer($swooleServer, $config['server'], $adapter, $appName);
         $obj->start();
     }
-
-    protected static function addRelease($releasefis = null)
-    {
-        $file = [
-            "fis-conf.js", "package.json"
-        ];
-
-        foreach ($file as $f) {
-            $path = ROOT_PATH . "/" . $f;
-            if (!is_file($path)) {
-                Log::sysinfo($path . " not found, program will run with not supports fis ---->----->");
-                self::removeRelease();
-                return;
-            }
-        }
-
-        $nodeModulesPath = ROOT_PATH . "/node_modules";
-        if (!is_dir($nodeModulesPath)) {
-            if (!self::checkCmd("npm")) return;
-            Log::error("dir 'node_modules' not found , please run 'npm install' ");
-            self::removeRelease();
-            return;
-        }
-
-        if (!self::checkCmd("fis3")) return;
-
-        $fisPath = Config::get("app.view.fis.compile_path");
-        if ($releasefis !=null) {
-            $cmdStr = "fis3 release {$releasefis} -d " . $fisPath;
-        } else {
-            $cmdStr = "fis3 release -d " . $fisPath;
-        }
-//        dump($cmdStr);
-        exec($cmdStr);
-    }
-
-    protected static function removeRelease()
-    {
-        $release = Config::get("app.view.fis.compile_path");
-        if (is_dir($release)) {
-            self::deldir($release);
-            return;
-        }
-    }
+    
+    
 
 
     protected static function deldir($dir)

@@ -89,14 +89,8 @@ class Blade implements ViewInterface
             $this->{'register'.ucfirst($engine).'Engine'}($resolver);
         }
         $finder = new FileViewFinder([$path]);
-
-        $fisConfig = "";
-        $fisPath = Config::get("_release.path");
         
-        if($fisPath){
-            $fisConfig = Dir::formatPath($fisPath).Config::get("app.view.fis.map_path");
-        }
-        $factory = new Factory($resolver, $finder, $fisConfig);
+        $factory = new Factory($resolver, $finder, $this->config);
         
         $result= $factory->make($view, $data, [])->render();
 
@@ -127,7 +121,7 @@ class Blade implements ViewInterface
         $resolver->register('blade', function () {
             $cachePath =  $this->cachePath;
             $compiler = new BladeCompiler($cachePath);
-            $bladeEx= $this->config;
+            list($version, $bladeEx, $runMode) = $this->config;
 
             if($bladeEx){
                 foreach ($bladeEx as $k=>$class){

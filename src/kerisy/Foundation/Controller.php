@@ -20,6 +20,7 @@ use Kerisy\Mvc\Template;
 use Kerisy\Support\Arr;
 use Kerisy\Support\Dir;
 use Kerisy\Support\ElapsedTime;
+use Kerisy\Support\RunMode;
 
 class Controller
 {
@@ -61,13 +62,8 @@ class Controller
     public function render($viewPath, $assign = [])
     {
 
-        $fisPath = Config::get("_release.path");
-        if ($fisPath) {
-            $fis = Config::get("app.view.fis.view_path");
-            $viewRoot = Dir::formatPath($fisPath) . $fis;
-        } else {
-            $viewRoot = Config::get("app.view.path");
-        }
+        
+        $viewRoot = Config::get("app.view.path");
 
         $theme = Config::get("app.view.theme");
         $realViewRoot = Dir::formatPath($viewRoot) . $theme;
@@ -77,7 +73,11 @@ class Controller
 
         Template::setViewCacheRoot($viewCachePath);
         Template::setEngine(Config::get("app.view.engine"));
-        $config = Config::get("app.view.blade_ex");
+        $bladexEx = Config::get("app.view.blade_ex");
+        $version = Config::get("app.view.static_version");
+        $runMode = RunMode::getRunMode();
+        $config = [$version, $bladexEx, $runMode];
+
         Template::setConfig($config);
 
         $assign = Arr::merge($assign, $this->view->getAssignData());

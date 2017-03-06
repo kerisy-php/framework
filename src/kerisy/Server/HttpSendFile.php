@@ -120,7 +120,6 @@ class HttpSendFile
             return $this->analyse = [$isFile, $filePath, $extension, '', $notFound];
         }
         
-        $fisPath = isset($this->config["_release.path"]) ? $this->config["_release.path"] : "";
         $staticPath = isset($this->config["static_path"]) ? $this->config["static_path"] : "";
         
         if (!$staticPath) {
@@ -134,13 +133,7 @@ class HttpSendFile
         $mime = Mime::get();
         if (is_file($filePath) && isset($mime[$extension])) {
             $isFile = 1;
-        } elseif($fisPath && isset($mime[$extension])){
-            $fisPath = rtrim($fisPath, DIRECTORY_SEPARATOR);
-            $filePath = $fisPath.$pathinfo;
-            if(is_file($filePath)){
-                $isFile = 1;
-            }
-        } else{
+        }else{
             if ($pathinfo == "/favicon.ico") {
                 $isFile = 1;
             }

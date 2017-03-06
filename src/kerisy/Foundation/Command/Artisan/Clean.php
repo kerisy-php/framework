@@ -1,6 +1,5 @@
 <?php
 /**
- * Created by PhpStorm.
  * Kerisy Framework
  *
  * PHP Version 7

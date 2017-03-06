@@ -65,10 +65,15 @@ class Log
     protected static function getOlineIp()
     {
         if(Content::hasSet("request")){
-            $ip = FContent::request()->server->get("HTTP_X_FORWARDED_FOR");
-            if(!$ip){
-                $ip = FContent::request()->server->get("REMOTE_ADDR");
-            }
+            $request = FContent::request();
+            $ip = $request->headers->get('x-forwarded-for');
+            !$ip && $ip = $request->headers->get('x-real-ip', '127.0.0.1');
+
+            is_array($ip) && $ip = $ip[0];
+
+            $ip = explode(',', $ip);
+            is_array($ip) && $ip = $ip[0];
+
             return $ip;
         }else{
             return "127.0.0.1";
@@ -83,34 +88,34 @@ class Log
 
     protected static function outPut($type, $data)
     {
-        if (self::$callback && (self::$callback instanceof \Closure)) {
+        if(self::$callback){
             $closureParam = [$type,$data];
-            return call_user_func(self::$callback, $closureParam);
-        }else{
-            $msg = array_pop($data);
-            if($type) array_unshift($data, $type);
-            if($type == 'show'){
-                $string = $msg;
-            }else{
-                $string = "[".implode("][",$data)."] ".$msg;
-            }
-            $foreground_colors = self::init();
-            $color = [
-                "info"=>"light_gray",
-                "sysinfo"=>"dark_gray",
-                "warn"=>"yellow",
-                "debug"=>"green",
-                "show"=>"green",
-                "error"=>"red",
-            ];
-
-            if (isset($foreground_colors[$color[$type]])) {
-                $colorStr = $foreground_colors[$color[$type]];
-                $string = "\033[" . $colorStr . "m".$string;
-            }
-            $string = $string . "\033[0m\n";
-            echo $string;
+            call_user_func(self::$callback, $closureParam);
         }
+        
+        $msg = array_pop($data);
+        if($type) array_unshift($data, $type);
+        if($type == 'show'){
+            $string = $msg;
+        }else{
+            $string = "[".implode("][",$data)."] ".$msg;
+        }
+        $foreground_colors = self::init();
+        $color = [
+            "info"=>"light_gray",
+            "sysinfo"=>"dark_gray",
+            "warn"=>"yellow",
+            "debug"=>"green",
+            "show"=>"green",
+            "error"=>"red",
+        ];
+
+        if (isset($foreground_colors[$color[$type]])) {
+            $colorStr = $foreground_colors[$color[$type]];
+            $string = "\033[" . $colorStr . "m".$string;
+        }
+        $string = $string . "\033[0m\n";
+        echo $string;
     }
 
     public static function __callStatic($name, $arguments)

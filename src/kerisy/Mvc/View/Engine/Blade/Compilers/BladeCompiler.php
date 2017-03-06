@@ -7,7 +7,6 @@ use Kerisy\Mvc\View\Engine\Blade\Support\Str;
 
 class BladeCompiler extends Compiler implements CompilerInterface
 {
-    protected static $isFis = false;
     protected static $staticPath = null;
     /**
      * All of the registered extensions.
@@ -100,11 +99,7 @@ class BladeCompiler extends Compiler implements CompilerInterface
      */
     protected $forelseCounter = 0;
 
-
-    public static function setIsFis($isFis)
-    {
-        self::$isFis = $isFis;
-    }
+    
 
     public static function setStaticPath($staticPath)
     {
@@ -1049,19 +1044,10 @@ class BladeCompiler extends Compiler implements CompilerInterface
 
     protected function compileExtends($expression, $match)
     {
-        if(self::$isFis){
-            $params = explode(",", $match[4]);
-            $params[0] = "\$__fis->uri({$params[0]})";
-            $expression = join(",", $params);
-            $this->_compileExtends($expression);
-            return "";
-        }else{
             $params = explode(",", $match[4]);
             $expression = join(",", $params);
             $this->_compileExtends($expression);
             return "";
-        }
-
     }
 
     /**
@@ -1090,75 +1076,16 @@ class BladeCompiler extends Compiler implements CompilerInterface
     {
         return "\Kerisy\Mvc\Route\RouteMatch::getInstance()->url{$expression}";
     }
-
-    protected function compileFramework($expression)
-    {
-        if (self::$isFis) {
-            return "<?php \$__fis->setFramework{$expression}; ?>";
-        }else{
-            return "";
-        }
-    }
-
-    protected function compileRequire($expression, $match)
-    {
-        $params = explode(",", $match[4]);
-
-        if (self::$isFis) {
-            $params[0] = "<?php echo {$params[0]} ?>";
-            $expression = join(", ", $params);
-            return "<!--f.r(".$expression.")-->";
-        } else {
-            $params[0] = trim($params[0], '\'');
-            $params[0] = trim($params[0], '\"');
-            self::$staticPath = trim(self::$staticPath,"/");
-            $path = str_replace(self::$staticPath,"",$params[0]);
-            $path = trim($path, "/");
-            $path = "/".$path;
-            $pathArr = pathinfo($path);
-            $extension = array_isset($pathArr, "extension");
-            if (strtolower($extension) == 'js') {
-                return "<script src=\"" . $path . "\"></script>" . PHP_EOL;
-            } elseif (strtolower($extension) == 'css') {
-                return "<link rel=\"stylesheet\" type='text/css' href=\"" . $path . "\"/>" . PHP_EOL;
-            } elseif (strtolower($extension) == 'ico') {
-                return "<link rel=\"shortcut icon\" href=\"" . $path . "\">" . PHP_EOL;
-            }
-            return self::$staticPath;
-        }
-    }
+    
+    
 
     protected function compileInclude($expression, $match)
     {
-        if (self::$isFis) {
-            $params = explode(",", $match[4]);
-            $params[0] = "\$__fis->uri({$params[0]})";
-            $expression = join(",", $params);
-            return $this->_compileInclude($expression);
-        }else{
             $params = explode(",", $match[4]);
             $expression = join(",", $params);
             return $this->_compileInclude($expression);
-        }
     }
-
-    protected function compileFuri($expression)
-    {
-        if (self::$isFis) {
-            return "<?php echo \$__fis->uri{$expression}; ?>";
-        }else{
-            return "";
-        }
-    }
-
-    protected function compileFurl($expression)
-    {
-        if (self::$isFis) {
-            return "\$__fis->uri{$expression}";
-        }else{
-            return "";
-        }
-    }
+    
 
     protected function compileL($expression)
     {
@@ -1167,60 +1094,35 @@ class BladeCompiler extends Compiler implements CompilerInterface
 
     protected function compileWidget($expression, $match)
     {
-        if (self::$isFis) {
-            $params = explode(",", $match[4]);
-            $params[0] = "\$__fis->uri({$params[0]})";
-            $expression = join(",", $params);
-            return $this->_compileInclude($expression);
-        }else{
-            $params = explode(",", $match[4]);
-            $expression = join(",", $params);
-            return $this->_compileInclude($expression);
-        }
+        $params = explode(",", $match[4]);
+        $expression = join(",", $params);
+        return $this->_compileInclude($expression);
     }
-
-    protected function compilePlaceholder($expression)
-    {
-        if (self::$isFis) {
-            return "<?php echo \$__fis->placeholder{$expression}; ?>";
-        }else{
-            return "";
-        }
-    }
+    
 
     protected function compileScript($expression)
     {
-        if (self::$isFis) {
-            return "<?php \$__fis->startScript(); ?>";
-        } else {
             return "<script type='application/javascript'>";
-        }
     }
 
     protected function compileStyle($expression)
     {
-        if (self::$isFis) {
-            return "<?php \$__fis->startStyle(); ?>";
-        } else {
-            return "<style type='text/css'>";
-        }
+        return "<style type='text/css'>";
+    }
+
+    protected function compileRequire($expression, $match)
+    {
+        $params = explode(",", $match[4]);
+        return "<?php echo \$__env->requireStatic($params[0]); ?>";
     }
 
     protected function compileEndscript($expression)
     {
-        if (self::$isFis) {
-            return "<?php \$__fis->endScript(); ?>";
-        } else {
-            return "</script>";
-        }
+        return "</script>";
     }
 
     protected function compileEndstyle($expression)
     {
-        if (self::$isFis) {
-            return "<?php \$__fis->endStyle(); ?>";
-        } else {
-            return "</style>";
-        }
+        return "</style>";
     }
 }

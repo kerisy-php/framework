@@ -45,14 +45,7 @@ class Application
 //        $this->initRelease();
         RouteBootstrap::getInstance();
     }
-
-    protected function initRelease()
-    {
-        $release = CConfig::get("app.view.fis.compile_path");
-        if(is_dir($release)){
-           CConfig::set("_release.path", $release);
-        }
-    }
+    
 
     /**
      * rpc server 初始化
@@ -121,6 +114,7 @@ class Application
             new Command\Server\Stop(),
             new Command\Artisan\Optimize(),
             new Command\Artisan\Clean(),
+            new Command\Artisan\Dbsync(),
             new Command\Monitor\Start(),
             new Command\Monitor\Restart(),
             new Command\Monitor\Status(),

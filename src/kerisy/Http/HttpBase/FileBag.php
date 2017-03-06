@@ -11,8 +11,6 @@
 
 namespace Kerisy\Http\HttpBase;
 
-use Kerisy\Http\HttpBase\File\UploadedFile;
-
 /**
  * FileBag is a container for uploaded files.
  *
@@ -47,11 +45,10 @@ class FileBag extends ParameterBag
      */
     public function set($key, $value)
     {
-        if (!is_array($value) && !$value instanceof UploadedFile) {
-            throw new \InvalidArgumentException('An uploaded file must be an array or an instance of UploadedFile.');
+        if (!is_array($value)) {
+            throw new \InvalidArgumentException('An uploaded file must be an array');
         }
-
-        parent::set($key, $this->convertFileInformation($value));
+        parent::set($key, $value);
     }
 
     /**
@@ -63,38 +60,7 @@ class FileBag extends ParameterBag
             $this->set($key, $file);
         }
     }
-
-    /**
-     * Converts uploaded files to UploadedFile instances.
-     *
-     * @param array|UploadedFile $file A (multi-dimensional) array of uploaded file information
-     *
-     * @return array A (multi-dimensional) array of UploadedFile instances
-     */
-    protected function convertFileInformation($file)
-    {
-        if ($file instanceof UploadedFile) {
-            return $file;
-        }
-
-        $file = $this->fixPhpFilesArray($file);
-        if (is_array($file)) {
-            $keys = array_keys($file);
-            sort($keys);
-
-            if ($keys == self::$fileKeys) {
-                if (UPLOAD_ERR_NO_FILE == $file['error']) {
-                    $file = null;
-                } else {
-                    $file = new UploadedFile($file['tmp_name'], $file['name'], $file['type'], $file['size'], $file['error']);
-                }
-            } else {
-                $file = array_map(array($this, 'convertFileInformation'), $file);
-            }
-        }
-
-        return $file;
-    }
+    
 
     /**
      * Fixes a malformed PHP $_FILES array.
