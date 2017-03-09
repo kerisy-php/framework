@@ -40,6 +40,13 @@ class RouteMatch
 
     protected static $middlewareConfig = [];
 
+    protected static $dispatch = [];
+
+    public static function getDispatch()
+    {
+        return self::$dispatch;
+    }
+
     /**
      *  instance
      * @return \Kerisy\Mvc\Route\RouteMatch
@@ -116,7 +123,49 @@ class RouteMatch
         $matcher = new UrlMatcher($rootCollection, $context);
         $url = $this->groupFilter($url);
         $parameters = $matcher->match($url);
+        $this->setDispatch($parameters);
         return $parameters;
+    }
+
+    /**
+     * 获取分派信息
+     *
+     * @param $parameters
+     * @return bool
+     */
+    public function setDispatch($match)
+    {
+        if(isset($match['_route']) && $match['_route']) {
+            $routeName = $match['_route'];
+            $arrTmp = explode("@", $routeName);
+            self::$dispatch['groupName'] = current($arrTmp);
+            self::$dispatch['routeName'] = end($arrTmp);
+        }
+
+        if(isset($match['_controller']) && $match['_controller']) {
+            $controller = $match['_controller'];
+            self::$dispatch['controller'] = current(explode("@", $controller));
+        }
+    }
+
+    /**
+     * 简化url调用
+     *
+     * @param $routeName
+     * @param array $params
+     * @param string $groupName
+     * @return mixed
+     */
+    public function simpleUrl($routeName, $params = [], $groupName='')
+    {
+        if($groupName){
+            $routeName = $groupName."@".$routeName;
+        }else{
+            if(isset(self::$dispatch['groupName']) && self::$dispatch['groupName']){
+                $routeName = self::$dispatch['groupName']."@".$routeName;
+            }
+        }
+        return $this->url($routeName, $params);
     }
 
 
@@ -344,7 +393,7 @@ class RouteMatch
                             if (in_array($action, $whiteAction)) continue;
                         }
                     }
-                    
+
                     if (isset($midd[$v])) {
                         $class = $midd[$v];
                         $obj = new $class();

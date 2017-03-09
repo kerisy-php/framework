@@ -90,8 +90,8 @@ class RouteGroup
         if (!$result) return [];
         
         foreach ($result as $k => $v) {
-//            $name = $this->name . $k;// todo
-            $name = $k;
+            $name = $this->name ."@". $k;
+//            $name = $k;
             $subCollection->add($name, $v);
         }
         

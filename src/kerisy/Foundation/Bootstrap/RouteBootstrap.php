@@ -133,7 +133,8 @@ class RouteBootstrap
         ){
             $isGroup = true;
             if(!isset($config['name']) || !$config['name']){
-                $config['name'] = md5(serialize($config));
+//                $config['name'] = md5(serialize($config));
+                throw new \Exception("group route name is null!");
             }
         }
 

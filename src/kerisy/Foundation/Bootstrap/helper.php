@@ -16,11 +16,12 @@ if (!function_exists('url')) {
      *
      * @param $routeName
      * @param array $params
+     * @param $groupName
      * @return string
      */
-    function url($routeName, $params = [])
+    function url($routeName, $params = [], $groupName='')
     {
-        return \Kerisy\Mvc\Route\RouteMatch::getInstance()->url($routeName, $params);
+        return \Kerisy\Mvc\Route\RouteMatch::getInstance()->simpleUrl($routeName, $params, $groupName);
     }
 }
 

@@ -1069,12 +1069,12 @@ class BladeCompiler extends Compiler implements CompilerInterface
 
     protected function compileUri($expression)
     {
-        return "<?php echo \Kerisy\Mvc\Route\RouteMatch::getInstance()->url{$expression}; ?>";
+        return "<?php echo \Kerisy\Mvc\Route\RouteMatch::getInstance()->simpleUrl{$expression}; ?>";
     }
 
     protected function compileUrl($expression)
     {
-        return "\Kerisy\Mvc\Route\RouteMatch::getInstance()->url{$expression}";
+        return "\Kerisy\Mvc\Route\RouteMatch::getInstance()->simpleUrl{$expression}";
     }
     
     
