@@ -38,7 +38,8 @@ class Route
             }
 
             if (isset($params['domain']) && $params['domain']) {
-                $obj->setDomain($params['domain']);
+                $domain = $params['domain'];
+                $obj->setDomain($domain);
             }
 
             if (isset($params['middleware']) && $params['middleware']) {

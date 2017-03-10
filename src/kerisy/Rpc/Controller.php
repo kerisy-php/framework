@@ -15,6 +15,7 @@
 namespace Kerisy\Rpc;
 
 use Kerisy\Support\ElapsedTime;
+use Kerisy\Support\Arr;
 
 class Controller
 {
@@ -58,6 +59,34 @@ class Controller
     public function response($data, $errorCode = self::RESPONSE_CODE, $errorMsg = '')
     {
         $data = $this->render($data, $errorCode, $errorMsg);
+        $config = config()->get("server.rpc");
+        $defaultConfig = [
+            'daemonize' => 0,
+            //worker数量，推荐设置和cpu核数相等
+            'worker_num' => 2,
+            //reactor数量，推荐2
+            'reactor_num' => 2,
+            "dispatch_mode" => 2,
+            "gzip" => 4,
+            "static_expire_time" => 86400,
+            "task_worker_num" => 5,
+            "task_fail_log" => "/tmp/trensy/task_fail_log",
+            "task_retry_count" => 2,
+            "serialization" => 1,
+            "mem_reboot_rate" => 0,
+            //以下配置直接复制，无需改动
+            'open_length_check' => 1,
+            'package_length_type' => 'N',
+            'package_length_offset' => 0,
+            'package_body_offset' => 4,
+            'package_max_length' => 2000000,
+            "pid_file" => "/tmp/trensy/pid",
+            'open_tcp_nodelay' => 1,
+        ];
+
+        $configServer = Arr::merge($defaultConfig, $config['server']);
+        $obj = new RpcSerialization($configServer['serialization'], $configServer['package_body_offset']);
+        $data = $obj->format($data);
         $this->server->send($this->fd, $data);
 //        $this->server->close($this->fd);
     }

@@ -96,7 +96,7 @@ class RouteGroup
         }
         
         if($this->prefix) self::$groupPrefixs[] = $this->prefix;
-
+        
         $subCollection->addPrefix($this->prefix);
         $subCollection->addDefaults($this->defaults);
         $subCollection->addRequirements([]);

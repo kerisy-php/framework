@@ -88,7 +88,6 @@ class UrlMatcher implements UrlMatcherInterface, RequestMatcherInterface
     public function match($pathinfo)
     {
         $this->allow = array();
-
         if ($ret = $this->matchCollection(rawurldecode($pathinfo), $this->routes)) {
             return $ret;
         }
@@ -136,8 +135,10 @@ class UrlMatcher implements UrlMatcherInterface, RequestMatcherInterface
                 continue;
             }
 
+            $hostRegex = $compiledRoute->getHostRegex();
+
             $hostMatches = array();
-            if ($compiledRoute->getHostRegex() && !preg_match($compiledRoute->getHostRegex(), $this->context->getHost(), $hostMatches)) {
+            if ($hostRegex && !preg_match($hostRegex, $this->context->getHost(), $hostMatches)) {
                 continue;
             }
 
@@ -154,17 +155,6 @@ class UrlMatcher implements UrlMatcherInterface, RequestMatcherInterface
                     continue;
                 }
             }
-
-            $status = $this->handleRouteRequirements($pathinfo, $name, $route);
-
-            if (self::ROUTE_MATCH === $status[0]) {
-                return $status[1];
-            }
-
-            if (self::REQUIREMENT_MISMATCH === $status[0]) {
-                continue;
-            }
-
             return $this->getAttributes($route, $name, array_replace($matches, $hostMatches));
         }
     }
@@ -185,7 +175,6 @@ class UrlMatcher implements UrlMatcherInterface, RequestMatcherInterface
     protected function getAttributes(Route $route, $name, array $attributes)
     {
         $attributes['_route'] = $name;
-
         return $this->mergeDefaults($attributes, $route->getDefaults());
     }
 
@@ -200,16 +189,17 @@ class UrlMatcher implements UrlMatcherInterface, RequestMatcherInterface
      */
     protected function handleRouteRequirements($pathinfo, $name, Route $route)
     {
+//        return array(self::REQUIREMENT_MISMATCH, null);
 //        // expression condition
 //        if ($route->getCondition() && !$this->getExpressionLanguage()->evaluate($route->getCondition(), array('context' => $this->context, 'request' => $this->request))) {
 //            return array(self::REQUIREMENT_MISMATCH, null);
 //        }
 
         // check HTTP scheme requirement
-        $scheme = $this->context->getScheme();
-        $status = $route->getSchemes() && !$route->hasScheme($scheme) ? self::REQUIREMENT_MISMATCH : self::REQUIREMENT_MATCH;
-
-        return array($status, null);
+//        $scheme = $this->context->getScheme();dump($scheme);
+//        $status = $route->getSchemes() && !$route->hasScheme($scheme) ? self::REQUIREMENT_MISMATCH : self::REQUIREMENT_MATCH;
+//
+//        return array($status, null);
     }
 
     /**
@@ -222,12 +212,12 @@ class UrlMatcher implements UrlMatcherInterface, RequestMatcherInterface
      */
     protected function mergeDefaults($params, $defaults)
     {
+
         foreach ($params as $key => $value) {
             if (!is_int($key)) {
                 $defaults[$key] = $value;
             }
         }
-
         return $defaults;
     }
 

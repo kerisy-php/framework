@@ -1159,7 +1159,6 @@ class Request
                 $host = $this->server->get('SERVER_ADDR', '');
             }
         }
-
         // trim and remove port number from host
         // host is lowercase as per RFC 952/2181
         $host = strtolower(preg_replace('/:\d+$/', '', trim($host)));

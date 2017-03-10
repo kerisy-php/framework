@@ -43,10 +43,8 @@ class RpcClient
         $config['host'] = $host;
         $config['port'] = $port;
         $config['serialization'] = $serialization;
-
-        $serialization = Serialization::get($config['serialization']);
-
-        $serialization->setBodyOffset($config['package_body_offset']);
+        
+        $serialization = new RpcSerialization($config['serialization'], $config['package_body_offset']);
         $client = new \swoole_client($config['alway_keep'] ? SWOOLE_SOCK_TCP | SWOOLE_KEEP : SWOOLE_TCP);
         $this->client = new SocketClient($client, $config, $serialization);
     }

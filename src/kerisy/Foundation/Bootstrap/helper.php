@@ -103,8 +103,15 @@ if (!function_exists('dump')) {
     function dump($str, $isReturn=false)
     {
         if(!$isReturn){
-            list($line, $func) = debug_backtrace(2, 2);
-            \Kerisy\Support\Log::show("{$func['function']}(): {$line['file']} . (line:{$line['line']})");
+            $data = debug_backtrace(2, 2);
+            $line = isset($data[0])?$data[0]:null;
+            $func = isset($data[1])?$data[1]:null;
+            if($func){
+                \Kerisy\Support\Log::show("{$func['function']}(): {$line['file']} . (line:{$line['line']})");
+            }
+            else{
+                \Kerisy\Support\Log::show(" {$line['file']} . (line:{$line['line']})");
+            }
             return \Kerisy\Support\Log::show($str);
         }
         ob_start();

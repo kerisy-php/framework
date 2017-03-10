@@ -57,6 +57,7 @@ class RpcServer implements SocketInterface
 
     public function perform($data, $serv, $fd, $from_id)
     {
+        ElapsedTime::setStartTime("rpc_sys_elapsed_time");
         $result = $this->serialize->xformat($data);
         if (!$result) {
             throw new InvalidArgumentException(" received body parse fail");

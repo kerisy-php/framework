@@ -25,6 +25,7 @@ use Kerisy\Mvc\Route\Base\Matcher\UrlMatcher;
 use Kerisy\Mvc\Route\Base\RequestContext;
 use Kerisy\Mvc\Route\Base\RouteCollection as BaseRouteCollection;
 use Kerisy\Mvc\Route\Exception\PageNotFoundException;
+use Kerisy\Server\Facade\Context as FContext;
 use Kerisy\Support\Arr;
 
 class RouteMatch
@@ -119,11 +120,15 @@ class RouteMatch
     {
         $rootCollection = $this->getRootCollection();
         $context = new RequestContext();
-        $context->fromRequest(Request::createFromGlobals());
+        $request = FContext::request();
+        if(!$request){
+            $request = Request::createFromGlobals();
+        }
+        $context->fromRequest($request);
         $matcher = new UrlMatcher($rootCollection, $context);
         $url = $this->groupFilter($url);
         $parameters = $matcher->match($url);
-        $this->setDispatch($parameters);
+        $parameters['_matchinfo'] = $this->setDispatch($parameters);
         return $parameters;
     }
 
@@ -135,17 +140,18 @@ class RouteMatch
      */
     public function setDispatch($match)
     {
+        $mathResult = [];
         if(isset($match['_route']) && $match['_route']) {
             $routeName = $match['_route'];
-            $arrTmp = explode("@", $routeName);
-            self::$dispatch['groupName'] = current($arrTmp);
-            self::$dispatch['routeName'] = end($arrTmp);
+            $mathResult['groupName'] = substr($routeName, 0, strpos($routeName, '@'));
+            $mathResult['routeName'] = substr($routeName, strpos($routeName, '@')+1);
         }
 
         if(isset($match['_controller']) && $match['_controller']) {
             $controller = $match['_controller'];
-            self::$dispatch['controller'] = current(explode("@", $controller));
+            $mathResult['controller'] = $controller;
         }
+        return $mathResult;
     }
 
     /**
@@ -188,7 +194,12 @@ class RouteMatch
 
         $rootCollection = $this->getRootCollection();
         $context = new RequestContext();
-        $context->fromRequest(Request::createFromGlobals());
+        $request = FContext::request();
+        if(!$request){
+            $request = Request::createFromGlobals();
+        }
+        $context->fromRequest($request);
+//        $context->fromRequest(Request::createFromGlobals());
         $generator = new UrlGenerator($rootCollection, $context);
         $url = $generator->generate($routeName, $params);
 
@@ -207,8 +218,10 @@ class RouteMatch
     public function run($url, Request $request, Response $response)
     {
         $this->sessionStart($request, $response);
+        $serverStr = $request->server->get("REQUEST_METHOD");
+        $serverStr .= $request->server->get("HTTP_HOST");
 
-        $sysCacheKey = md5(__CLASS__ . $url);
+        $sysCacheKey = md5(__CLASS__ . $url.$serverStr);
 
         $parameters = syscache()->get($sysCacheKey);
 
@@ -216,6 +229,8 @@ class RouteMatch
             $parameters = $this->match($url);
             syscache()->set($sysCacheKey, $parameters, 3600);
         }
+
+        self::$dispatch = $parameters['_matchinfo'];
 
         if ($parameters) {
             $secondReq = [];

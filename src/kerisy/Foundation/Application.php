@@ -64,9 +64,8 @@ class Application
      */
     public function start($request, $response)
     {
-       
         $url = $request->getPathInfo();
-        
+
         $routeObj = RouteMatch::getInstance();
        
         $middlewareConfig = CConfig::get("app.middleware");
