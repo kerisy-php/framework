@@ -6,6 +6,7 @@ use Exception;
 use ErrorException;
 use Kerisy\Mvc\View\Engine\Blade\Compilers\CompilerInterface;
 use Kerisy\Di\Di;
+use Kerisy\Support\RunMode;
 
 class CompilerEngine extends PhpEngine
 {
@@ -23,15 +24,18 @@ class CompilerEngine extends PhpEngine
      */
     protected $lastCompiled = [];
 
+    protected $runMode = null;
+    
     /**
      * Create a new Blade view engine instance.
      *
      * @param  \Kerisy\Mvc\View\Engine\Blade\Compilers\CompilerInterface  $compiler
      * @return void
      */
-    public function __construct(CompilerInterface $compiler)
+    public function __construct(CompilerInterface $compiler, $runMode)
     {
         $this->compiler = $compiler;
+        $this->runMode = $runMode;
     }
 
     /**
@@ -58,7 +62,11 @@ class CompilerEngine extends PhpEngine
         // If this given view has expired, which means it has simply been edited since
         // it was last compiled, we will re-compile the views so we can evaluate a
         // fresh copy of the view. We'll pass the compiler the path of the view.
-        if ($this->compiler->isExpired($path)) {
+        if($this->runMode == RunMode::RUN_MODE_ONLINE){
+            if ($this->compiler->isExpired($path)) {
+                $this->compiler->compile($path);
+            }
+        }else{
             $this->compiler->compile($path);
         }
 

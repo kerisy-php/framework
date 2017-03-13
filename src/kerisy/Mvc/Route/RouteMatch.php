@@ -289,9 +289,8 @@ class RouteMatch
                 }
             }
 
-            if ($requestData) $require = Arr::merge($require, $requestData);
 
-            return $this->runBase($require, $parameters, [$serv, $fd]);
+            return $this->runBase($require, $parameters, [$serv, $fd, $requestData]);
         }
         return "";
     }
@@ -330,10 +329,9 @@ class RouteMatch
                             $content = call_user_func_array([$obj, $action], $realParams);
                         } else {
                             //tcp
-                            list($serv, $fd) = $otherData;
-                            $obj = new $controller($serv, $fd);
-                            $postData = $otherData + $require;
-                            $check = $this->todoMiddleWare($obj, $action, $middleware, $postData);
+                            list($serv, $fd, $requestData) = $otherData;
+                            $obj = new $controller($serv, $fd, $requestData);
+                            $check = $this->todoMiddleWare($obj, $action, $middleware, $require);
                             if (!$check) return;
                             $realParams = $this->callUserFuncArrayRealParams($controller, $action, $require);
                             $content = call_user_func_array([$obj, $action], $realParams);

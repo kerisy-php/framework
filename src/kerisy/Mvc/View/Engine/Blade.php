@@ -131,7 +131,7 @@ class Blade implements ViewInterface
                     });
                 }
             }
-            $engine = new CompilerEngine($compiler);
+            $engine = new CompilerEngine($compiler, $runMode);
             return $engine;
         });
     }
