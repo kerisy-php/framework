@@ -25,27 +25,27 @@ class RouteBootstrap
      *  instance
      * @return \Kerisy\Foundation\Bootstrap\RouteBootstrap
      */
-    public static function getInstance()
+    public static function getInstance($configKey='route')
     {
-        if (self::$instance) return self::$instance;
+        if (self::$instance[$configKey]) return self::$instance[$configKey];
 
-        return self::$instance = new self();
+        return self::$instance[$configKey] = new self($configKey);
     }
 
     /**
      * constructor.
      */
-    public function __construct()
+    public function __construct($configKey='route')
     {
-        $this->loadFromConfig();
+        $this->loadFromConfig($configKey);
     }
 
     /**
      * 通过配置加载route
      */
-    public function loadFromConfig()
+    public function loadFromConfig($configKey)
     {
-        $config = Config::get("route");
+        $config = Config::get($configKey);
         $this->change($config);
 //        dump($config);
         if ($config) {

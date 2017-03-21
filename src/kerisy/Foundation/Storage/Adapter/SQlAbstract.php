@@ -13,6 +13,8 @@
 
 namespace Kerisy\Foundation\Storage\Adapter;
 
+use Kerisy\Support\Log;
+
 abstract class SQlAbstract
 {
     protected $hasTran = 0;//是否有事务
@@ -43,7 +45,7 @@ abstract class SQlAbstract
         $className = get_called_class();
         $obj = new $className;
         $table = $obj->tableName;
-        $table = self::$prefix.$table;
+        $table = self::$prefix . $table;
         return $this->tableName = $table;
     }
 
@@ -172,7 +174,7 @@ abstract class SQlAbstract
         }
         $sql = rtrim($sql, ',');
         $sql .= $whereStr;
- 
+
 
         return $this->exec($sql, self::CONN_MASTER);
     }
@@ -212,7 +214,7 @@ abstract class SQlAbstract
         $whereSql = $whereSql ? " WHERE " . $whereSql : "";
 
         $sql = "UPDATE `{$tableName}` SET {$field} = {$field} - {$number} " . $whereSql;
-    
+
         $this->exec($sql, self::CONN_MASTER);
         return true;
     }
@@ -289,13 +291,26 @@ abstract class SQlAbstract
         return $rs;
     }
 
+    /**
+     * 解析where数据
+     * @param array $where
+     * @return string
+     */
+    public function parseWhere($where = array()){
+        $whereSql = $this->_parseWhere($where);
+        $whereSql = trim($whereSql);
+        $whereSql = trim($whereSql, "OR");
+        $whereSql = trim($whereSql, "AND");
+        return $whereSql;
+    }
 
     /**
      *
      * 解析where数据
      * @param array $where
+     * @param string $andOR
      */
-    public function parseWhere($where = array())
+    private function _parseWhere($where = array(), $andOR='AND')
     {
         if (count($where) < 1) {
             return "";
@@ -304,23 +319,26 @@ abstract class SQlAbstract
 
         foreach ($where as $k => $v) {
             $param = $k . " = ? ";
-            $andOR = "AND";
             $more = 0;
             if (is_array($v)) {
                 if (isset($v[0][0]) && $v[0][0] && (is_array($v[0]))) {
                     if ($v) {
                         foreach ($v as $kk => $vv) {
-                            $whereSql .= $this->joinSql($vv, $k, $andOR);
+                            $tmpWhere = [];
+                            $tmpWhere[$k] = $vv;
+                            $whereSql .= $this->_parseWhere($tmpWhere, $andOR);
                         }
                     }
                     $more = 1;
                 } else {
+
                     list($sign) = $v;
 
                     if (isset($v[2]) && $v[2]) {
                         $andOR = $v[2];
                     }
-                    if (isset($v[1])) {
+                    
+                    if (isset($v[1]) && $v[1] !== null) {
                         $param = $k . " " . $sign . " ? ";
                         $sign = strtolower($sign);
                         if ($sign == 'in') {
@@ -332,36 +350,12 @@ abstract class SQlAbstract
                     }
                     $andOR = strtoupper($andOR);
                 }
+
             }
             if (!$more) {
                 $whereSql .= " $andOR (" . $this->quoteInto($param, $v) . ")";
             }
         }
-        $whereSql = trim($whereSql);
-        $whereSql = trim($whereSql, "OR");
-        $whereSql = trim($whereSql, "AND");
-        return $whereSql;
-    }
-
-    public function joinSql($v, $feild, $andOR)
-    {
-        list($sign, $vl) = $v;
-
-        if (isset($v[2]) && $v[2]) {
-            $andOR = $v[2];
-        }
-        if ($vl !== '') {
-            $param = $feild . " " . $sign . " ? ";
-            $sign = strtolower($sign);
-            if ($sign == 'in') {
-                $param = $feild . " " . $sign . " (?) ";
-            }
-            $v = $vl;
-        } else {
-            $param = $feild . " " . $sign . " ";
-        }
-        $andOR = strtoupper($andOR);
-        $whereSql = " $andOR (" . $this->quoteInto($param, $v) . ")";
         return $whereSql;
     }
 
@@ -407,7 +401,7 @@ abstract class SQlAbstract
             $limitSql = " LIMIT {$offset} , {$limit} ";
         }
 
-        $field = $this->field?$this->field:"*";
+        $field = $this->field ? $this->field : "*";
 
         $sql = "SELECT {$field}  FROM `{$tableName}` " . $whereSql . $groupBySql . $orderBySql . $limitSql;
 
@@ -418,7 +412,7 @@ abstract class SQlAbstract
             $rsCount = $this->fetch($sqlCount, self::CONN_SLAVE);
             $this->_total = $rsCount['cnt'];
         }
-        
+
         return $rs;
     }
 
@@ -441,11 +435,13 @@ abstract class SQlAbstract
         $orderBySql = "";
         $groupBySql = "";
         $limitSql = "";
-        if ($groupBy) {
-            $groupBySql = " GROUP BY " . $groupBy;
-        }
+
         if ($orderBy) {
             $orderBySql = " ORDER BY " . $orderBy;
+        }
+
+        if ($groupBy) {
+            $groupBySql = " GROUP BY " . $groupBy;
         }
 
         if ($limit) {
@@ -462,11 +458,11 @@ abstract class SQlAbstract
                 return array();
             }
             $result = array();
-            
+
             foreach ($rs as $key => $value) {
-                if(isset($value[$resultKey])){
+                if (isset($value[$resultKey])) {
                     $result[$value[$resultKey]] = $value[$field];
-                }else{
+                } else {
                     $result[] = $value[$field];
                 }
             }
@@ -483,7 +479,7 @@ abstract class SQlAbstract
      * 根据条件获取一行
      * @param array $where
      */
-    public function get($where, $orderBy = "", $tableName = null)
+    public function get($where, $orderBy = "", $groupBy = "", $tableName = null)
     {
 
         $whereSql = $this->parseWhere($where);
@@ -491,14 +487,20 @@ abstract class SQlAbstract
 
         $tableName = $tableName ? self::$prefix . $tableName : $this->getTableName();
 
-        $field = $this->field?$this->field:"*";
+        $field = $this->field ? $this->field : "*";
 
         $sql = "SELECT {$field} FROM `{$tableName}` " . $whereSql;
+
         if ($orderBy) {
             $sql .= " ORDER BY " . $orderBy;
         }
+
+        if ($groupBy) {
+            $sql .= " GROUP BY " . $groupBy;
+        }
+
         $this->field = null;
-        
+
         return $this->fetch($sql, self::CONN_SLAVE);
     }
 
@@ -512,13 +514,14 @@ abstract class SQlAbstract
      * @param string $groupBy
      * @return array
      */
-    function pager($where = array(), $page=1,$pageSize=20, $orderBy = "", $groupBy = ""){
-        $page = $page?$page:1;
-        $limit = ($page-1)*$pageSize;
-        $list = $this->gets($where,$orderBy,$pageSize,$limit,$groupBy,true);
+    function pager($where = array(), $page = 1, $pageSize = 20, $orderBy = "", $groupBy = "")
+    {
+        $page = $page ? $page : 1;
+        $limit = ($page - 1) * $pageSize;
+        $list = $this->gets($where, $orderBy, $pageSize, $limit, $groupBy, true);
         $count = $this->getTotal();
-        $totalPage = $count==0?0:ceil($count/$pageSize);
-        return array($list,$count, $totalPage);
+        $totalPage = $count == 0 ? 0 : ceil($count / $pageSize);
+        return array($list, $count, $totalPage);
     }
 
     /**
@@ -529,14 +532,15 @@ abstract class SQlAbstract
      * @return array
      * @throws \Exception
      */
-    function pagerSql($sql,$page=1,$pageSize=20){
-        $page = $page?$page:1;
-        $limit = ($page-1)*$pageSize;
-        $sql .= " LIMIT ".$limit.", ".$pageSize;
-        $list = $this->selectAll($sql,array(),true);
+    function pagerSql($sql, $page = 1, $pageSize = 20)
+    {
+        $page = $page ? $page : 1;
+        $limit = ($page - 1) * $pageSize;
+        $sql .= " LIMIT " . $limit . ", " . $pageSize;
+        $list = $this->selectAll($sql, array(), true);
         $count = $this->getTotal();
-        $totalPage = $count==0?0:ceil($count/$pageSize);
-        return array($list,$count, $totalPage);
+        $totalPage = $count == 0 ? 0 : ceil($count / $pageSize);
+        return array($list, $count, $totalPage);
     }
 
 
@@ -560,17 +564,18 @@ abstract class SQlAbstract
     }
 
 
-    public function field($fieldStr){
+    public function field($fieldStr)
+    {
         $this->field = $fieldStr;
         return $this;
     }
-    
+
 
     protected function quote($value)
     {
-        if(!is_string($value)) return $value;
+        if (!is_string($value)) return $value;
         $data = addslashes($value);
-        return "'".$data."'";
+        return "'" . $data . "'";
     }
 
     /**
@@ -589,5 +594,77 @@ abstract class SQlAbstract
     public static function clearStaticData()
     {
         self::$_sql = [];
+    }
+
+    /**
+     *  导入
+     *
+     * @param $sqlPath
+     * @param string $old_prefix
+     * @param string $new_prefix
+     * @return bool
+     */
+    function import($sqlPath, $old_prefix = "", $new_prefix = "")
+    {
+        if (is_file($sqlPath)) {
+            $txt = file_get_contents($sqlPath);
+            if (!$txt) return true;
+            $sqlArr = $this->clearSql($txt, $old_prefix, $new_prefix);
+//            dump($sqlArr);
+            if ($sqlArr) {
+                foreach ($sqlArr as $sv) {
+                    Log::show($sv);
+                    $this->exec($sv);
+                }
+            }
+        }
+        return true;
+    }
+
+    /*
+		参数：
+		$old_prefix:原表前缀；
+		$new_prefix:新表前缀；
+		$separator:分隔符 参数可为";\n"或";\r\n"或";\r"
+	*/
+    function clearSql($content, $old_prefix = "", $new_prefix = "", $separator = ";\n")
+    {
+        $commenter = array('#', '--', '\/\*');
+        $content = str_replace(array($old_prefix, "\r"), array($new_prefix, "\n"), $content);//替换前缀
+        //通过sql语法的语句分割符进行分割
+        $segment = explode($separator, trim($content));
+        //去掉注释和多余的空行
+        $data = array();
+        foreach ($segment as $statement) {
+            $sentence = explode("\n", $statement);
+            $newStatement = array();
+            foreach ($sentence as $subSentence) {
+                if ('' != trim($subSentence)) {
+                    //判断是会否是注释
+                    $isComment = false;
+                    foreach ($commenter as $comer) {
+                        if (preg_match("/^(" . $comer . ")/is", trim($subSentence))) {
+                            $isComment = true;
+                            break;
+                        }
+                    }
+                    //如果不是注释，则认为是sql语句
+                    if (!$isComment)
+                        $newStatement[] = $subSentence;
+                }
+            }
+            $data[] = $newStatement;
+        }
+        //组合sql语句
+        foreach ($data as $statement) {
+            $newStmt = '';
+            foreach ($statement as $sentence) {
+                $newStmt = $newStmt . trim($sentence) . "\n";
+            }
+            if (!empty($newStmt)) {
+                $result[] = $newStmt;
+            }
+        }
+        return $result;
     }
 }

@@ -52,7 +52,7 @@ class Application
      */
     public function rpcBootstrap()
     {
-        RouteBootstrap::getInstance();
+        RouteBootstrap::getInstance("rpcroute");
     }
 
     /**
@@ -125,7 +125,7 @@ class Application
             foreach ($config as $cv){
                 $commandsTmp[] = new $cv;
             }
-            $commands = Arr::merge($commands, $commandsTmp);
+            $commands = array_merge($commands, $commandsTmp);
         }
         $application = new CmdApplication();
         foreach ($commands as $v) {

@@ -57,8 +57,8 @@ class Bootstrap
         $this->initMonitor();
         $this->initAlias();
         $this->initHelper();
-        $this->initDi();
         $this->initFacade();
+        $this->initDi();
         $this->initTask();
         $this->init404();
         $this->initEvent();

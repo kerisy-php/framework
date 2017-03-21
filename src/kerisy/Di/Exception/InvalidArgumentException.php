@@ -1,5 +1,6 @@
 <?php
 /**
+ *
  * Kerisy Framework
  *
  * PHP Version 7
@@ -10,16 +11,9 @@
  * @version         3.0.0
  */
 
-namespace Kerisy\Di;
+namespace Kerisy\Di\Exception;
 
-
-interface DiInterface
+class InvalidArgumentException extends \Exception
 {
-
-    public static function set($name, $options);
-
-    public static function get($name);
-
-    public static function setNoShare($name, $options);
 
 }

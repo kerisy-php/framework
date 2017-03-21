@@ -96,9 +96,10 @@ class Pdo extends SQlAdapter
             || strtolower(substr($sql, 0, 5)) == 'begin'
             || strtolower(substr($sql, 0, 6)) == 'commit'
             || strtolower(substr($sql, 0, 8)) == 'rollback'
+            || strtolower(substr($sql, 0, 5)) == 'alter'
         )
         ) {
-            throw new \Exception("only run on select");
+            throw new \Exception("only run on not select");
         }
 
         self::$_sql['sql'] = $sql;
@@ -143,7 +144,7 @@ class Pdo extends SQlAdapter
         try{
             $result = [];
             if (!$method || $method == 'lastInsertId') {
-                self::$conn[$connType]->exec($sql);
+                $result = self::$conn[$connType]->exec($sql);
                 if ($method) {
                     $result = self::$conn[$connType]->$method();
                 }
@@ -174,6 +175,7 @@ class Pdo extends SQlAdapter
 //            dump('3');
 //            dump($e->getCode());
             if($e->getCode() != 'HY000' || !stristr($e->getMessage(), 'server has gone away')) {
+                dump($sql);
                 throw new \Exception($e->getMessage());
             }
             //重新连接
@@ -184,12 +186,14 @@ class Pdo extends SQlAdapter
             if(self::$conn){
                 return $this->set($sql, $connType, $method);
             }else{
+                dump($sql);
                 throw new \Exception($e->getMessage());
             }
         }catch (\Exception $e){
 //            dump('3');
 //            dump($e->getCode());
             if($e->getCode() != 'HY000' || !stristr($e->getMessage(), 'server has gone away')) {
+                dump($sql);
                 throw new \Exception($e->getMessage());
             }
             //重新连接
@@ -200,6 +204,7 @@ class Pdo extends SQlAdapter
             if(self::$conn){
                 return $this->set($sql, $connType, $method);
             }else{
+                dump($sql);
                 throw new \Exception($e->getMessage());
             }
         }

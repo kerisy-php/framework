@@ -29,49 +29,36 @@ class Dbsync extends Base
     {
         //InputArgument
         $this->setName('dbsync')
-            ->addArgument("config",InputArgument::OPTIONAL, "sync database config")
-            ->addArgument("sqlpath",InputArgument::OPTIONAL, "sql file dir path")
-            ->addArgument("prefix",InputArgument::OPTIONAL, "database table prefix")
-            ->addOption("--init", "-i", InputOption::VALUE_NONE, "dbsync init")
+            ->addOption('--config', '-c', InputOption::VALUE_OPTIONAL, 'sync database config')
+            ->addOption('--sqldir', '-d', InputOption::VALUE_OPTIONAL, 'sql file dir path')
+            ->addOption('--prefix', '-p', InputOption::VALUE_OPTIONAL, 'database table prefix')
             ->setDescription('database sync project');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $storageConfig = config()->get("storage.server.pdo");
-        $inputConfig = $input->getArgument("config");
+        $inputConfig = $input->getOption("config");
         $inputConfig = $inputConfig?$inputConfig:$storageConfig;
 
-        $sqlpath = $input->getArgument("sqlpath");
-        $sqlpath = $sqlpath?$sqlpath:ROOT_PATH."/resource/sql/";
+        $sqlpath = $input->getOption("sqldir");
+        $sqlpath = $sqlpath?$sqlpath:APPLICATION_PATH."/sql/";
 
-        $prefix = $input->getArgument("prefix");
+        $prefix = $input->getOption("prefix");
         $prefix = $prefix?$prefix:"";
 
         $newPrefix = $inputConfig['prefix'];
         $this->tableName = "{$newPrefix}dbsync";
-
-        $init = $input->getOption("init");
 
         //判断表格是否存在
         $db = new Pdo($inputConfig);
         $sql =  "SHOW TABLES like '{$this->tableName}'";
         $checkData = $db->fetch($sql);
 
-        if($init){
-            if($checkData){
-                Log::error("dbSync initialize already done, please retry after removing table({$this->tableName})");
-                return ;
-            }
-            $sql = "CREATE TABLE `{$this->tableName}` ( `id` INT NOT NULL AUTO_INCREMENT , `filename` VARCHAR(100) NOT NULL , `created_at` TIMESTAMP NOT NULL , `updated_at` TIMESTAMP NOT NULL , PRIMARY KEY (`id`)) ENGINE = InnoDB CHARACTER SET utf8 COLLATE utf8_general_ci";
+        if(!$checkData){
+            $sql = "CREATE TABLE `{$this->tableName}` ( `id` INT NOT NULL AUTO_INCREMENT , `filename` VARCHAR(100) NOT NULL DEFAULT '', `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`)) ENGINE = InnoDB CHARACTER SET utf8 COLLATE utf8_general_ci";
             $db->exec($sql);
             Log::sysinfo("dbSync initialize success!");
-            return ;
-        }
-
-        if(!$checkData){
-            Log::error("dbSync must initialize, please run 'dbsync --init'");
-            return ;
         }
 
         $this->importDb($inputConfig, $sqlpath, $prefix);
@@ -128,12 +115,10 @@ class Dbsync extends Base
             Log::sysinfo("no sql need import");
             return ;
         }
-
         foreach ($files as $v){
             $filePath = $sqlpath.$v.".sql";
             Log::sysinfo("start import :". $filePath);
-            $db->import($filePath, $newPrefix, $prefix);
-            //todo
+            $db->import($filePath, $prefix, $newPrefix);
             $insertData = [];
             $insertData['filename'] = $v;
             $insertData['created_at'] = date('Y-m-d H:i:s');
