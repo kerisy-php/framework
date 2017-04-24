@@ -54,14 +54,25 @@ class Bootstrap
         $this->initConfig($path);
         $this->iniSet();
         $this->initLog();
-        $this->initMonitor();
         $this->initAlias();
         $this->initHelper();
         $this->initFacade();
         $this->initDi();
         $this->initTask();
         $this->init404();
-        $this->initEvent();
+        $this->initDiy();
+    }
+
+    protected function initDiy()
+    {
+        $config = Config::get("app.init");
+        if ($config) {
+            $obj = new $config;
+            if (!method_exists($obj, "perform")) {
+                throw new InvalidArgumentException(" log class perform not config ");
+            }
+            call_user_func_array([$obj, "perform"], []);
+        }
     }
 
     protected function initLog()
@@ -76,11 +87,6 @@ class Bootstrap
                 call_user_func_array([$obj, "perform"], [$params]);
             });
         }
-    }
-
-    public function initEvent()
-    {
-        
     }
 
     /**
@@ -114,14 +120,6 @@ class Bootstrap
                 $server->close($fd);
             }
         });
-    }
-
-    /**
-     * 监控初始化
-     */
-    protected function initMonitor()
-    {
-
     }
 
     /**

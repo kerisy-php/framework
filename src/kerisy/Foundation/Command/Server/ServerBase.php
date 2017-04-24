@@ -19,6 +19,7 @@ use Kerisy\Support\PhpExecutableFinder;
 
 class ServerBase
 {
+
     protected static $cmdHelp = null;
 
     public static function operate($cmd, $cmdObj, $input)
@@ -39,15 +40,7 @@ class ServerBase
             Log::sysinfo("server config not config");
             return;
         }
-
-        $str = '
-██╗  ██╗███████╗██████╗ ██╗███████╗██╗   ██╗
-██║ ██╔╝██╔════╝██╔══██╗██║██╔════╝╚██╗ ██╔╝
-█████╔╝ █████╗  ██████╔╝██║███████╗ ╚████╔╝ 
-██╔═██╗ ██╔══╝  ██╔══██╗██║╚════██║  ╚██╔╝  
-██║  ██╗███████╗██║  ██║██║███████║   ██║   
-╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝╚═╝╚══════╝   ╚═╝                                                    
-        ';
+        $str = 'Welcome To Kerisy!';
         Log::show($str);
         self::doOperate($cmd, $options, $config, $cmdObj);
         sleep(1);
@@ -74,9 +67,16 @@ class ServerBase
         $runFileName = $_SERVER['SCRIPT_FILENAME'];
         $phpbin = self::getPhpBinary();
         $servers = $config['servers'];
+
         if ($servers) {
+            $name = $config['name'];
             foreach ($servers as $v) {
-                $params = [$runFileName, $v . ":" . $type];
+                $cmdName = $v . ":" . $type;
+                $cmdDefined = $cmdObj->getApplication()->has($cmdName);
+                if(!$cmdDefined){
+                    $cmdName = $v;
+                }
+                $params = [$runFileName, $cmdName];
                 if ($daemonizeStr) array_push($params, $daemonizeStr);
                 if ($option) {
                     $optionTmp = explode(",", $option);
@@ -85,19 +85,18 @@ class ServerBase
                     }
                 }
                 self::process($phpbin, $params, $cmdObj);
-                self::check($config);
+                self::check($name);
             }
         }
     }
 
-    protected static function check($config)
+    protected static function check($name)
     {
-        $name = $config['name'];
         $count = -1;
         $time = time();
         while (1) {
             usleep(40000);
-            exec("ps axu|grep " . $name . "|awk '{print $2}'", $masterArr);
+            exec("ps axu|grep " . $name . "|grep -v grep|awk '{print $2}'", $masterArr);
             if ((time() - $time) > 30) {
                 break;
             }
@@ -125,6 +124,7 @@ class ServerBase
         $paramTmp = $param;
         $cmdName = array_isset($param, 1);
         if (!$cmdName) return;
+
         $obj = $cmdObj->getCmdDefinition($cmdName);
         $op = array_slice($param, 2);
         $tmp = [];

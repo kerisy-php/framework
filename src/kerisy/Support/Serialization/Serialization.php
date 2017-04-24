@@ -12,6 +12,7 @@
 
 namespace Kerisy\Support\Serialization;
 
+use Kerisy\Foundation\Shortcut;
 use Kerisy\Support\Serialization\Adapter\DefaultSerialization;
 use Kerisy\Support\Serialization\Adapter\HproseSerialization;
 use Kerisy\Support\Serialization\Adapter\IgbinarySerialization;
@@ -20,14 +21,14 @@ use Kerisy\Support\Serialization\Adapter\MsgPackSerialization;
 
 class Serialization
 {
-
+    use Shortcut;
     /**
      * 获取序列方案
      * 
      * @param $type
      * @return DefaultSerialization|HproseSerialization|IgbinarySerialization|JsonSerialization|MsgPackSerialization
      */
-    public static function get($type=0)
+    public static function get($type=1)
     {
         $type = intval($type);
         if($type){
@@ -45,6 +46,7 @@ class Serialization
                 default:
                     return new DefaultSerialization();
             }
+
         }else{
             if (function_exists("msgpack_pack")){
                 return new MsgPackSerialization();

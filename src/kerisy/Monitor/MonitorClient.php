@@ -37,7 +37,7 @@ class MonitorClient
      * @param float $timeOut 超时时间,单位是s
      * @param obj $serialization 压缩解压缩工具
      */
-    function __construct($host, $port, $serialization = null, $timeOut = 0.5)
+    public function __construct($host, $port, $serialization = null, $timeOut = 0.5)
     {
         $this->host = $host;
         $this->port = $port;
@@ -66,7 +66,7 @@ class MonitorClient
         $client->on('error', [$this, 'onError']);
 
         $client->connect($this->host, $this->port, $this->timeOut, true);
-        
+
         $client->close(true);
     }
 
@@ -87,7 +87,7 @@ class MonitorClient
      */
     public function onClose($client)
     {
-        echo "Monitor Client Connection lose\n";
+//        echo "Monitor Client Connection lose\n";
     }
 
 

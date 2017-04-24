@@ -15,6 +15,7 @@
 namespace Kerisy\Monitor;
 
 
+use Kerisy\Coroutine\Event;
 use Kerisy\Server\SocketInterface;
 use Kerisy\Foundation\Bootstrap\RouteBootstrap;
 use Kerisy\Server\SocketServer;
@@ -59,7 +60,6 @@ class MonitorServer implements SocketInterface
         }else{
             $result = $data;
         }
-
         if (!$result) {
             throw new \Exception(" received body parse fail");
         }

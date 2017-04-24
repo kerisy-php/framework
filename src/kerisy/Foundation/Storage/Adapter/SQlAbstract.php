@@ -13,10 +13,14 @@
 
 namespace Kerisy\Foundation\Storage\Adapter;
 
+use Kerisy\Foundation\Shortcut;
 use Kerisy\Support\Log;
 
 abstract class SQlAbstract
 {
+    use Shortcut;
+
+    protected $alias = [];  //记录全局的语句参数
     protected $hasTran = 0;//是否有事务
     protected $_total = 0;
     protected static $_sql = array();
@@ -45,7 +49,7 @@ abstract class SQlAbstract
         $className = get_called_class();
         $obj = new $className;
         $table = $obj->tableName;
-        $table = self::$prefix . $table;
+        $table = self::$prefix.$table;
         return $this->tableName = $table;
     }
 
@@ -230,7 +234,7 @@ abstract class SQlAbstract
             return false;
         }
         if (!(strtolower(substr($sql, 0, 6)) == 'select' || strtolower(substr($sql, 0, 4)) == 'show')) {
-            throw new \Exception("can not run on insert ,update ,delete");
+            throw new \Exception("coan not run on insert ,update ,delete");
         }
         if ($data) {
             foreach ($data as $k => $v) {
@@ -304,6 +308,132 @@ abstract class SQlAbstract
         return $whereSql;
     }
 
+    //where语句
+    public function where($key, $compute, $value=null, $join = "AND")
+    {
+        $compute = strtolower($compute);
+
+        if($value === null){
+            $tmp = [$compute, null, $join];
+        }else{
+            if(in_array($compute, ["=","!=",">",">=","<","<=","in"])){
+                $tmp = [$compute, $value, $join];
+            }else{
+                return $this;
+            }
+        }
+
+        if(isset($this->alias['where'][$key])){
+            array_push($this->alias['where'][$key], $tmp);
+        }else {
+            $this->alias['where'][$key] = [$tmp];
+        }
+        return $this;
+    }
+
+    public function table($table)
+    {
+        $this->alias['table'] = $table;
+        return $this;
+    }
+
+    public function isNull($key)
+    {
+        $this->where($key, "IS NULL");
+        return $this;
+    }
+
+    public function isNotNull($key)
+    {
+        $this->where($key, "IS NOT NULL");
+        return $this;
+    }
+
+    public function whereNeq($key, $value)
+    {
+        $this->where($key, "!=", $value);
+        return $this;
+    }
+
+    public function whereEq($key, $value)
+    {
+        $this->where($key, "=", $value);
+        return $this;
+    }
+
+    public function whereIn($key, $value)
+    {
+        $this->where($key, "in", $value);
+        return $this;
+    }
+
+    //limit语句
+    public function limit($limit)
+    {
+        $this->alias['limit'] = $limit;
+        return $this;
+    }
+
+    public function offset($offset)
+    {
+        $this->alias['offset'] = $offset;
+        return $this;
+    }
+
+    //order语句
+    public function orderBy($order)
+    {
+        $this->alias['order'] = $order;
+        return $this;
+    }
+
+    //group语句
+    public function groupBy($group)
+    {
+        $this->alias['group'] = $group;
+        return $this;
+    }
+
+
+    /**
+     * 查询多条
+     * @return mixed
+     */
+    public function find()
+    {
+        $where = isset($this->alias['where'])?$this->alias['where']:[];
+        $order = isset($this->alias['order'])?$this->alias['order']:'';
+        $group = isset($this->alias['group'])?$this->alias['group']:'';
+        $limit = isset($this->alias['limit'])?$this->alias['limit']:'';
+        $offset = isset($this->alias['offset'])?$this->alias['offset']:'';
+        $table = isset($this->alias['table'])?$this->alias['table']:'';
+
+        return $this->gets($where, $order, $limit, $offset, $group, false, $table);
+    }
+
+    //查询一条
+    public function findOne()
+    {
+        $where = isset($this->alias['where'])?$this->alias['where']:[];
+        $order = isset($this->alias['order'])?$this->alias['order']:'';
+        $group = isset($this->alias['group'])?$this->alias['group']:'';
+        $table = isset($this->alias['table'])?$this->alias['table']:'';
+
+        return $this->get($where, $order,$group, $table);
+    }
+
+    /**
+     * 删除
+     * @return mixed
+     */
+    public function remove()
+    {
+        $where = isset($this->alias['where'])?$this->alias['where']:[];
+        $table = isset($this->alias['table'])?$this->alias['table']:'';
+
+        return $this->delete($where, $table);
+    }
+
     /**
      *
      * 解析where数据
@@ -337,7 +467,7 @@ abstract class SQlAbstract
                     if (isset($v[2]) && $v[2]) {
                         $andOR = $v[2];
                     }
-                    
+
                     if (isset($v[1]) && $v[1] !== null) {
                         $param = $k . " " . $sign . " ? ";
                         $sign = strtolower($sign);
@@ -358,6 +488,7 @@ abstract class SQlAbstract
         }
         return $whereSql;
     }
+
 
     public function quoteInto($param, $v)
     {
@@ -401,7 +532,7 @@ abstract class SQlAbstract
             $limitSql = " LIMIT {$offset} , {$limit} ";
         }
 
-        $field = $this->field ? $this->field : "*";
+        $field = $this->field?$this->field:"*";
 
         $sql = "SELECT {$field}  FROM `{$tableName}` " . $whereSql . $groupBySql . $orderBySql . $limitSql;
 
@@ -435,13 +566,11 @@ abstract class SQlAbstract
         $orderBySql = "";
         $groupBySql = "";
         $limitSql = "";
-
-        if ($orderBy) {
-            $orderBySql = " ORDER BY " . $orderBy;
-        }
-
         if ($groupBy) {
             $groupBySql = " GROUP BY " . $groupBy;
+        }
+        if ($orderBy) {
+            $orderBySql = " ORDER BY " . $orderBy;
         }
 
         if ($limit) {
@@ -460,9 +589,9 @@ abstract class SQlAbstract
             $result = array();
 
             foreach ($rs as $key => $value) {
-                if (isset($value[$resultKey])) {
+                if(isset($value[$resultKey])){
                     $result[$value[$resultKey]] = $value[$field];
-                } else {
+                }else{
                     $result[] = $value[$field];
                 }
             }
@@ -479,7 +608,7 @@ abstract class SQlAbstract
      * 根据条件获取一行
      * @param array $where
      */
-    public function get($where, $orderBy = "", $groupBy = "", $tableName = null)
+    public function get($where, $orderBy = "", $groupBy="", $tableName = null)
     {
 
         $whereSql = $this->parseWhere($where);
@@ -487,18 +616,15 @@ abstract class SQlAbstract
 
         $tableName = $tableName ? self::$prefix . $tableName : $this->getTableName();
 
-        $field = $this->field ? $this->field : "*";
+        $field = $this->field?$this->field:"*";
 
         $sql = "SELECT {$field} FROM `{$tableName}` " . $whereSql;
-
         if ($orderBy) {
             $sql .= " ORDER BY " . $orderBy;
         }
-
         if ($groupBy) {
-            $sql .= " GROUP BY " . $groupBy;
+            $sql .= " GROUP BY " . $orderBy;
         }
-
         $this->field = null;
 
         return $this->fetch($sql, self::CONN_SLAVE);
@@ -514,14 +640,13 @@ abstract class SQlAbstract
      * @param string $groupBy
      * @return array
      */
-    function pager($where = array(), $page = 1, $pageSize = 20, $orderBy = "", $groupBy = "")
-    {
-        $page = $page ? $page : 1;
-        $limit = ($page - 1) * $pageSize;
-        $list = $this->gets($where, $orderBy, $pageSize, $limit, $groupBy, true);
+    function pager($where = array(), $page=1,$pageSize=20, $orderBy = "", $groupBy = ""){
+        $page = $page?$page:1;
+        $limit = ($page-1)*$pageSize;
+        $list = $this->gets($where,$orderBy,$pageSize,$limit,$groupBy,true);
         $count = $this->getTotal();
-        $totalPage = $count == 0 ? 0 : ceil($count / $pageSize);
-        return array($list, $count, $totalPage);
+        $totalPage = $count==0?0:ceil($count/$pageSize);
+        return array($list,$count, $totalPage);
     }
 
     /**
@@ -532,15 +657,14 @@ abstract class SQlAbstract
      * @return array
      * @throws \Exception
      */
-    function pagerSql($sql, $page = 1, $pageSize = 20)
-    {
-        $page = $page ? $page : 1;
-        $limit = ($page - 1) * $pageSize;
-        $sql .= " LIMIT " . $limit . ", " . $pageSize;
-        $list = $this->selectAll($sql, array(), true);
+    function pagerSql($sql,$page=1,$pageSize=20){
+        $page = $page?$page:1;
+        $limit = ($page-1)*$pageSize;
+        $sql .= " LIMIT ".$limit.", ".$pageSize;
+        $list = $this->selectAll($sql,array(),true);
         $count = $this->getTotal();
-        $totalPage = $count == 0 ? 0 : ceil($count / $pageSize);
-        return array($list, $count, $totalPage);
+        $totalPage = $count==0?0:ceil($count/$pageSize);
+        return array($list,$count, $totalPage);
     }
 
 
@@ -564,8 +688,7 @@ abstract class SQlAbstract
     }
 
 
-    public function field($fieldStr)
-    {
+    public function field($fieldStr){
         $this->field = $fieldStr;
         return $this;
     }
@@ -573,9 +696,9 @@ abstract class SQlAbstract
 
     protected function quote($value)
     {
-        if (!is_string($value)) return $value;
+        if(!is_string($value)) return $value;
         $data = addslashes($value);
-        return "'" . $data . "'";
+        return "'".$data."'";
     }
 
     /**
@@ -602,19 +725,32 @@ abstract class SQlAbstract
      * @param $sqlPath
      * @param string $old_prefix
      * @param string $new_prefix
+     * @param string $exceptTable 排除的table
      * @return bool
      */
-    function import($sqlPath, $old_prefix = "", $new_prefix = "")
-    {
-        if (is_file($sqlPath)) {
+    function import($sqlPath,$old_prefix="",$new_prefix="", $exceptTable=[]){
+        if(is_file($sqlPath)){
             $txt = file_get_contents($sqlPath);
-            if (!$txt) return true;
-            $sqlArr = $this->clearSql($txt, $old_prefix, $new_prefix);
+            if(!$txt) return true;
+            $sqlArr = $this->clearSql($txt,$old_prefix,$new_prefix);
 //            dump($sqlArr);
-            if ($sqlArr) {
-                foreach ($sqlArr as $sv) {
-                    Log::show($sv);
-                    $this->exec($sv);
+            if($sqlArr){
+                foreach ($sqlArr as $sv){
+                    $isExcept = 0;
+                    if($exceptTable){
+                        foreach ($exceptTable as $ev){
+                            if(preg_match_all("/`{$ev}`/i", $sv, $match)){
+                                $this->dump($match);
+                                $isExcept = 1;
+                                continue;
+                            }
+                        }
+                    }
+                    if(!$isExcept){
+                        Log::show($sv);
+                        $this->exec($sv);
+                    }
+
                 }
             }
         }
@@ -627,41 +763,49 @@ abstract class SQlAbstract
 		$new_prefix:新表前缀；
 		$separator:分隔符 参数可为";\n"或";\r\n"或";\r"
 	*/
-    function clearSql($content, $old_prefix = "", $new_prefix = "", $separator = ";\n")
+    function clearSql($content,$old_prefix="",$new_prefix="",$separator=";\n")
     {
-        $commenter = array('#', '--', '\/\*');
+        $commenter = array('#','--','\/\*');
         $content = str_replace(array($old_prefix, "\r"), array($new_prefix, "\n"), $content);//替换前缀
         //通过sql语法的语句分割符进行分割
-        $segment = explode($separator, trim($content));
+        $segment = explode($separator,trim($content));
         //去掉注释和多余的空行
-        $data = array();
-        foreach ($segment as $statement) {
-            $sentence = explode("\n", $statement);
+        $data=array();
+        foreach($segment as  $statement)
+        {
+            $sentence = explode("\n",$statement);
             $newStatement = array();
-            foreach ($sentence as $subSentence) {
-                if ('' != trim($subSentence)) {
+            foreach($sentence as $subSentence)
+            {
+                if('' != trim($subSentence))
+                {
                     //判断是会否是注释
                     $isComment = false;
-                    foreach ($commenter as $comer) {
-                        if (preg_match("/^(" . $comer . ")/is", trim($subSentence))) {
+                    foreach($commenter as $comer)
+                    {
+                        if(preg_match("/^(".$comer.")/is",trim($subSentence)))
+                        {
                             $isComment = true;
                             break;
                         }
                     }
                     //如果不是注释，则认为是sql语句
-                    if (!$isComment)
+                    if(!$isComment)
                         $newStatement[] = $subSentence;
                 }
             }
             $data[] = $newStatement;
         }
         //组合sql语句
-        foreach ($data as $statement) {
+        foreach($data as  $statement)
+        {
             $newStmt = '';
-            foreach ($statement as $sentence) {
-                $newStmt = $newStmt . trim($sentence) . "\n";
+            foreach($statement as $sentence)
+            {
+                $newStmt = $newStmt.trim($sentence)."\n";
             }
-            if (!empty($newStmt)) {
+            if(!empty($newStmt))
+            {
                 $result[] = $newStmt;
             }
         }

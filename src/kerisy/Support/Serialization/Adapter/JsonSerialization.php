@@ -38,9 +38,7 @@ class JsonSerialization extends SerializationAbstract
         if (!$body) {
             return null;
         }
-
-        $result = json_decode($body, true);
-        return $result;
+        return json_decode($body, true);
     }
 
     /**
@@ -60,7 +58,8 @@ class JsonSerialization extends SerializationAbstract
      */
     public function xtrans($data)
     {
-        return json_decode($data);
+        return json_decode($data, true);
     }
     
 }
+

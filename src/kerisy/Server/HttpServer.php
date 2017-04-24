@@ -190,9 +190,7 @@ class HttpServer
 
     public function onWorkerError(SwooleServer $swooleServer, $workerId, $workerPid, $exitCode)
     {
-        Log::sysinfo($this->serverName . " worker error ..... ");
-        Log::sysinfo("======================");
-        Log::error(socket_strerror($exitCode) . "");
+        Log::error($this->serverName . " worker error ..... ");
     }
 
     /**

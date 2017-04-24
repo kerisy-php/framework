@@ -46,7 +46,9 @@ abstract class SerializationAbstract
         if (!$bufferData) return "";
         $len = strlen($bufferData);
         $packLen = pack("N", $len);
-        return $packLen . $bufferData;
+        //兼容老框架
+        $packType = pack("C",0);
+        return $packLen . $packType.$bufferData;
     }
 
     /**
@@ -58,7 +60,9 @@ abstract class SerializationAbstract
     public function getBody($bufferData)
     {
         if (!$bufferData) return "";
-        $content = substr($bufferData, self::$bodyOffset);
+        //兼容老框架
+        $bodyOffset = self::$bodyOffset+1;
+        $content = substr($bufferData, $bodyOffset);
         return $content;
     }
 }

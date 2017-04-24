@@ -341,6 +341,8 @@ class RouteMatch
                             $task->work($task->getRoutine());
                             unset($task);
                         }
+
+                        Event::fire("monitor", [$require[0], $require[1]]);
                         Event::fire("clear");
                     } else {
                         throw new PageNotFoundException("page not found!");
