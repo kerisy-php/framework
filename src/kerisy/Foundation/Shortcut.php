@@ -117,7 +117,7 @@ trait Shortcut
 
      public static function backtrace()
     {
-        $data = debug_backtrace(2, 7);
+        $data = debug_backtrace(2, 15);
         if($data){
             $data = array_splice($data, 2);
             \Kerisy\Support\Log::show('{');

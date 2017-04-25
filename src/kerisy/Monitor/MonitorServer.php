@@ -69,7 +69,7 @@ class MonitorServer implements SocketInterface
             if(!method_exists($obj, "perform")){
                 throw new \Exception(" 'perform' method must defined");
             }
-            $obj->perform($result);
+            $obj->perform([$fd, $from_id,$result]);
         }
         $serv->close($fd);
     }

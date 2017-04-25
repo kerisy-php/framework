@@ -14,6 +14,7 @@
 
 namespace Kerisy\Server;
 
+use Kerisy\Foundation\Shortcut;
 use swoole_http_request as SwooleHttpRequest;
 use swoole_http_response as SwooleHttpResponse;
 use swoole_http_server as SwooleServer;
@@ -33,6 +34,8 @@ use Kerisy\Support\Exception as SupportException;
 
 class HttpServer
 {
+    use Shortcut;
+
     /**
      * @var swooleServer
      */
@@ -190,7 +193,8 @@ class HttpServer
 
     public function onWorkerError(SwooleServer $swooleServer, $workerId, $workerPid, $exitCode)
     {
-        Log::error($this->serverName . " worker error ..... ");
+        Log::error($this->serverName . " worker error [error_code:{$exitCode}]..... ");
+        self::backtrace();
     }
 
     /**

@@ -14,15 +14,19 @@
 
 namespace Kerisy\Server;
 
+use Kerisy\Foundation\Shortcut;
 use Kerisy\Server\Exception\InvalidArgumentException;
 use Kerisy\Server\Facade\Context as FacedeContext;
 use Kerisy\Coroutine\Event;
 use Kerisy\Support\Arr;
 use Kerisy\Support\ElapsedTime;
 use Kerisy\Coroutine\Base\CoroutineTask;
+use Kerisy\Support\Log;
 
 class Task
 {
+    use Shortcut;
+
     private $server = null;
     private  $retryCount = 2;
     private  $logPath = "/tmp/taskFail.log";
@@ -51,16 +55,16 @@ class Task
         $serv = FacedeContext::server();
 
         if (!$serv) {
-            throw new InvalidArgumentException(" swoole server is not get");
+            Log::sysinfo("task run warning: swoole server is not get");
+//            throw new InvalidArgumentException(" swoole server is not get");
+        }else{
+            if(self::$config){
+                $this->retryCount = self::$config['task_retry_count'];
+                $this->logPath = self::$config['task_fail_log'];
+                $this->timeOut = self::$config['task_timeout'];
+            }
+            $this->server = $serv;
         }
-
-        if(self::$config){
-            $this->retryCount = self::$config['task_retry_count'];
-            $this->logPath = self::$config['task_fail_log'];
-            $this->timeOut = self::$config['task_timeout'];
-        }
-
-        $this->server = $serv;
     }
 
     public function send($taskName, $params = [], $retryNumber = 0, $dstWorkerId = -1)
@@ -107,18 +111,7 @@ class Task
 
         list($task, $params) = $data;
         if (is_string($task)) {
-            $taskClass = isset(self::$taskConfig[$task]) ? self::$taskConfig[$task] : null;
-            if (!$taskClass) {
-                throw new InvalidArgumentException(" task not config ");
-            }
-
-            $obj = new $taskClass();
-
-            if (!method_exists($obj, "perform")) {
-                throw new InvalidArgumentException(" task method perform not config ");
-            }
-            $result = call_user_func_array([$obj, "perform"], $params);
-
+            $result = $this->taskRun($task, $params);
             if ($result instanceof \Generator) {
                 $task = new CoroutineTask($result);
                 $task->work($task->getRoutine());
@@ -130,10 +123,34 @@ class Task
     }
 
 
+    protected function taskRun($task, $params)
+    {
+        $taskClass = isset(self::$taskConfig[$task]) ? self::$taskConfig[$task] : null;
+        if (!$taskClass) {
+            throw new InvalidArgumentException(" task not config ");
+        }
+
+        $obj = new $taskClass();
+
+        if (!method_exists($obj, "perform")) {
+            throw new InvalidArgumentException(" task method perform not config ");
+        }
+        $result = call_user_func_array([$obj, "perform"], $params);
+        return $result;
+    }
+
+
     public function __call($name, $arguments)
     {
-        $dstWorkerId = $this->getDstWorkerId();
-        $this->send($name, $arguments, $this->retryCount,$dstWorkerId);
+        if($this->server){
+            $dstWorkerId = $this->getDstWorkerId();
+            $this->send($name, $arguments, $this->retryCount,$dstWorkerId);
+        }else{
+            Log::sysinfo("task run warning: task run use nonBlock mode");
+            $this->nonBlock(function() use($name, $arguments){
+                $this->taskRun($name, $arguments);
+            });
+        }
     }
 
     /**
