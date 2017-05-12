@@ -14,6 +14,8 @@
 namespace Kerisy\Rpc;
 
 use Kerisy\Foundation\Application;
+use Kerisy\Foundation\Shortcut;
+use Google\FlatBuffers\ByteBuffer;
 use Kerisy\Server\SocketInterface;
 use Kerisy\Server\SocketServer;
 use Kerisy\Coroutine\Event;
@@ -23,6 +25,7 @@ use Kerisy\Mvc\Route\RouteMatch;
 
 class RpcServer implements SocketInterface
 {
+    use Shortcut;
     private $root = null;
     private $config = null;
     private $serialize = null;
@@ -58,11 +61,34 @@ class RpcServer implements SocketInterface
     public function perform($data, $serv, $fd, $from_id)
     {
         ElapsedTime::setStartTime("rpc_sys_elapsed_time");
-        $result = $this->serialize->xformat($data);
-        if (!$result) {
-            throw new InvalidArgumentException(" received body parse fail");
+        if($this->config['type'] == 'flatbuffer'){
+            $bufferData = $this->serialize->xformat($data);
+
+            $bufferRouteMatchPack = substr($bufferData,0,2);
+            $bufferRouteMatch = current(unpack("n",$bufferRouteMatchPack));
+            $content = substr($bufferData,2);
+
+            $dataBuffer = ByteBuffer::wrap($content);
+
+            $config = $this->config()->get("flatbuffer");
+            $classCall = $this->array_isset($config, $bufferRouteMatch);
+
+            if(!$classCall){
+                throw  new \Exception("api not found!");
+            }
+            list($className, $action) = $classCall;
+            $classObj = new $className;
+            $routeData =$classObj->$action($dataBuffer);
+            list($url,$params) = $routeData;
+
+        }else{
+            $result = $this->serialize->xformat($data);
+            if (!$result) {
+                throw new InvalidArgumentException(" received body parse fail");
+            }
+            list($url, $params) = $result;
         }
-        list($url, $params) = $result;
+
         RouteMatch::getInstance()->runSocket($url, $params, $serv,$fd);
     }
 }

@@ -101,8 +101,10 @@ class JobBase
                 Log::sysinfo("[$serverName] stop success ");
                 break;
             case 'restart':
-                self::stop($appName);
-               self::start($config, $root);
+                $return =  self::stop($appName);
+                if($return){
+                    self::start($config, $root);
+                }
                 break;
             default :
                 exit(0);
@@ -112,7 +114,8 @@ class JobBase
     protected static function stop($appName)
     {
         $killStr = $appName . "-job";
-        exec("ps axu|grep " . $killStr . "|awk '{print $2}'|xargs kill -9", $masterPidArr);
+        exec("ps axu|grep " . $killStr . "|awk '{print $2}'|xargs kill -9", $masterPidArr, $return);
+        return $return;
     }
 
     protected static function start($config, $root)

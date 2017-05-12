@@ -112,11 +112,7 @@ class Task
         list($task, $params) = $data;
         if (is_string($task)) {
             $result = $this->taskRun($task, $params);
-            if ($result instanceof \Generator) {
-                $task = new CoroutineTask($result);
-                $task->work($task->getRoutine());
-                unset($task);
-            }
+
             return [true, $result, ''];
         }
         return [true, "", ''];

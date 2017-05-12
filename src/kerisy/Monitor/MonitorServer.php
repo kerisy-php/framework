@@ -56,7 +56,7 @@ class MonitorServer implements SocketInterface
     public function perform($data, $serv, $fd, $from_id)
     {
         if($this->serialize){
-            $result = $this->serialize->xformat($data);
+            $result = $this->serialize->xtrans($data);
         }else{
             $result = $data;
         }

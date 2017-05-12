@@ -27,13 +27,13 @@ class MonitorSerialization
         $this->serializeObj->setBodyOffset($bodyOffset);
     }
 
-    public function xformat($data)
+    public function xtrans($data)
     {
-        return $this->serializeObj->xformat($data);
+        return $this->serializeObj->xtrans($data);
     }
 
-    public function format($data)
+    public function trans($data)
     {
-        return $this->serializeObj->format($data);
+        return $this->serializeObj->trans($data);
     }
 }

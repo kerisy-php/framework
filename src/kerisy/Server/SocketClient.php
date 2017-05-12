@@ -46,6 +46,7 @@ class SocketClient
     public function sendAndRecvice($data)
     {
         $formatData = $this->serialization->format($data);
+
         if (!$this->client->isConnected()) {
             $this->connect($this->config);
         }

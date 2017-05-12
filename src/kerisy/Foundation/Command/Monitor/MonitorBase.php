@@ -127,8 +127,10 @@ class MonitorBase
                 Log::sysinfo("[$serverName] stop success ");
                 break;
             case 'restart':
-                self::stop($appName);
-                self::start($config, $appName);
+                $return = self::stop($appName);
+                if($return){
+                    self::start($config, $appName);
+                }
                 break;
             default :
                 return "";
@@ -139,7 +141,8 @@ class MonitorBase
     protected static function stop($appName)
     {
         $killStr = $appName . "-monitor";
-        exec("ps axu|grep " . $killStr . "|awk '{print $2}'|xargs kill -9", $masterPidArr);
+        exec("ps axu|grep " . $killStr . "|awk '{print $2}'|xargs kill -9", $masterPidArr, $return);
+        return $return;
     }
 
     protected static function start($config, $appName)

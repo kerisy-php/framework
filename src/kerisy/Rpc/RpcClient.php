@@ -14,6 +14,7 @@
 namespace Kerisy\Rpc;
 
 
+use Google\FlatBuffers\ByteBuffer;
 use Kerisy\Server\SocketClient;
 use Kerisy\Support\Arr;
 use Kerisy\Support\Serialization\Serialization;
@@ -61,6 +62,21 @@ class RpcClient
     {
         $result = [$url, $params];
         return $this->client->sendAndRecvice($result);
+    }
+
+    public function fbGet($routeMatch, $bufferData)
+    {
+        $packRouteMatch = pack("n",$routeMatch);
+        $str = $packRouteMatch.$bufferData;
+
+        $data = $this->client->sendAndRecvice($str);
+        if(!$data){
+            return false;
+        }
+        else{
+            $dataBuffer = ByteBuffer::wrap($data);
+            return $dataBuffer;
+        }
     }
 
     public function close()

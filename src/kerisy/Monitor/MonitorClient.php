@@ -53,7 +53,7 @@ class MonitorClient
      */
     public function send($msg)
     {
-        if ($this->serialization) $msg = $this->serialization->format($msg);
+        if ($this->serialization) $msg = $this->serialization->trans($msg);
 
         $client = new \swoole_client(SWOOLE_SOCK_UDP, SWOOLE_SOCK_ASYNC);
 

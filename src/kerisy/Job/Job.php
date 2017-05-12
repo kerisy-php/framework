@@ -95,12 +95,8 @@ class Job
                     if(!is_object($jobObj)){
                         continue;
                     }
-                    $result = $jobObj->perform();
-                    if ($result instanceof \Generator) {
-                        $task = new CoroutineTask($result);
-                        $task->work($task->getRoutine());
-                        unset($task);
-                    }
+                    $jobObj->perform();
+
                     if($isInit){
                         $this->storage->zrem($initKey, $v);
                     }else{

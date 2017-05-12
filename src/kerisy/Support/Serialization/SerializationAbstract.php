@@ -44,11 +44,12 @@ abstract class SerializationAbstract
     public function getSendContent($bufferData)
     {
         if (!$bufferData) return "";
-        $len = strlen($bufferData);
-        $packLen = pack("N", $len);
         //兼容老框架
         $packType = pack("C",0);
-        return $packLen . $packType.$bufferData;
+        $bufferData = $packType.$bufferData;
+        $len = strlen($bufferData);
+        $packLen = pack("N", $len);
+        return $packLen .$bufferData;
     }
 
     /**

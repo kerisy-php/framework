@@ -327,6 +327,7 @@ class RouteMatch
                             if (!$check) return;
                             $realParams = $this->callUserFuncArrayRealParams($controller, $action, $require[2]);
                             $content = call_user_func_array([$obj, $action], $realParams);
+                            Event::fire("monitor", [$require[0], $require[1]]);
                         } else {
                             //tcp
                             list($serv, $fd, $requestData) = $otherData;
@@ -335,15 +336,11 @@ class RouteMatch
                             if (!$check) return;
                             $realParams = $this->callUserFuncArrayRealParams($controller, $action, $require);
                             $content = call_user_func_array([$obj, $action], $realParams);
-                        }
-                        if ($content instanceof \Generator) {
-                            $task = new CoroutineTask($content);
-                            $task->work($task->getRoutine());
-                            unset($task);
+                            Event::fire("monitor", $realParams);
                         }
 
-                        Event::fire("monitor", [$require[0], $require[1]]);
                         Event::fire("clear");
+                        return $content;
                     } else {
                         throw new PageNotFoundException("page not found!");
                     }

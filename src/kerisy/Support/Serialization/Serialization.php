@@ -18,6 +18,7 @@ use Kerisy\Support\Serialization\Adapter\HproseSerialization;
 use Kerisy\Support\Serialization\Adapter\IgbinarySerialization;
 use Kerisy\Support\Serialization\Adapter\JsonSerialization;
 use Kerisy\Support\Serialization\Adapter\MsgPackSerialization;
+use Kerisy\Support\Serialization\Adapter\StringSerialization;
 
 class Serialization
 {
@@ -43,6 +44,8 @@ class Serialization
                     return new JsonSerialization();
                 case 5:
                     return new HproseSerialization();
+                case 6:
+                    return new StringSerialization();
                 default:
                     return new DefaultSerialization();
             }

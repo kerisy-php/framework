@@ -74,9 +74,6 @@ class RpcBase
             //reactor数量，推荐2
             'reactor_num' => 2,
             "dispatch_mode" => 2,
-            'static_path' => $root . '/public',
-            "gzip" => 4,
-            "static_expire_time" => 86400,
             "task_worker_num" => 5,
             "task_fail_log" => "/tmp/task_fail_log",
             "task_retry_count" => 2,
@@ -127,8 +124,10 @@ class RpcBase
                 Log::sysinfo("[$serverName] stop success ");
                 break;
             case 'restart':
-                self::stop($appName);
-                self::start($config, $root, $appName);
+                $return = self::stop($appName);
+                if($return){
+                    self::start($config, $root, $appName);
+                }
                 break;
             default :
                 return "";
@@ -139,7 +138,8 @@ class RpcBase
     protected static function stop($appName)
     {
         $killStr = $appName . "-rpc";
-        exec("ps axu|grep " . $killStr . "|awk '{print $2}'|xargs kill -9", $masterPidArr);
+        exec("ps axu|grep " . $killStr . "|awk '{print $2}'|xargs kill -9", $masterPidArr, $return);
+        return $return;
     }
 
     protected static function start($config, $root, $appName)

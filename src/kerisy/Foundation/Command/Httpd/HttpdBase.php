@@ -145,8 +145,10 @@ class HttpdBase
                 Log::sysinfo("[$serverName] stop success ");
                 break;
             case 'restart':
-                self::stop($appName);
-                self::start($config, $adapter, $appName);
+                $return  = self::stop($appName);
+                if($return){
+                    self::start($config, $adapter, $appName);
+                }
                 break;
             default :
                 return "";
@@ -166,7 +168,8 @@ class HttpdBase
     protected static function stop($appName)
     {
         $killStr = $appName . "-httpd";
-        exec("ps axu|grep " . $killStr . "|awk '{print $2}'|xargs kill -9", $masterPidArr);
+        exec("ps axu|grep " . $killStr . "|awk '{print $2}'|xargs kill -9", $masterPidArr, $return);
+        return $return;
     }
 
     protected static function start($config, $adapter, $appName)
